@@ -1,0 +1,12 @@
+.idea/
+target/
+channel/impl/target/
+channel/api/target/
+features/features-p4plugin/target/
+karaf/target/
+*.iml
+*.ipr
+*.iws
+*.class
+*~
+

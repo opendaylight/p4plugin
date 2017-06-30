@@ -11,15 +11,10 @@ package org.opendaylight.p4plugin.channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import io.grpc.internal.DnsNameResolverProvider;
-import io.grpc.netty.NegotiationType;
-import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.NettyChannelProvider;
-import org.apache.commons.lang3.ObjectUtils;
 import org.opendaylight.p4plugin.channel.proto.GreeterGrpc;
 import org.opendaylight.p4plugin.channel.proto.HelloReply;
 import org.opendaylight.p4plugin.channel.proto.HelloRequest;
-import java.util.concurrent.TimeUnit;
+//import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

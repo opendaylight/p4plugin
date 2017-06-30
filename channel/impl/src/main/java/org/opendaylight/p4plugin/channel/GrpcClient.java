@@ -11,20 +11,14 @@ package org.opendaylight.p4plugin.channel;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.StatusRuntimeException;
-import io.grpc.internal.DnsNameResolverProvider;
-import io.grpc.netty.NegotiationType;
-import io.grpc.netty.NettyChannelBuilder;
-import io.grpc.netty.NettyChannelProvider;
-import org.apache.commons.lang3.ObjectUtils;
 import org.opendaylight.p4plugin.channel.proto.GreeterGrpc;
 import org.opendaylight.p4plugin.channel.proto.HelloReply;
 import org.opendaylight.p4plugin.channel.proto.HelloRequest;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class GrpcClient {
-    private static final Logger logger = LoggerFactory.getLogger(GrpcClient.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(GrpcClient.class.getName());
 
     private final ManagedChannel channel;
     private final GreeterGrpc.GreeterBlockingStub blockingStub;
@@ -44,13 +38,13 @@ public class GrpcClient {
 
     /** Say hello to server. */
     public String greet(String name) {
-        logger.info("Will try to greet " + name + " ...");
+        LOG.info("Will try to greet " + name + " ...");
         HelloRequest request = HelloRequest.newBuilder().setName(name).build();
         HelloReply response;
         try {
             response = blockingStub.sayHello(request);
         } catch (StatusRuntimeException e) {
-            logger.info("RPC failed: {}", e.getStatus());
+            LOG.info("RPC failed: {}", e.getStatus());
             return null;
         }
 

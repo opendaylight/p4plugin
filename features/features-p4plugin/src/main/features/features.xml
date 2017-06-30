@@ -17,8 +17,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <repository>mvn:org.opendaylight.netconf/features-restconf/{{VERSION}}/xml/features</repository>
     <repository>mvn:org.opendaylight.dluxapps/features-dluxapps/{{VERSION}}/xml/features</repository>
 
-    <feature name='odl-p4plugin-channel-impl' version='${project.version}' description='ODL :: p4plugin :: channel :: impl'>
+    <feature name='odl-p4plugin-all' version='${project.version}' description='ODL :: P4plugin :: ALL'>
+        <feature version = '${project.version}'>odl-p4plugin-channel</feature>
+    </feature>
+
+    <feature name='odl-p4plugin-channel-api' version='${project.version}' description='ODL :: p4plugin :: channel :: api'>
+        <bundle>mvn:org.opendaylight.p4plugin/p4plugin-channel-api/{{VERSION}}</bundle>
+    </feature>
+
+    <feature name='odl-p4plugin-channel' version='${project.version}' description='ODL :: p4plugin :: channel'>
         <feature version = '${mdsal.version}'>odl-mdsal-all</feature>
+        <feature version = '${project.version}'>odl-p4plugin-channel-api</feature>
         <bundle>mvn:org.opendaylight.p4plugin/p4plugin-channel-impl/{{VERSION}}</bundle>
     </feature>
 

@@ -28,8 +28,8 @@ public class GrpcClient {
     }
 
     GrpcClient(ManagedChannelBuilder<?> channelBuilder) {
-          channel = channelBuilder.build();
-          blockingStub = GreeterGrpc.newBlockingStub(channel);
+        channel = channelBuilder.build();
+        blockingStub = GreeterGrpc.newBlockingStub(channel);
     }
 
     public void shutdown() throws InterruptedException {

@@ -40,9 +40,8 @@ public class ChannelProvider {
         LOG.info("ChannelProvider Closed");
         try {
             client.shutdown();
-        } catch (Exception e) 
-        {
-            e.printStackTrace();
+        } catch (InterruptedException e) {
+            LOG.error("Close is Interrupted", e);
         }
     }
 }

@@ -18,6 +18,10 @@ import "google/protobuf/any.proto";
 
 // This package and its contents are a work-in-progress.
 
+option java_multiple_files = true;
+option java_package = "org.opendaylight.p4plugin.p4info.proto";
+option java_outer_classname = "P4InfoProto";
+
 package p4.config;
 
 message P4Info {

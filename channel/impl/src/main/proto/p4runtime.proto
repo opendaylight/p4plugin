@@ -22,6 +22,10 @@ import "p4/config/p4info.proto";
 
 // This package and its contents are a work-in-progress.
 
+option java_multiple_files = true;
+option java_package = "org.opendaylight.p4plugin.p4runtime.proto";
+option java_outer_classname = "P4RuntimeProto";
+
 package p4;
 
 service P4Runtime {

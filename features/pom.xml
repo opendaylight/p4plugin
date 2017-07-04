@@ -12,6 +12,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     
+    <parent>
+       <groupId>org.opendaylight.odlparent</groupId>
+       <artifactId>odlparent-lite</artifactId>
+       <version>2.0.0</version>
+       <relativePath/>
+    </parent>
+    
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>features-aggregator</artifactId>
     <packaging>pom</packaging>
@@ -19,6 +26,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>features-aggregator</name>
 
     <modules>
+    	<module>odl-p4plugin-channel-impl</module>
+        <module>odl-p4plugin-all</module>
+
         <module>features-p4plugin</module>
     </modules>
 

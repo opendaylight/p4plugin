@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "da2a55be_851a7e15",
+        "filename": "channel/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 6952
+      },
+      "writtenOn": "2017-07-06T05:44:15Z",
+      "side": 1,
+      "message": "four spaces instead of tab",
+      "range": {
+        "startLine": 29,
+        "startChar": 24,
+        "endLine": 29,
+        "endChar": 25
+      },
+      "revId": "1f5af6c88a03289510a3d562475d493c77dd57ee",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da2a55be_c50596c3",
+        "filename": "features/odl-p4plugin-channel-impl/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 28,
+      "author": {
+        "id": 6952
+      },
+      "writtenOn": "2017-07-06T05:44:15Z",
+      "side": 1,
+      "message": "mdsal.version error",
+      "range": {
+        "startLine": 28,
+        "startChar": 50,
+        "endLine": 28,
+        "endChar": 51
+      },
+      "revId": "1f5af6c88a03289510a3d562475d493c77dd57ee",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "da2a55be_25f632d8",
+        "filename": "features/pom.xml",
+        "patchSetId": 1
+      },
+      "lineNbr": 29,
+      "author": {
+        "id": 6952
+      },
+      "writtenOn": "2017-07-06T05:44:15Z",
+      "side": 1,
+      "message": "four spaces instead of tab",
+      "range": {
+        "startLine": 29,
+        "startChar": 46,
+        "endLine": 29,
+        "endChar": 47
+      },
+      "revId": "1f5af6c88a03289510a3d562475d493c77dd57ee",
+      "serverId": "7fc14799-209e-464c-9743-7a06c2c21a81",
+      "unresolved": false
+    }
+  ]
+}

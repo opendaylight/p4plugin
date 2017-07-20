@@ -139,13 +139,13 @@ public class WriteTableEntryData {
             if (!preamble.getName().equals(actionName)) { continue; }
             for (org.opendaylight.p4plugin.p4info.proto.Action.Param param : action.getParamsList()) {
                 if (param.getName().equals(paramName)) {
-                    return param.getBitwidth() % 8 == 0 ?  param.getBitwidth() / 8 : param.getBitwidth() / 8 + 1;
+                    return param.getBitwidth() + 7 / 8;
                 }
             }
         }
         return -1;
     }
-    
+
     public static byte[] strToByteArray(String str, int len) {
         String[] strArray = null;
         byte[] byteArray = null;

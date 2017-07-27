@@ -27,7 +27,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <properties>
         <mdsal.version>1.5.0-Carbon</mdsal.version>
         <protobuf.java.version>3.2.0</protobuf.java.version>
-        <protobuf.java.util.version>3.2.0</protobuf.java.util.version>
     </properties>
 
     <dependencies>

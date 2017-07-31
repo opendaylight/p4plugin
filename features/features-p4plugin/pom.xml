@@ -29,7 +29,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-channel-impl</artifactId>
+            <artifactId>odl-p4plugin-channel</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>

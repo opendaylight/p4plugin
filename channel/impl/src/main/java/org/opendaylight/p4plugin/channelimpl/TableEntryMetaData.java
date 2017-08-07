@@ -6,13 +6,8 @@
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
 package org.opendaylight.p4plugin.channelimpl;
-import com.google.protobuf.ByteString;
-import org.opendaylight.p4plugin.p4info.proto.*;
-import org.opendaylight.p4plugin.p4runtime.proto.FieldMatch;
-import org.opendaylight.p4plugin.p4runtime.proto.TableAction;
-import org.opendaylight.p4plugin.p4runtime.proto.TableEntry;
+
 import java.util.LinkedHashMap;
-import java.util.List;
 
 public class TableEntryMetaData {
     private Integer deviceId;

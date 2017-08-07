@@ -9,7 +9,6 @@
 package org.opendaylight.p4plugin.channelimpl;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.TextFormat;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.Status;
@@ -19,9 +18,9 @@ import org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig;
 import org.opendaylight.p4plugin.p4info.proto.*;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
 import java.io.IOException;
+import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +47,7 @@ public class ChannelImpl {
         //channel.shutdown().awaitTermination(5, TimeUnit.SECONDS);
     }
 
-    public void parseRunTimeInfo(String file) {
+    public void parseRunTimeInfo(URL file) {
         try {
             runTimeInfo = ChannelUtils.parseRunTimeInfo(file);
         } catch (IOException e) {
@@ -56,7 +55,7 @@ public class ChannelImpl {
         }
     }
 
-    public void parseDeviceConfigInfo(String file) {
+    public void parseDeviceConfigInfo(URL file) {
         try {
             logicInfo = ChannelUtils.parseDeviceConfigInfo(file);
         } catch (IOException e) {
@@ -230,7 +229,7 @@ public class ChannelImpl {
         return tableEntryBuilder.build();
     }
 
-    public void setForwardingPipelineConfig(String logicFile, String runTimeFile, long deviceId) {
+    public void setForwardingPipelineConfig(URL logicFile, URL runTimeFile, long deviceId) {
         parseRunTimeInfo(runTimeFile);
         parseDeviceConfigInfo(logicFile);
 
@@ -286,8 +285,6 @@ public class ChannelImpl {
                 LOG.info("Receive packet-in, packet = {}.", value.getPacket());
                 LOG.info("Receive packet-in, payload = {} size = {}.",  value.getPacket().getPayload(),
                                                                         value.getPacket().getPayload().size());
-                LOG.info("Receive packet-in, payload = {} size = {}.",  value.getPacket().getIngressLogicalPort(),
-                                                                        value.getPacket().getIngressPhysicalPort());
             }
 
             @Override
@@ -315,7 +312,7 @@ public class ChannelImpl {
             byte[] payload = new byte[100];
             Arrays.fill(payload, (byte)0x5a);
             packetBuilder.setPayload(ByteString.copyFrom(payload));
-            packetBuilder.setEgressPhysicalPort(1);
+            //packetBuilder.setEgressPhysicalPort(1);
             requestObserver.onNext(requestBuilder.setPacket(packetBuilder.build()).build());
         } catch (RuntimeException e) {
             requestObserver.onError(e);

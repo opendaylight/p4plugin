@@ -19,6 +19,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     class="org.opendaylight.p4plugin.channelimpl.ChannelProvider"
     init-method="init" destroy-method="close">
     <argument ref="dataBroker" />
+    <property name="bcontext" ref="blueprintBundleContext"></property>
   </bean>
 
 </blueprint>

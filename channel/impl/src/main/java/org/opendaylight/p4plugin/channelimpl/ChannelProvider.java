@@ -8,15 +8,16 @@
 package org.opendaylight.p4plugin.channelimpl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-
+import java.net.URL;
 
 public class ChannelProvider {
     private static final Logger LOG = LoggerFactory.getLogger(ChannelProvider.class);
     private final DataBroker dataBroker;
-
+    public BundleContext bcontext;
     ChannelImpl client = null;
 
     public ChannelProvider(final DataBroker dataBroker) {
@@ -27,11 +28,15 @@ public class ChannelProvider {
      * Method called when the blueprint container is created.
      */
 
-    public void init() {
+    public void init() throws Throwable {
         LOG.info("ChannelProvider Session Initiated");
         client = new ChannelImpl("localhost",50051);
 
-        client.setForwardingPipelineConfig("simple_router.json", "simple_router.proto.txt", 0);
+        Bundle bundle = bcontext.getBundle();
+        URL logicFile = bundle.getResource("/org/opendaylight/p4/simple_router.json");
+        URL runTimeInfoFile = bundle.getResource("/org/opendaylight/p4/simple_router.proto.txt");
+
+        client.setForwardingPipelineConfig(logicFile, runTimeInfoFile, 0);
         client.addTableEntry(new TableEntryMetaData.Builder()
                                 .setDeviceId(0)
                                 .setUpdateType(TableEntryMetaData.UpdateType.INSERT)
@@ -102,17 +107,6 @@ public class ChannelProvider {
                                 .addParams("smac","01:02:03:04:05:06")
                                 .build());
         //client.setForwardingPipelineConfig("packet_io.json", "packet_io.proto.txt", 0);
-        client.initBidirectionalStreamChannel();
-        for(int i = 0; i < 1000; i++) {
-            LOG.info("packet out cnt = {}", i++);
-            client.packetOut();
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                LOG.info("sleep exception");
-            }
-        }
-
         LOG.info("Write OK");
     }
 
@@ -128,5 +122,9 @@ public class ChannelProvider {
         } catch (InterruptedException e) {
             LOG.error("Close is Interrupted", e);
         }
+    }
+
+    public void setBcontext(BundleContext bcontext) {
+        this.bcontext = bcontext;
     }
 }

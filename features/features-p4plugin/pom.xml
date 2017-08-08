@@ -35,6 +35,34 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
             <classifier>features</classifier>
         </dependency>
         <dependency>
+            <groupId>org.opendaylight.p4plugin</groupId>
+            <artifactId>odl-p4plugin-deviceManager</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.p4plugin</groupId>
+            <artifactId>odl-p4plugin-tableManager</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.p4plugin</groupId>
+            <artifactId>odl-p4plugin-packetHandler</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.p4plugin</groupId>
+            <artifactId>odl-p4plugin-p4Service</artifactId>
+            <version>${project.version}</version>
+            <type>xml</type>
+            <classifier>features</classifier>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>odl-p4plugin-all</artifactId>
             <version>${project.version}</version>

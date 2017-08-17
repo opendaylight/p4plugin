@@ -1,5 +1,20 @@
 tables {
   preamble {
+    id: 33586128
+    name: "decap_cpu_header"
+    alias: "decap_cpu_header"
+  }
+  action_refs {
+    id: 16788917
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
+  }
+  size: 1024
+}
+tables {
+  preamble {
     id: 33589124
     name: "forward"
     alias: "forward"
@@ -14,11 +29,14 @@ tables {
     id: 16780303
   }
   action_refs {
+    id: 16840314
+  }
+  action_refs {
     id: 16784184
   }
   action_refs {
     id: 16800567
-    annotations: "@default_only()"
+    annotations: "@defaultonly()"
   }
   size: 512
 }
@@ -42,7 +60,22 @@ tables {
   }
   action_refs {
     id: 16800567
-    annotations: "@default_only()"
+    annotations: "@defaultonly()"
+  }
+  size: 1024
+}
+tables {
+  preamble {
+    id: 33555613
+    name: "send_arp_to_cpu"
+    alias: "send_arp_to_cpu"
+  }
+  action_refs {
+    id: 16840314
+  }
+  action_refs {
+    id: 16800567
+    annotations: "@defaultonly()"
   }
   size: 1024
 }
@@ -66,7 +99,7 @@ tables {
   }
   action_refs {
     id: 16800567
-    annotations: "@default_only()"
+    annotations: "@defaultonly()"
   }
   size: 256
 }
@@ -79,6 +112,13 @@ actions {
 }
 actions {
   preamble {
+    id: 16788917
+    name: "do_decap_cpu_header"
+    alias: "do_decap_cpu_header"
+  }
+}
+actions {
+  preamble {
     id: 16780303
     name: "set_dmac"
     alias: "set_dmac"
@@ -87,6 +127,23 @@ actions {
     id: 1
     name: "dmac"
     bitwidth: 48
+  }
+}
+actions {
+  preamble {
+    id: 16840314
+    name: "do_send_to_cpu"
+    alias: "do_send_to_cpu"
+  }
+  params {
+    id: 1
+    name: "reason"
+    bitwidth: 16
+  }
+  params {
+    id: 2
+    name: "cpu_port"
+    bitwidth: 9
   }
 }
 actions {

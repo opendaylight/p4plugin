@@ -166,6 +166,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <dependencies>
         <dependency>
+            <groupId>org.opendaylight.p4plugin</groupId>
+            <artifactId>p4plugin-channel-api</artifactId>
+            <version>0.1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
@@ -376,7 +381,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             !sun.security.x509,
                             *
                         </Import-Package>
-                        <Export-Package>org.opendaylight.p4plugin.channel.impl</Export-Package>
+                        <Export-Package>org.opendaylight.p4plugin.channelImpl</Export-Package>
                         <Embed-Dependency>
                             *;scope=compile|runtime;artifactId=!p4plugin*|yang*|sal*|config*;inline=true
                         </Embed-Dependency>

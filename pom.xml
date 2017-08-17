@@ -44,6 +44,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modules>
         <module>channel</module>
         <module>features</module>
+        <module>deviceManager</module>
         <module>karaf</module>
     </modules>
 </project>

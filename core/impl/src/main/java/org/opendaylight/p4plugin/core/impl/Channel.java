@@ -162,8 +162,15 @@ public class Channel {
         return state;
     }
 
-    public P4Info getP4Info() {
+    public P4Info getRuntimeInfo() {
         return this.p4Info;
+    }
+    public void setRuntimeInfo(P4Info p4Info) {
+        this.p4Info = p4Info;
+    }
+
+    public void setDeviceConfig(ByteString deviceConfig) {
+        this.deviceConfig = deviceConfig;
     }
 
     public void shutdown() {

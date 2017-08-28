@@ -27,4 +27,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </bean>
     <odl:rpc-implementation ref="deviceManager" />
 
+    <bean id="tableManager"
+          class="org.opendaylight.p4plugin.core.impl.TableManager">
+    </bean>
+    <odl:rpc-implementation ref="tableManager" />
 </blueprint>

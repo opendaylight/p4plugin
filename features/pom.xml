@@ -26,9 +26,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>features-aggregator</name>
 
     <modules>
-        <module>odl-p4plugin-channel</module>
+        <module>odl-p4plugin-core</module>
         <module>odl-p4plugin-all</module>
-        <module>odl-p4plugin-deviceManager</module>
         <module>features-p4plugin</module>
     </modules>
 

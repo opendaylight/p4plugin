@@ -13,33 +13,21 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.opendaylight.odlparent</groupId>
-        <artifactId>feature-repo-parent</artifactId>
-        <version>2.0.2</version>
+        <groupId>org.opendaylight.mdsal</groupId>
+        <artifactId>binding-parent</artifactId>
+        <version>0.10.0-Carbon</version>
         <relativePath/>
     </parent>
 
-
     <groupId>org.opendaylight.p4plugin</groupId>
-    <artifactId>features-p4plugin</artifactId>
+    <artifactId>p4plugin-core-api</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <packaging>feature</packaging>
-    <name>features-p4plugin</name>
-
+    <name>p4plugin core-api</name>
+    <packaging>bundle</packaging>
     <dependencies>
         <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-core</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-all</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
+            <groupId>org.opendaylight.mdsal.model</groupId>
+            <artifactId>ietf-inet-types-2013-07-15</artifactId>
         </dependency>
     </dependencies>
 </project>

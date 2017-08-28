@@ -1,0 +1,171 @@
+module table {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:table";
+    prefix "table";
+
+    revision "2017-08-08" {
+        description "Initial revision of table";
+    }
+    
+    import device {
+        prefix "device";
+        revision-date 2017-08-08;
+    }
+    
+    import common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+    
+    typedef known-update-type {
+        type enumeration {
+            enum "UNSPECIFIED"  {
+                value 1;
+            }
+
+            enum "INSERT" {
+                value 2;
+            }
+
+            enum "MODIFY" {
+                value 3;
+            }
+
+            enum "DELETE" {
+                value 4;
+            }
+        }
+    }
+
+    typedef known-match-type {
+        type enumeration {
+            enum "EXACT" {
+                value 1;
+            }
+
+            enum "TERNARY" {
+                value 2;
+            }
+
+            enum "LPM" {
+                value 3;
+            }
+
+            enum "RANGE" {
+                value 4;
+            }
+
+            enum "VALID" {
+                value 5;
+            }
+        }
+    }
+
+    //grouping action {
+    //   leaf Action {
+    //        type string;
+    //    }
+    //}
+
+    //grouping params {
+    //    list Params {
+    //        key "Name";
+    //        leaf Name {
+    //            type string;
+    //        }
+    //
+    //        leaf Value {
+    //            type string;
+    //        }
+    //    }
+    //}
+
+    //grouping action-info {
+    //    uses table:action;
+    //    uses table:params;
+    //}
+
+    //grouping table-name {
+    //    leaf Table {
+    //        type string;
+    //    }
+    //}
+
+    //grouping operation {
+    //    leaf Operation {
+    //        type table:known-update-type;
+    //    }
+    //}
+
+    //grouping match-info {
+    //    list Match-Fields {
+    //        key "Field";
+    //        leaf Field {
+    //            type string;
+    //        }
+    //
+    //        leaf Value {
+    //           type string;
+    //        }
+    //
+    //        leaf Match-Type {
+    //            type table:known-match-type;
+    //        }
+    //    }
+    //}
+
+    grouping table-entry-input {
+        leaf Table {
+            type string;
+        }
+
+        leaf Operation {
+            type table:known-update-type;
+        }
+
+        list Match-Fields {
+            key "Field";
+            leaf Field {
+                type string;
+            }
+
+            leaf Value {
+                type string;
+            }
+
+            leaf Match-Type {
+                type table:known-match-type;
+            }
+        }
+
+        leaf Action {
+            type string;
+        }
+
+        list Params {
+            key "Name";
+            leaf Name {
+                type string;
+            }
+
+            leaf Value {
+                type string;
+            }
+        }
+        //uses table:table-name;
+        //uses table:operation;
+        //uses table:match-info;
+        //uses table:action-info;
+    }
+
+    rpc populate-table-entry {
+        input {
+            uses device:target-identifier;
+            uses device:device-config;
+            uses table:table-entry-input;
+        }
+        output {
+            uses common:rpc-result;
+        }
+    }
+}

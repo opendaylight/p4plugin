@@ -13,25 +13,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.opendaylight.odlparent</groupId>
-        <artifactId>single-feature-parent</artifactId>
-        <version>2.0.2</version>
-        <relativePath/>
+       <groupId>org.opendaylight.odlparent</groupId>
+       <artifactId>odlparent</artifactId>
+       <version>2.0.2</version>
+       <relativePath/>
     </parent>
 
     <groupId>org.opendaylight.p4plugin</groupId>
-    <artifactId>odl-p4plugin-all</artifactId>
+    <artifactId>core-aggregator</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <packaging>feature</packaging>
-    <name>odl-p4plugin-all</name>
+    <name>core-aggregator</name>
+    <packaging>pom</packaging>
 
-    <dependencies>
-        <dependency>
-            <groupId>org.opendaylight.p4plugin</groupId>
-            <artifactId>odl-p4plugin-core</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-    </dependencies>
+    <modules>
+        <module>api</module>
+        <module>impl</module>
+    </modules>
 </project>

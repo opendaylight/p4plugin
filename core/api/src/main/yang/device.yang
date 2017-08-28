@@ -1,0 +1,53 @@
+module device {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:device";
+    prefix "device";
+
+    revision "2017-08-08" {
+        description "Initial revision of device";
+    }
+    
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+    
+    import common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+    
+    grouping target-identifier {
+        leaf IP {
+            type inet:ip-address;
+        }
+
+        leaf Port {
+            type inet:port-number;
+        }
+
+        leaf Device-ID {
+            type uint64;
+        }
+    }
+    
+    grouping device-config {
+        leaf Device-Config {
+            type string;
+        }
+
+        leaf Runtime-Info {
+            type string;
+        }
+    }
+    
+    rpc set-pipeline-config {
+        input {
+            uses device:target-identifier;
+            uses device:device-config;
+        }
+        output {
+            uses common:rpc-result;
+        }
+    }
+}

@@ -1,0 +1,15 @@
+module common {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:common";
+    prefix "common";
+
+    revision "2017-08-08" {
+        description "Initial revision of common";
+    }
+    
+    grouping rpc-result {
+        leaf result {
+            type boolean;
+        }
+    }
+}

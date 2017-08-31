@@ -153,7 +153,7 @@ public class Channel {
             responses = blockingStub.read(request);
             return responses;
         } catch (StatusRuntimeException e) {
-            LOG.info("Write RPC failed: {}", e.getStatus());
+            LOG.info("Read RPC failed: {}", e.getStatus());
         }
         return null;
     }

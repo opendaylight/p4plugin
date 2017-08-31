@@ -22,7 +22,11 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.ta
 
 
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 public abstract class Utils {
     /**
@@ -89,12 +93,21 @@ public abstract class Utils {
         return byteArray;
     }
 
+    public static String byteArrayToStr(byte[] input) {
+        StringBuffer buffer = new StringBuffer();
+        for(int i = 0; i < input.length; i++) {
+            buffer.append(String.valueOf(input[i]));
+            buffer.append(" ");
+        }
+        return new String(buffer);
+    }
+
     /**
      * Get table id by table name from p4 runtime info;
      */
-    public static int getTableId(P4Info runTimeInfo, String tableName) {
-        List<Table> list = runTimeInfo.getTablesList();
-
+    public static int getTableId(P4Info runtimeInfo, String tableName) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<Table> list = runtimeInfo.getTablesList();
         for (Table table : list) {
             Preamble preamble = table.getPreamble();
             if (preamble.getName().equals(tableName)) {
@@ -104,11 +117,21 @@ public abstract class Utils {
         return -1;
     }
 
+    public static String  getTableName(P4Info runtimeInfo, int tableId) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<Table> list = runtimeInfo.getTablesList()
+                                      .stream()
+                                      .filter(table->table.getPreamble().getId() == tableId)
+                                      .collect(Collectors.toList());
+        return list.get(0).getPreamble().getName();
+    }
+
     /**
      * Get match field id by table name and match field name from p4 runtime info;
      */
-    public static int getMatchFieldId(P4Info runTimeInfo, String tableName, String matchFieldName) {
-        List<Table> list = runTimeInfo.getTablesList();
+    public static int getMatchFieldId(P4Info runtimeInfo, String tableName, String matchFieldName) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<Table> list = runtimeInfo.getTablesList();
         Table table = null;
 
         for(Table t : list) {
@@ -122,11 +145,25 @@ public abstract class Utils {
         return  -1;
     }
 
+    public static String getMatchFieldName(P4Info runtimeInfo, int tableId, int matchFieldId) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<Table> list = runtimeInfo.getTablesList()
+                                      .stream()
+                                      .filter(table->table.getPreamble().getId() == tableId)
+                                      .collect(Collectors.toList());
+        List<MatchField> mfList = list.get(0).getMatchFieldsList()
+                                      .stream()
+                                      .filter(matchField ->matchField.getId() == matchFieldId)
+                                      .collect(Collectors.toList());
+        return mfList.get(0).getName();
+    }
+
     /**
      * Get correct match field width, round to the nearest integer.
      */
-    public static int getMatchFieldWidth(P4Info runTimeInfo, String tableName, String matchFieldName) {
-        List<Table> list = runTimeInfo.getTablesList();
+    public static int getMatchFieldWidth(P4Info runtimeInfo, String tableName, String matchFieldName) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<Table> list = runtimeInfo.getTablesList();
         Table table = null;
 
         for(Table t : list) {
@@ -145,8 +182,9 @@ public abstract class Utils {
     /**
      * Get action id ny action name.
      */
-    public static int getActionId(P4Info runTimeInfo, String actionName) {
-        List<org.opendaylight.p4plugin.p4info.proto.Action> actionList = runTimeInfo.getActionsList();
+    public static int getActionId(P4Info runtimeInfo, String actionName) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<org.opendaylight.p4plugin.p4info.proto.Action> actionList = runtimeInfo.getActionsList();
         for (org.opendaylight.p4plugin.p4info.proto.Action action : actionList) {
             Preamble preamble = action.getPreamble();
             if (preamble.getName().equals(actionName)) { return action.getPreamble().getId(); }
@@ -154,11 +192,20 @@ public abstract class Utils {
         return -1;
     }
 
+    public static String getActionName(P4Info runtimeInfo, int actionId) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        return runtimeInfo.getActionsList().stream()
+                .filter(action -> action.getPreamble().getId() == actionId)
+                .collect(Collectors.toList())
+                .get(0).getPreamble().getName();
+    }
+
     /**
      * Get a concrete param id, a action may contain many params
      */
-    public static int getParamId(P4Info runTimeInfo, String actionName, String paramName) {
-        List<org.opendaylight.p4plugin.p4info.proto.Action> actionList = runTimeInfo.getActionsList();
+    public static int getParamId(P4Info runtimeInfo, String actionName, String paramName) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<org.opendaylight.p4plugin.p4info.proto.Action> actionList = runtimeInfo.getActionsList();
         for (org.opendaylight.p4plugin.p4info.proto.Action action : actionList) {
             Preamble preamble = action.getPreamble();
             if (!preamble.getName().equals(actionName)) { continue; }
@@ -167,6 +214,19 @@ public abstract class Utils {
             }
         }
         return -1;
+    }
+
+    public static String getParamName(P4Info runtimeInfo, int actionId, int paramId) {
+        Preconditions.checkArgument(runtimeInfo != null, "Runtime Info is null.");
+        List<org.opendaylight.p4plugin.p4info.proto.Action> list =  runtimeInfo.getActionsList()
+                                                                               .stream()
+                                                                               .filter(action -> action.getPreamble().getId() == actionId)
+                                                                               .collect(Collectors.toList());
+        return list.get(0).getParamsList()
+                          .stream()
+                          .filter(param -> param.getId() == paramId)
+                          .collect(Collectors.toList())
+                          .get(0).getName();
     }
 
     /**
@@ -210,15 +270,17 @@ public abstract class Utils {
         org.opendaylight.p4plugin.p4runtime.proto.Action.Builder actionBuilder = newActionBuilder();
         actionBuilder.setActionId(actionId);
 
-        for (Params k : input.getParams()) {
-            org.opendaylight.p4plugin.p4runtime.proto.Action.Param.Builder paramBuilder = newParamBuilder();
-            int paramId = getParamId(runtimeInfo, actionName, k.getName());
-            paramBuilder.setParamId(paramId);
-            int paramWidth = getParamWidth(runtimeInfo, actionName, k.getName());
-            byte[] a = strToByteArray(k.getValue(), paramWidth);
-            ByteString b = ByteString.copyFrom(a);
-            paramBuilder.setValue(b);
-            actionBuilder.addParams(paramBuilder.build());
+        if (params != null) {
+            for (Params k : params) {
+                org.opendaylight.p4plugin.p4runtime.proto.Action.Param.Builder paramBuilder = newParamBuilder();
+                int paramId = getParamId(runtimeInfo, actionName, k.getName());
+                paramBuilder.setParamId(paramId);
+                int paramWidth = getParamWidth(runtimeInfo, actionName, k.getName());
+                byte[] a = strToByteArray(k.getValue(), paramWidth);
+                ByteString b = ByteString.copyFrom(a);
+                paramBuilder.setValue(b);
+                actionBuilder.addParams(paramBuilder.build());
+            }
         }
 
         TableAction.Builder tableActionBuilder = TableAction.newBuilder();
@@ -229,45 +291,46 @@ public abstract class Utils {
 
         tableEntryBuilder.setAction(tableActionBuilder.build());
 
-        for (MatchFields f : fields) {
-            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
-            int matchFieldId = getMatchFieldId(runtimeInfo, tableName, f.getField());
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            switch(f.getMatchType()) {
-                case EXACT: {
-                    FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
-                    exactBuilder.setValue(ByteString.copyFrom(strToByteArray(f.getValue(), getMatchFieldWidth(runtimeInfo,tableName, f.getField()))));
-                    fieldMatchBuilder.setExact(exactBuilder.build());
-                    break;
-                }
-                case TERNARY:
-                    break;
-                case LPM: {
-                    FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
-                    String value = f.getValue();
-                    String ip = null;
-                    int prefixLen = 0;
-                    if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
-                            + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
-                            + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])/([1-9]|[1-2][0-9]|3[0-2])")) {
-                        String[] result = value.split("/");
-                        ip = result[0];
-                        prefixLen = Integer.parseInt(result[1]);
-                        lpmBuilder.setValue(ByteString.copyFrom(strToByteArray(ip, getMatchFieldWidth(runtimeInfo, tableName, f.getField()))));
-                        lpmBuilder.setPrefixLen(prefixLen);
-                        fieldMatchBuilder.setLpm(lpmBuilder.build());
+        if (fields != null) {
+            for (MatchFields f : fields) {
+                FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
+                int matchFieldId = getMatchFieldId(runtimeInfo, tableName, f.getField());
+                fieldMatchBuilder.setFieldId(matchFieldId);
+                switch (f.getMatchType()) {
+                    case EXACT: {
+                        FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
+                        exactBuilder.setValue(ByteString.copyFrom(strToByteArray(f.getValue(), getMatchFieldWidth(runtimeInfo, tableName, f.getField()))));
+                        fieldMatchBuilder.setExact(exactBuilder.build());
+                        break;
                     }
-                    break;
+                    case TERNARY:
+                        break;
+                    case LPM: {
+                        FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
+                        String value = f.getValue();
+                        String ip = null;
+                        int prefixLen = 0;
+                        if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
+                                + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
+                                + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])/([1-9]|[1-2][0-9]|3[0-2])")) {
+                            String[] result = value.split("/");
+                            ip = result[0];
+                            prefixLen = Integer.parseInt(result[1]);
+                            lpmBuilder.setValue(ByteString.copyFrom(strToByteArray(ip, getMatchFieldWidth(runtimeInfo, tableName, f.getField()))));
+                            lpmBuilder.setPrefixLen(prefixLen);
+                            fieldMatchBuilder.setLpm(lpmBuilder.build());
+                        }
+                        break;
+                    }
+                    case RANGE:
+                        break;
+                    case VALID:
+                        break;
+                    default:
+                        break;
                 }
-                case RANGE:
-                    break;
-                case VALID:
-                    break;
-                default:
-                    break;
+                tableEntryBuilder.addMatch(fieldMatchBuilder.build());
             }
-
-            tableEntryBuilder.addMatch(fieldMatchBuilder.build());
         }
         return tableEntryBuilder.build();
     }

@@ -168,4 +168,28 @@ module table {
             uses common:rpc-result;
         }
     }
+
+    rpc read-table-entry {
+        input {
+            uses device:target-identifier;
+            uses device:device-config;
+            choice Type {
+                default ALL;
+                case ALL {
+                }
+
+                case ONE {
+                    leaf Table {
+                        type string;
+                    }
+                }
+            }
+        }
+        output {
+            uses common:rpc-result;
+            leaf-list Entry {
+                type string;
+            }
+        }
+    }
 }

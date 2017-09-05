@@ -37,83 +37,6 @@ module table {
         }
     }
 
-    typedef known-match-type {
-        type enumeration {
-            enum "EXACT" {
-                value 1;
-            }
-
-            enum "TERNARY" {
-                value 2;
-            }
-
-            enum "LPM" {
-                value 3;
-            }
-
-            enum "RANGE" {
-                value 4;
-            }
-
-            enum "VALID" {
-                value 5;
-            }
-        }
-    }
-
-    //grouping action {
-    //   leaf Action {
-    //        type string;
-    //    }
-    //}
-
-    //grouping params {
-    //    list Params {
-    //        key "Name";
-    //        leaf Name {
-    //            type string;
-    //        }
-    //
-    //        leaf Value {
-    //            type string;
-    //        }
-    //    }
-    //}
-
-    //grouping action-info {
-    //    uses table:action;
-    //    uses table:params;
-    //}
-
-    //grouping table-name {
-    //    leaf Table {
-    //        type string;
-    //    }
-    //}
-
-    //grouping operation {
-    //    leaf Operation {
-    //        type table:known-update-type;
-    //    }
-    //}
-
-    //grouping match-info {
-    //    list Match-Fields {
-    //        key "Field";
-    //        leaf Field {
-    //            type string;
-    //        }
-    //
-    //        leaf Value {
-    //           type string;
-    //        }
-    //
-    //        leaf Match-Type {
-    //            type table:known-match-type;
-    //        }
-    //    }
-    //}
-
     grouping table-entry-input {
         leaf Table {
             type string;
@@ -133,8 +56,43 @@ module table {
                 type string;
             }
 
-            leaf Match-Type {
-                type table:known-match-type;
+            choice Match-Type {
+                default EXACT;
+                case EXACT {}
+                case TERNARY {
+                    leaf Mask {
+                        type string {
+                            pattern '^([1-9]|[1-2][0-9]|3[0-2])$|'                        +
+                                    '^(([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|'        +
+                                    '25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4]'  +
+                                    '[0-9]|25[0-5])$';
+                        }
+                    }
+                }
+
+                case LPM {
+                    leaf Prefix-Len {
+                        type uint8 {
+                            range 0..32;
+                        }
+                    }
+                }
+
+                case RANGE {
+                    leaf High {
+                        type uint32;
+                    }
+
+                    leaf Low {
+                        type uint32;
+                    }
+                }
+
+                case VALID {
+                    leaf Valid {
+                        type boolean;
+                    }
+                }
             }
         }
 
@@ -152,39 +110,39 @@ module table {
                 type string;
             }
         }
-        //uses table:table-name;
-        //uses table:operation;
-        //uses table:match-info;
-        //uses table:action-info;
     }
 
-    rpc populate-table-entry {
+    grouping read-entry-type {
+        choice Read-Type {
+            default ALL-TABLES;
+            case ALL-TABLES {}
+
+            case ONE-TABLE {
+                leaf Table {
+                    type string;
+                }
+            }
+        }
+    }
+
+    rpc set-table-entry {
         input {
-            uses device:target-identifier;
+            uses device:device-identifier;
             uses device:device-config;
             uses table:table-entry-input;
         }
+
         output {
             uses common:rpc-result;
         }
     }
 
-    rpc read-table-entry {
+    rpc get-table-entry {
         input {
-            uses device:target-identifier;
-            uses device:device-config;
-            choice Type {
-                default ALL;
-                case ALL {
-                }
-
-                case ONE {
-                    leaf Table {
-                        type string;
-                    }
-                }
-            }
+            uses device:device-identifier;
+            uses table:read-entry-type;
         }
+
         output {
             uses common:rpc-result;
             leaf-list Entry {

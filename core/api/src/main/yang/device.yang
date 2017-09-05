@@ -17,35 +17,55 @@ module device {
         revision-date 2017-08-08;
     }
     
-    grouping target-identifier {
-        leaf IP {
-            type inet:ip-address;
+    grouping device-identifier {
+        leaf Ip {
+            type inet:ipv4-address;
         }
 
         leaf Port {
             type inet:port-number;
         }
 
-        leaf Device-ID {
+        leaf Device-Id {
             type uint64;
         }
     }
-    
+
     grouping device-config {
         leaf Device-Config {
-            type string;
+            type string {
+                pattern '/.*\.[0-9a-zA-Z]+';
+            }
         }
 
         leaf Runtime-Info {
-            type string;
+            type string {
+                pattern '/.*\.*proto\.txt';
+            }
         }
     }
-    
+
     rpc set-pipeline-config {
         input {
-            uses device:target-identifier;
+            uses device:device-identifier;
             uses device:device-config;
         }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc get-pipeline-config {
+        input {
+            uses device:device-identifier;
+            leaf Output-File {
+                type string {
+                    pattern '/.*[0-9a-zA-Z]';
+                }
+            }
+        }
+
         output {
             uses common:rpc-result;
         }

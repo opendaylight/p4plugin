@@ -1,9 +1,0 @@
-module channel {
-    yang-version 1;
-    namespace "urn:opendaylight:p4plugin:channel";
-    prefix "channel";
-
-    revision "2017-08-08" {
-        description "Initial revision of channel";
-    }
-}

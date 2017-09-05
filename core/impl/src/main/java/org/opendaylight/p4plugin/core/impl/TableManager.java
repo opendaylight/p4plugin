@@ -8,152 +8,116 @@
 package org.opendaylight.p4plugin.core.impl;
 
 import com.google.common.util.concurrent.Futures;
-import com.google.protobuf.ByteString;
-import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.read.table.entry.input.type.ALL;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.read.table.entry.input.type.ONE;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.md.sal.core.general.entity.rev150820.EntityBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.read.entry.type.ReadType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.read.entry.type.read.type.ALLTABLES;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.read.entry.type.read.type.ONETABLE;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.inmemory.datastore.provider.rev140617.modules.module.configuration.InmemoryOperationalDatastoreProvider;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
 
-import static org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.FieldMatchTypeCase.EXACT;
-
 public class TableManager implements TableService {
     private static final Logger LOG = LoggerFactory.getLogger(TableManager.class);
     public TableManager() {}
-    
-    public boolean doPopulateTableEntry(PopulateTableEntryInput input) {
-        String host = input.getIP().getIpv4Address().getValue();
+
+    public static boolean doSetTableEntry(SetTableEntryInput input) {
+        String host = input.getIp().getValue();
         Integer port = input.getPort().getValue();
-        BigInteger deviceId = input.getDeviceID();
+        Long deviceId = input.getDeviceId().longValue();
         String deviceConfig = input.getDeviceConfig();
         String runtimeInfo = input.getRuntimeInfo();
-        String key = String.format("%s:%d:%d", host, port, deviceId);
-        Channel channel = DeviceManager.findChannel(host, port, deviceId);
+        Target target = null;
+        WriteResponse response = null;
 
-        if(channel == null) {
-            channel = DeviceManager.newChannel(host, port, deviceId, deviceConfig, runtimeInfo);
-            DeviceManager.addNewChannelToMap(key, channel);
+        try {
+            target = DeviceManager.getTarget(host, port, deviceId, runtimeInfo, deviceConfig);
+        } catch (IOException e) {
+            LOG.info("Get target exception when set table entry, reason = {}.", e.getMessage());
+            e.printStackTrace();
         }
 
-        WriteRequest.Builder request = WriteRequest.newBuilder();
-        request.setDeviceId(input.getDeviceID().longValue());
-        Update.Builder updateBuilder = Update.newBuilder();
-        updateBuilder.setType(Update.Type.valueOf(input.getOperation().toString()));
-
-        Entity.Builder entityBuilder = Entity.newBuilder();
-        entityBuilder.setTableEntry(Utils.toMessage(channel.getRuntimeInfo(), input));
-        updateBuilder.setEntity(entityBuilder.build());
-        request.addUpdates(updateBuilder.build());
-
-        WriteResponse response = channel.write(request.build());
-        return response == null ? false : true;
+        if (target != null) {
+            WriteRequest.Builder request = WriteRequest.newBuilder();
+            request.setDeviceId(input.getDeviceId().longValue());
+            Update.Builder updateBuilder = Update.newBuilder();
+            updateBuilder.setType(Update.Type.valueOf(input.getOperation().toString()));
+            Entity.Builder entityBuilder = Entity.newBuilder();
+            entityBuilder.setTableEntry(target.toMessage(input));
+            updateBuilder.setEntity(entityBuilder.build());
+            request.addUpdates(updateBuilder.build());
+            response = target.write(request.build());
+        }
+        return response != null;
     }
 
-    boolean doReadTableEntry(ReadTableEntryInput input, List<String> result) {
-        String host = input.getIP().getIpv4Address().getValue();
+    public static List<TableEntry> doGetTableEntry(GetTableEntryInput input) {
+        String host = input.getIp().getValue();
         Integer port = input.getPort().getValue();
-        BigInteger deviceId = input.getDeviceID();
-        String deviceConfig = input.getDeviceConfig();
-        String runtimeInfo = input.getRuntimeInfo();
-        String key = String.format("%s:%d:%d", host, port, deviceId);
-        Channel channel = DeviceManager.findChannel(host, port, deviceId);
-
-        if (channel == null) {
-            channel = DeviceManager.newChannel(host, port, deviceId, deviceConfig, runtimeInfo);
-            DeviceManager.addNewChannelToMap(key, channel);
-        }
-
+        Long deviceId = input.getDeviceId().longValue();
+        Target target = DeviceManager.findTarget(host, port, deviceId);
         ReadRequest.Builder request = ReadRequest.newBuilder();
-        request.setDeviceId(input.getDeviceID().longValue());
+        request.setDeviceId(deviceId);
         Entity.Builder entityBuilder = Entity.newBuilder();
         TableEntry.Builder entryBuilder = TableEntry.newBuilder();
-        if (input.getType() instanceof ALL) {
+        ReadType readType = input.getReadType();
+
+        if (readType instanceof ALLTABLES) {
             entryBuilder.setTableId(0);
-        } else if (input.getType() instanceof ONE) {
-            entryBuilder.setTableId(Utils.getTableId(channel.getRuntimeInfo(),((ONE)input.getType()).getTable()));
+        } else if (readType instanceof ONETABLE) {
+            entryBuilder.setTableId(target.getTableId(((ONETABLE)readType).getTable()));
+        } else {
+            return null;
         }
 
         entityBuilder.setTableEntry(entryBuilder);
         request.addEntities(entityBuilder);
-        Iterator<ReadResponse> responses = channel.read(request.build());
-        P4Info runtime = channel.getRuntimeInfo();
+        Iterator<ReadResponse> responses = target.read(request.build());
+        List<TableEntry> result = new ArrayList<>();
 
         while (responses.hasNext()) {
             ReadResponse response = responses.next();
             List<Entity> entityList = response.getEntitiesList();
             boolean isCompleted = response.getComplete();
-
-            entityList.forEach(entity->{
+            entityList.forEach(entity-> {
                 TableEntry entry = entity.getTableEntry();
-                Action action = entry.getAction().getAction();
-                int tableId = entry.getTableId();
-                int actionId = action.getActionId();
-                List<Action.Param> paramList = action.getParamsList();
-                StringBuffer buffer = new StringBuffer();
-                paramList.forEach(param->{
-                    buffer.append(String.format("%s = %s", Utils.getParamName(runtime, actionId, param.getParamId()),
-                                                           Utils.byteArrayToStr(param.getValue().toByteArray())));
-                });
-
-                List<FieldMatch> fieldList = entry.getMatchList();
-                fieldList.forEach(field->{
-                    int fieldId = field.getFieldId();
-                    switch (field.getFieldMatchTypeCase()) {
-                        case EXACT: {
-                            FieldMatch.Exact exact = field.getExact();
-                            String tmp = String.format("%s = ",Utils.getMatchFieldName(runtime, tableId, fieldId));
-                            tmp += Utils.byteArrayToStr(exact.getValue().toByteArray());
-                            tmp += " : EXACT ";
-                            buffer.append(tmp);
-                            break;
-                        }
-
-                        case LPM: {
-                            FieldMatch.LPM lpm = field.getLpm();
-                            String tmp = String.format("%s = ",Utils.getMatchFieldName(runtime, tableId, fieldId));
-                            tmp += Utils.byteArrayToStr(lpm.getValue().toByteArray());
-                            tmp += " /";
-                            tmp += String.valueOf(lpm.getPrefixLen());
-                            tmp += " : LPM ";
-                            buffer.append(tmp);
-                            break;
-                        }
-                    }
-                });
-
-                result.add(new String(buffer));
+                result.add(entry);
             });
             if (isCompleted) break;
         }
-
-        return true;
+        return result;
     }
 
     @Override
-    public Future<RpcResult<PopulateTableEntryOutput>> populateTableEntry(PopulateTableEntryInput input) {
-        PopulateTableEntryOutputBuilder builder = new PopulateTableEntryOutputBuilder();
-        builder.setResult(doPopulateTableEntry(input));
+    public Future<RpcResult<SetTableEntryOutput>> setTableEntry(SetTableEntryInput input) {
+        SetTableEntryOutputBuilder builder = new SetTableEntryOutputBuilder();
+        builder.setResult(doSetTableEntry(input));
         return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
     }
 
     @Override
-    public Future<RpcResult<ReadTableEntryOutput>> readTableEntry(ReadTableEntryInput input) {
-        ReadTableEntryOutputBuilder builder = new ReadTableEntryOutputBuilder();
+    public Future<RpcResult<GetTableEntryOutput>> getTableEntry(GetTableEntryInput input) {
+        GetTableEntryOutputBuilder builder = new GetTableEntryOutputBuilder();
         builder.setResult(true);
-        List<String> list = new ArrayList<>();
-        doReadTableEntry(input, list);
-        builder.setEntry(list);
+        List<TableEntry> entryList = doGetTableEntry(input);
+        List<String> result = new ArrayList<>();
+        Target target = DeviceManager.findTarget(input.getIp().getValue(),
+                                                 input.getPort().getValue(),
+                                                 input.getDeviceId().longValue());
+        entryList.forEach(entry -> {
+            String str = target.tableEntryToString(entry);
+            result.add(str);
+        });
+
+        builder.setEntry(result);
         return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
     }
 }

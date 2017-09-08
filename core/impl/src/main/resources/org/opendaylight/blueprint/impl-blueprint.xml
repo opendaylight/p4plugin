@@ -22,13 +22,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="bcontext" ref="blueprintBundleContext"></property>
     </bean>
     
-    <bean id="deviceManager"
-        class="org.opendaylight.p4plugin.core.impl.DeviceManager">
+    <bean id="ServiceImpl"
+        class="org.opendaylight.p4plugin.core.impl.ServiceImpl">
     </bean>
-    <odl:rpc-implementation ref="deviceManager" />
-
-    <bean id="tableManager"
-          class="org.opendaylight.p4plugin.core.impl.TableManager">
-    </bean>
-    <odl:rpc-implementation ref="tableManager" />
+    <odl:rpc-implementation ref="ServiceImpl" />
 </blueprint>

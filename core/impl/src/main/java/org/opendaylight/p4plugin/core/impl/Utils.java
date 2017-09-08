@@ -11,16 +11,7 @@ import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import org.opendaylight.p4plugin.p4info.proto.*;
-import org.opendaylight.p4plugin.p4info.proto.Action;
-import org.opendaylight.p4plugin.p4runtime.proto.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.TableEntryInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.MatchFields;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.Params;
-
 import java.io.*;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 public abstract class Utils {
     /**

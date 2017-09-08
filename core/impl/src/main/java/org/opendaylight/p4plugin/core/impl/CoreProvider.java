@@ -12,6 +12,9 @@ import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.Callable;
+import java.util.concurrent.FutureTask;
+
 public class CoreProvider {
     private static final Logger LOG = LoggerFactory.getLogger(CoreProvider.class);
     private final DataBroker dataBroker;
@@ -25,7 +28,15 @@ public class CoreProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        new Channel("localhost", 50051).shutdown();//grpc bug
+        new GrpcChannel("localhost", 50051).shutdown();//grpc bug
+//        FutureTask<Void> futureTask = new FutureTask<>(new Callable<Void>() {
+//            @Override
+//            public Void call() throws Exception {
+//                ChannelManager.ChannelMonitor();
+//                return null;
+//            }
+//        });
+//        new Thread(futureTask).start();
         LOG.info("Core provider initiated");
     }
     

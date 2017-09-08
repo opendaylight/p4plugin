@@ -13,21 +13,29 @@ import io.grpc.stub.StreamObserver;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-public class Channel {
-    private static final Logger LOG = LoggerFactory.getLogger(Channel.class);
+public class GrpcChannel {
+    private static final Logger LOG = LoggerFactory.getLogger(GrpcChannel.class);
 
     private final ManagedChannel channel;
     private final P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
     private final P4RuntimeGrpc.P4RuntimeStub asyncStub;
     private StreamObserver<StreamMessageRequest> requestStreamObserver;
+    private String ip;
+    private Integer port;
+    private CountDownLatch countDownLatch;
 
-    public Channel(String host, Integer port) {
-        this(ManagedChannelBuilder.forAddress(host, port).usePlaintext(true));
+    public GrpcChannel(String ip, Integer port) {
+        this(ManagedChannelBuilder.forAddress(ip, port).usePlaintext(true));
+        this.ip = ip;
+        this.port = port;
+        this.countDownLatch = new CountDownLatch(1);
     }
 
-    private Channel(ManagedChannelBuilder<?> channelBuilder) {
+    private GrpcChannel(ManagedChannelBuilder<?> channelBuilder) {
         channel = channelBuilder.build();
         blockingStub = P4RuntimeGrpc.newBlockingStub(channel);
         asyncStub = P4RuntimeGrpc.newStub(channel);
@@ -42,6 +50,25 @@ public class Channel {
         return asyncStub;
     }
 
+    public boolean getChannelState() {
+        boolean state = true;
+        try {
+            state = !countDownLatch.await(1, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            LOG.info("Get channel state exception.");
+            e.printStackTrace();
+        }
+        return state;
+    }
+
+    public String getIp() {
+        return ip;
+    }
+
+    public Integer getPort() {
+        return port;
+    }
+
     public StreamObserver<StreamMessageRequest> initBidiStreamChannel() {
         StreamObserver<StreamMessageResponse> response = new StreamObserver<StreamMessageResponse>() {
             @Override
@@ -51,15 +78,17 @@ public class Channel {
 
             @Override
             public void onError(Throwable t) {
-                DeviceManager.getChannelMap().forEach((k,v) ->v.shutdown());
-                DeviceManager.getTargetMap().forEach((k,v) ->v.setTargetState(Target.TargetState.Unknown));
+                Manager.removeChannel(ip, port);
+                Manager.removeDevices(ip, port);
+                countDownLatch.countDown();
                 LOG.info("Stream channel on error.");
             }
 
             @Override
             public void onCompleted() {
-                DeviceManager.getChannelMap().forEach((k,v) ->v.shutdown());
-                DeviceManager.getTargetMap().forEach((k,v) ->v.setTargetState(Target.TargetState.Unknown));
+                Manager.removeChannel(ip, port);
+                Manager.removeDevices(ip, port);
+                countDownLatch.countDown();
                 LOG.info("Stream channel on complete.");
             }
         };

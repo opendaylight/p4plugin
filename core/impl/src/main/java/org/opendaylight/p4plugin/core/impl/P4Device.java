@@ -7,7 +7,6 @@
  */
 package org.opendaylight.p4plugin.core.impl;
 
-import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import org.eclipse.jdt.annotation.Nullable;
@@ -16,11 +15,11 @@ import org.opendaylight.p4plugin.p4info.proto.MatchField;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.p4info.proto.Table;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.TableEntryInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.MatchFields;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.Params;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.match.fields.MatchType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.table.rev170808.table.entry.input.match.fields.match.type.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.TableEntryInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.table.entry.input.MatchFields;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.table.entry.input.Params;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.table.entry.input.match.fields.MatchType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.table.entry.input.match.fields.match.type.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,15 +30,14 @@ import java.util.Optional;
 
 import static org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigRequest.Action.VERIFY_AND_COMMIT;
 
-public class Target {
-    private static final Logger LOG = LoggerFactory.getLogger(Target.class);
-    private Channel channel;
+public class P4Device {
+    private static final Logger LOG = LoggerFactory.getLogger(P4Device.class);
+    private GrpcChannel channel;
     private P4Info runtimeInfo;
     private ByteString deviceConfig;
     private Long deviceId;
-    private TargetState state = TargetState.Unknown;
-
-    private Target() {}
+    private State state = State.Unknown;
+    private P4Device() {}
 
     public int getTableId(String tableName) {
         Optional<Table> container = runtimeInfo.getTablesList().stream()
@@ -103,6 +101,9 @@ public class Target {
     }
 
     public int getMatchFieldWidth(String tableName, String matchFieldName) {
+        if (runtimeInfo == null) {
+            throw new NullPointerException("P4Device runtime info is null.");
+        }
         Optional<Table> tableContainer = runtimeInfo.getTablesList()
                 .stream()
                 .filter(table -> table.getPreamble().getName().equals(tableName))
@@ -122,6 +123,9 @@ public class Target {
     }
 
     public int getActionId(String actionName) {
+        if (runtimeInfo == null) {
+            throw new NullPointerException("P4Device runtime info is null.");
+        }
         Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer = runtimeInfo.getActionsList()
                 .stream()
                 .filter(action -> action.getPreamble().getName().equals(actionName))
@@ -134,6 +138,7 @@ public class Target {
     }
 
     public String getActionName(int actionId) {
+        if (runtimeInfo == null) throw new NullPointerException("P4Device runtime info is null.");
         Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer = runtimeInfo.getActionsList()
                 .stream()
                 .filter(action -> action.getPreamble().getId() == actionId)
@@ -146,6 +151,7 @@ public class Target {
     }
 
     public int getParamId(String actionName, String paramName) {
+        if (runtimeInfo == null) throw new NullPointerException("P4Device runtime info is null.");
         Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer = runtimeInfo.getActionsList()
                 .stream()
                 .filter(action -> action.getPreamble().getName().equals(actionName))
@@ -157,7 +163,9 @@ public class Target {
                     .stream()
                     .filter(param -> param.getName().equals(paramName))
                     .findFirst();
-            result = paramContainer.get().getId();
+            if (paramContainer.isPresent()) {
+                result = paramContainer.get().getId();
+            }
         }
         return result;
     }
@@ -209,10 +217,13 @@ public class Target {
     }
 
     /**
-     * Human-readable entry meta-data serialize to protobuf message.
+     * Input table entry serialize to protobuf message.
      */
     public TableEntry toMessage(TableEntryInput input) {
-        Preconditions.checkArgument(runtimeInfo != null, "Runtime info is null.");
+        if (runtimeInfo == null) {
+            throw new NullPointerException("Runtime info is null.");
+        }
+
         String tableName = input.getTable();
         List<MatchFields> fields = input.getMatchFields();
         String actionName = input.getAction();
@@ -231,9 +242,9 @@ public class Target {
                 int paramId = getParamId(actionName, k.getName());
                 paramBuilder.setParamId(paramId);
                 int paramWidth = getParamWidth(actionName, k.getName());
-                byte[] a = Utils.strToByteArray(k.getValue(), paramWidth);
-                ByteString b = ByteString.copyFrom(a);
-                paramBuilder.setValue(b);
+                byte[] valueArr = Utils.strToByteArray(k.getValue(), paramWidth);
+                ByteString valueByteStr = ByteString.copyFrom(valueArr);
+                paramBuilder.setValue(valueByteStr);
                 actionBuilder.addParams(paramBuilder.build());
             }
         }
@@ -250,21 +261,20 @@ public class Target {
                 FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
                 int matchFieldId = getMatchFieldId(tableName, f.getField());
                 int matchFieldWidth = getMatchFieldWidth(tableName, f.getField());
-                String value = f.getValue();
                 fieldMatchBuilder.setFieldId(matchFieldId);
-
                 MatchType matchType = f.getMatchType();
-                if (matchType instanceof EXACT) {
+
+                if ((matchType instanceof EXACT)) {
                     FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
-                    /* Value must match integer */
-                    if (value.matches("\\d+")) {
-                        exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
-                        fieldMatchBuilder.setExact(exactBuilder.build());
-                    }
+                    EXACT exact = (EXACT)matchType;
+                    String value = exact.getExactValue();
+                    exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
+                    fieldMatchBuilder.setExact(exactBuilder.build());
                 } else if (matchType instanceof LPM) {
                     FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
                     LPM lpm = (LPM)matchType;
-                    int prefixLen = lpm.getPrefixLen();
+                    String value = lpm.getLpmValue();
+                    int prefixLen = lpm.getLpmPrefixLen();
                     // Value must match ipv4 address
                     if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
                                     + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
@@ -275,13 +285,16 @@ public class Target {
                     }
                 } else if (matchType instanceof TERNARY) {
                     FieldMatch.Ternary.Builder ternaryBuilder = FieldMatch.Ternary.newBuilder();
+                    TERNARY ternary = (TERNARY)matchType;
+                    String mask = ternary.getTernaryMask();
+                    String value = ternary.getTernaryValue();
+
                     if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
                                     + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
                                     + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
                         ternaryBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
                     }
-                    TERNARY ternary = (TERNARY)matchType;
-                    String mask = ternary.getMask();
+
                     if (mask.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
                                    + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
                                    + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
@@ -324,7 +337,9 @@ public class Target {
      * Table entry object to human-readable string.
      */
     public String tableEntryToString(TableEntry entry) {
-        Preconditions.checkArgument(runtimeInfo != null, "Runtime info is null.");
+        if (runtimeInfo == null) {
+            throw new NullPointerException("Runtime info is null.");
+        }
         org.opendaylight.p4plugin.p4runtime.proto.Action action = entry.getAction().getAction();
         int tableId = entry.getTableId();
         int actionId = action.getActionId();
@@ -373,22 +388,22 @@ public class Target {
             }
         });
 
-        buffer.append(" " + getActionName(actionId) + " ( ");
+        buffer.append(" " + getActionName(actionId) + "(");
         paramList.forEach(param -> {
             int paramId = param.getParamId();
             buffer.append(String.format("%s", getParamName(actionId, paramId)));
             buffer.append(" = ");
             buffer.append(String.format("%s", Utils.byteArrayToStr(param.getValue().toByteArray())));
         });
-        buffer.append(" ) ");
+        buffer.append(")");
         return new String(buffer);
     }
 
-    public void setTargetState(TargetState state) {
+    public void setDeviceState(State state) {
         this.state = state;
     }
 
-    public TargetState getTargetState() {
+    public State getDeviceState() {
         return state;
     }
 
@@ -400,6 +415,10 @@ public class Target {
         runtimeInfo  = Utils.parseRuntimeInfo(file);
     }
 
+    public void setRuntimeInfo(P4Info runtimeInfo) {
+        this.runtimeInfo = runtimeInfo;
+    }
+
     public ByteString getDeviceConfig() {
         return this.deviceConfig;
     }
@@ -408,7 +427,7 @@ public class Target {
         deviceConfig = Utils.parseDeviceConfigInfo(file);
     }
 
-    public Channel getChannel() {
+    public GrpcChannel getGrpcChannel() {
         return this.channel;
     }
 
@@ -418,12 +437,6 @@ public class Target {
         masterArbitrationBuilder.setDeviceId(deviceId);
         requestBuilder.setArbitration(masterArbitrationBuilder);
         channel.getRequestStreamObserver().onNext(requestBuilder.build());
-        //wait 2s, in order to get the correct result,
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
     }
 
     public SetForwardingPipelineConfigResponse setPipelineConfig() {
@@ -506,12 +519,12 @@ public class Target {
     }
 
     public static final class Builder {
-        private Channel channel_;
+        private GrpcChannel channel_;
         private P4Info runtimeInfo_;
         private ByteString deviceConfig_;
         private Long deviceId_;
 
-        public Builder setChannel(Channel channel) {
+        public Builder setChannel(GrpcChannel channel) {
             this.channel_ = channel;
             return this;
         }
@@ -531,8 +544,8 @@ public class Target {
             return this;
         }
 
-        public Target build() {
-            Target target = new Target();
+        public P4Device build() {
+            P4Device target = new P4Device();
             target.deviceConfig = deviceConfig_;
             target.runtimeInfo = runtimeInfo_;
             target.channel = channel_;
@@ -541,7 +554,7 @@ public class Target {
         }
     }
 
-    public enum TargetState {
+    public enum State {
         Unknown,
         Connected,
         Configured,

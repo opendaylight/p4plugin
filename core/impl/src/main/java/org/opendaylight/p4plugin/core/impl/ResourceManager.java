@@ -16,11 +16,11 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-public class Manager {
-    private static final Logger LOG = LoggerFactory.getLogger(Manager.class);
+public class ResourceManager {
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceManager.class);
     static ConcurrentHashMap<String, GrpcChannel> channels = new ConcurrentHashMap<>();
     static ConcurrentHashMap<String, P4Device> devices = new ConcurrentHashMap<>();
-    private Manager() {}
+    private ResourceManager() {}
 
     public static GrpcChannel findChannel(String ip, Integer port) {
         String key = String.format("%s:%d", ip, port);

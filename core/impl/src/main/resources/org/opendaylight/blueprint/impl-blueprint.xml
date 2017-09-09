@@ -15,10 +15,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         interface="org.opendaylight.controller.md.sal.binding.api.DataBroker"
         odl:type="default" />
 
+    <reference id="notificationService"
+        interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>    
+        
     <bean id="provider" 
         class="org.opendaylight.p4plugin.core.impl.CoreProvider"
         init-method="init" destroy-method="close">
         <argument ref="dataBroker" />
+        <argument ref="notificationService" />
         <property name="bcontext" ref="blueprintBundleContext"></property>
     </bean>
     

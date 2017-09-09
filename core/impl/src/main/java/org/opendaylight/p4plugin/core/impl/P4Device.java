@@ -7,6 +7,7 @@
  */
 package org.opendaylight.p4plugin.core.impl;
 
+import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import org.eclipse.jdt.annotation.Nullable;
@@ -269,7 +270,7 @@ public class P4Device {
                     EXACT exact = (EXACT)matchType;
                     String value = exact.getExactValue();
                     exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
-                    fieldMatchBuilder.setExact(exactBuilder.build());
+                    fieldMatchBuilder.setExact(exactBuilder);
                 } else if (matchType instanceof LPM) {
                     FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
                     LPM lpm = (LPM)matchType;
@@ -281,7 +282,7 @@ public class P4Device {
                                     + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
                         lpmBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
                         lpmBuilder.setPrefixLen(prefixLen);
-                        fieldMatchBuilder.setLpm(lpmBuilder.build());
+                        fieldMatchBuilder.setLpm(lpmBuilder);
                     }
                 } else if (matchType instanceof TERNARY) {
                     FieldMatch.Ternary.Builder ternaryBuilder = FieldMatch.Ternary.newBuilder();
@@ -319,13 +320,17 @@ public class P4Device {
                             }
                         }
                         ternaryBuilder.setMask(ByteString.copyFrom(resultByte));
+                        fieldMatchBuilder.setTernary(ternaryBuilder);
                     }
                 } else if (matchType instanceof RANGE) {
                     //TODO
                 } else if (matchType instanceof VALID) {
-                    //TODO
+                    FieldMatch.Valid.Builder validBuilder = FieldMatch.Valid.newBuilder();
+                    boolean value = ((VALID)matchType).isValid();
+                    validBuilder.setValue(value);
+                    fieldMatchBuilder.setValid(validBuilder);
                 } else {
-                    //TODO
+                    throw new IllegalArgumentException("Match type illegal.");
                 }
                 tableEntryBuilder.addMatch(fieldMatchBuilder.build());
             }

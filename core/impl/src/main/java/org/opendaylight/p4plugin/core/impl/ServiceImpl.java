@@ -40,7 +40,7 @@ public class ServiceImpl implements P4pluginCoreService {
         P4Device device = null;
 
         try {
-            device = Manager.getDevice(ip, port, deviceId, runtimeInfo, deviceConfig);
+            device = ResourceManager.getDevice(ip, port, deviceId, runtimeInfo, deviceConfig);
             if (device != null) {
                 if (device.getDeviceState() != P4Device.State.Unknown) {
                     response = device.setPipelineConfig();
@@ -67,7 +67,7 @@ public class ServiceImpl implements P4pluginCoreService {
         File file = new File(outputFile);
         FileOutputStream outputStream;
         PrintStream printStream;
-        P4Device device = Manager.findDevice(ip, port, deviceId);
+        P4Device device = ResourceManager.findDevice(ip, port, deviceId);
 
         if ((device == null) || (device.getDeviceState() != P4Device.State.Configured)) {
             return false;
@@ -100,7 +100,7 @@ public class ServiceImpl implements P4pluginCoreService {
         Integer port = input.getPort().getValue();
         Long deviceId = input.getDeviceId().longValue();
         WriteResponse response = null;
-        P4Device device = Manager.findDevice(host, port, deviceId);
+        P4Device device = ResourceManager.findDevice(host, port, deviceId);
 
         if ((device != null) && (device.getDeviceState() == P4Device.State.Configured)) {
             WriteRequest.Builder request = WriteRequest.newBuilder();
@@ -123,7 +123,7 @@ public class ServiceImpl implements P4pluginCoreService {
         String ip = input.getIp().getValue();
         Integer port = input.getPort().getValue();
         Long deviceId = input.getDeviceId().longValue();
-        P4Device device = Manager.findDevice(ip, port, deviceId);
+        P4Device device = ResourceManager.findDevice(ip, port, deviceId);
 
         if ((device == null) || (device.getDeviceState() != P4Device.State.Configured)) {
             return null;
@@ -174,7 +174,7 @@ public class ServiceImpl implements P4pluginCoreService {
         String ip = input.getIp().getValue();
         Integer port = input.getPort().getValue();
         Long deviceId = input.getDeviceId().longValue();
-        P4Device device = Manager.findDevice(ip, port, deviceId);
+        P4Device device = ResourceManager.findDevice(ip, port, deviceId);
 
         if ((device == null) || (device.getDeviceState() != P4Device.State.Configured)) {
             return null;
@@ -248,7 +248,13 @@ public class ServiceImpl implements P4pluginCoreService {
             builder.setEntry(result);
             builder.setResult(true);
         }
+        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    }
 
+    @Override
+    public Future<RpcResult<SetActionProfileEntryOutput>> setActionProfileEntry(SetActionProfileEntryInput input)  {
+        SetActionProfileEntryOutputBuilder builder = new SetActionProfileEntryOutputBuilder();
+        builder.setResult(true);
         return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
     }
 }

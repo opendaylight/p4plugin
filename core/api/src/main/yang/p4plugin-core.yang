@@ -175,6 +175,11 @@ module p4plugin-core {
         }
     }
 
+    grouping packet-payload {
+        leaf payload {
+            type binary;
+        }
+    }
     rpc set-pipeline-config {
         input {
             uses device-identifier;
@@ -228,5 +233,36 @@ module p4plugin-core {
                 type string;
             }
         }
+    }
+
+    rpc set-action-profile-entry {
+        input {
+            leaf Action-Profile {
+                type string;
+            }
+
+            leaf Action {
+                type string;
+            }
+
+            list Params {
+                key "Name";
+                leaf Name {
+                    type string;
+                }
+
+                leaf Value {
+                    type string;
+                }
+            }
+        }
+
+        output {
+            uses rpc-result;
+        }
+    }
+
+    notification p4-packet-received {
+        uses packet-payload;
     }
 }

@@ -248,7 +248,13 @@ public class ServiceImpl implements P4pluginCoreService {
             builder.setEntry(result);
             builder.setResult(true);
         }
+        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    }
 
+    @Override
+    public Future<RpcResult<SetActionProfileEntryOutput>> setActionProfileEntry(SetActionProfileEntryInput input)  {
+        SetActionProfileEntryOutputBuilder builder = new SetActionProfileEntryOutputBuilder();
+        builder.setResult(true);
         return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
     }
 }

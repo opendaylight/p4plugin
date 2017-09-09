@@ -11,6 +11,8 @@ import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.stub.StreamObserver;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.P4PacketReceived;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.rev170808.P4PacketReceivedBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,6 +75,9 @@ public class GrpcChannel {
         StreamObserver<StreamMessageResponse> response = new StreamObserver<StreamMessageResponse>() {
             @Override
             public void onNext(StreamMessageResponse value) {
+                P4PacketReceivedBuilder notification = new P4PacketReceivedBuilder();
+                notification.setPayload(value.getPacket().getPayload().toByteArray());
+                NotificationProvider.getInstance().notify(notification.build());
                 LOG.info("receive packet in");
             }
 
@@ -81,7 +86,8 @@ public class GrpcChannel {
                 Manager.removeChannel(ip, port);
                 Manager.removeDevices(ip, port);
                 countDownLatch.countDown();
-                LOG.info("Stream channel on error.");
+                LOG.info("Stream channel on error, reason = {}.", t.getMessage());
+                LOG.info("onError-->", t);
             }
 
             @Override

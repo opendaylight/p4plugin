@@ -1,0 +1,45 @@
+module p4plugin-core-packet {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:core:packet";
+    prefix "packet";
+
+    organization
+        "ZTE corporation";
+
+    contact
+        "ding.rui@zte.com.cn";
+
+    description
+        "This module contains a set of type definitions and
+         RPCs that are used across p4plugin";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import p4plugin-core-device {
+        prefix "device";
+        revision-date 2017-08-08;
+    }
+
+    import p4plugin-core-common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+
+    notification p4-packet-received {
+        uses device:node;
+        leaf payload {
+            type binary;
+        }
+    }
+
+    rpc p4-transmit-packet {
+        input {
+            uses device:node;
+            leaf payload {
+                type binary;
+            }
+        }
+    }
+}

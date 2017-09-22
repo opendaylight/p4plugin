@@ -12,15 +12,15 @@ import org.opendaylight.yangtools.yang.binding.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class NotificationProvider {
-    private static NotificationProvider instance = new NotificationProvider();
+public class NotificationServiceProvider {
+    private static NotificationServiceProvider singleton = new NotificationServiceProvider();
     private NotificationPublishService notificationService;
-    private static final Logger LOG = LoggerFactory.getLogger(NotificationProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NotificationServiceProvider.class);
 
-    private NotificationProvider() {}
+    private NotificationServiceProvider() {}
 
-    public static NotificationProvider getInstance() {
-        return instance;
+    public static NotificationServiceProvider getInstance() {
+        return singleton;
     }
 
     public void setNotificationService(NotificationPublishService notificationService) {

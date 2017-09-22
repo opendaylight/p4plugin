@@ -409,7 +409,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             *
                         </Import-Package>
                         <Export-Package>
-                            org.opendaylight.p4plugin.core,
+                            org.opendaylight.p4plugin.core.impl,
                         </Export-Package>
                         <Embed-Dependency>
                             *;scope=compile|runtime;artifactId=!p4plugin*|yang*|sal*|config*|guava;inline=true

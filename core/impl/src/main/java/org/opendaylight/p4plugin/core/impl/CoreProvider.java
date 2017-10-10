@@ -9,6 +9,7 @@ package org.opendaylight.p4plugin.core.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
+import org.opendaylight.p4plugin.core.impl.connection.P4RuntimeChannel;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,9 +30,9 @@ public class CoreProvider {
      * Method called when the blueprint container is created.
      */
     public void init() {
-        new GrpcChannel("localhost", 50051).shutdown();//grpc bug
-        NotificationProvider.getInstance().setNotificationService(notificationService); 
-        LOG.info("P4plugin core provider initiated");
+        new P4RuntimeChannel("localhost", 50051).shutdown();//grpc bug
+        NotificationServiceProvider.getInstance().setNotificationService(notificationService);
+        LOG.info("P4plugin core provider initiated.");
     }
     
     /**

@@ -18,7 +18,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="notificationService"
         interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>    
         
-    <bean id="provider" 
+    <bean id="coreProvider"
         class="org.opendaylight.p4plugin.core.impl.CoreProvider"
         init-method="init" destroy-method="close">
         <argument ref="dataBroker" />
@@ -26,8 +26,17 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <property name="bcontext" ref="blueprintBundleContext"></property>
     </bean>
     
-    <bean id="ServiceImpl"
-        class="org.opendaylight.p4plugin.core.impl.ServiceImpl">
+    <bean id="deviceServiceProvider"
+        class="org.opendaylight.p4plugin.core.impl.DeviceServiceProvider">
     </bean>
-    <odl:rpc-implementation ref="ServiceImpl" />
+    <bean id="tableServiceProvider"
+          class="org.opendaylight.p4plugin.core.impl.TableServiceProvider">
+    </bean>
+    <bean id="packetServiceProvider"
+          class="org.opendaylight.p4plugin.core.impl.PacketServiceProvider">
+    </bean>
+
+    <odl:rpc-implementation ref="deviceServiceProvider" />
+    <odl:rpc-implementation ref="tableServiceProvider" />
+    <odl:rpc-implementation ref="packetServiceProvider" />
 </blueprint>

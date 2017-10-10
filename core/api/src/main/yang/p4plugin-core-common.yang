@@ -1,0 +1,25 @@
+module p4plugin-core-common {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:core:common";
+    prefix "common";
+
+    organization
+        "ZTE corporation";
+
+    contact
+        "ding.rui@zte.com.cn";
+
+    description
+        "This module contains a set of common type definitions that are used across p4plugin";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    grouping rpc-result {
+        leaf result {
+            type boolean;
+            default false;
+        }
+    }
+}

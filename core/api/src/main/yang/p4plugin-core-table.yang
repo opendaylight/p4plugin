@@ -1,0 +1,339 @@
+module p4plugin-core-table {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:core:table";
+    prefix "table";
+
+    organization
+        "ZTE corporation";
+
+    contact
+        "ding.rui@zte.com.cn";
+
+    description
+        "This module contains a set of type definitions and
+         RPCs that are used across p4plugin";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import p4plugin-core-device {
+        prefix "device";
+        revision-date 2017-08-08;
+    }
+
+    import p4plugin-core-common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+
+    grouping action {
+        leaf action-name {
+            type string;
+        }
+
+        list action-param {
+            key "param-name";
+            leaf param-name {
+                type string;
+            }
+
+            leaf param-value {
+                type string;
+            }
+        }
+    }
+
+    grouping match-fields {
+        list field {
+            key "field-name";
+            leaf field-name {
+                type string;
+            }
+
+            choice match-type {
+                default EXACT;
+                case EXACT {
+                    leaf exact-value {
+                        type string;
+                    }
+                }
+
+                case TERNARY {
+                    leaf ternary-Value {
+                        type string;
+                    }
+
+                    leaf ternary-mask {
+                        type string {
+                            pattern '([1-9]|[1-2][0-9]|3[0-2])|'                          +
+                                    '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|'        +
+                                    '25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4]'  +
+                                    '[0-9]|25[0-5]))';
+                        }
+                    }
+                }
+
+                case LPM {
+                    leaf lpm-value {
+                        type string;
+                    }
+
+                    leaf lpm-prefixLen {
+                        type uint8 {
+                            range 0..32;
+                        }
+                   }
+                }
+
+                case RANGE {
+                    leaf range-high {
+                        type uint32;
+                    }
+
+                    leaf range-low {
+                        type uint32;
+                    }
+                }
+
+                case VALID {
+                    leaf valid-value {
+                        type boolean;
+                    }
+                }
+            }
+        }
+    }
+
+    grouping entry-key {
+        leaf table {
+            type string;
+        }
+        uses match-fields;
+    }
+
+    grouping table-entry {
+        uses entry-key;
+        choice action-type {
+            default DIRECT-ACTION;
+            case DIRECT-ACTION {
+                uses action;
+            }
+
+            case ACTION-PROFILE-MEMBER {
+                leaf member-id {
+                    type uint32;
+                }
+            }
+
+            case ACTION-PROFILE-GROUP {
+                leaf group-id {
+                    type uint32;
+                }
+            }
+        }
+    }
+
+    grouping member-key {
+        leaf action-profile {
+            type string;
+        }
+
+        leaf member-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-member {
+        uses member-key;
+        uses action;
+    }
+
+    grouping group-key {
+        leaf action-profile {
+            type string;
+        }
+
+        leaf group-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-group {
+        uses group-key;
+        leaf group-type {
+            type enumeration {
+                enum UNSPECIFIED;
+                enum SELECT;
+                enum FAST_FAILOVER;
+            }
+        }
+
+        list group-member {
+            key "member-id";
+            leaf member-id {
+                type uint32;
+            }
+
+            leaf weight {
+                type int32;
+            }
+
+            leaf watch {
+                type int32;
+            }
+        }
+
+        leaf max-size {
+            type int32;
+        }
+    }
+
+    rpc add-table-entry {
+        input {
+            uses device:node;
+            uses table-entry;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc modify-table-entry {
+        input {
+            uses device:node;
+            uses table-entry;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-table-entry {
+        input {
+            uses device:node;
+            uses entry-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-table-entry {
+        input {
+            uses device:node;
+            leaf table {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string; //Need to improve;
+            }
+        }
+    }
+
+    rpc add-action-profile-member {
+        input {
+            uses device:node;
+            uses action-profile-member;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc modify-action-profile-member {
+        input {
+            uses device:node;
+            uses action-profile-member;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-action-profile-member {
+        input {
+            uses device:node;
+            uses member-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-action-profile-member {
+        input {
+            uses device:node;
+            leaf action-profile {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string;
+            }
+        }
+    }
+
+    rpc add-action-profile-group {
+        input {
+            uses device:node;
+            uses action-profile-group;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    //modify action profile group member, max_size cannot be modified after a group has been created
+    rpc modify-action-profile-group {
+        input {
+            uses device:node;
+            uses action-profile-group;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-action-profile-group {
+        input {
+            uses device:node;
+            uses group-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-action-profile-group {
+        input {
+            uses device:node;
+            leaf action-profile {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string;
+            }
+        }
+    }
+}

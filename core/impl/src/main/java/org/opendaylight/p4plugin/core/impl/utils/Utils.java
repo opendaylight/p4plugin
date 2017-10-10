@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.p4plugin.core.impl;
+package org.opendaylight.p4plugin.core.impl.utils;
 
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
@@ -20,18 +20,20 @@ public abstract class Utils {
      * p4c-bm2-ss simple_router.p4 --p4v 14 --p4-runtime-file simple_router.proto.txt --p4runtime-format text
      */
     public static P4Info parseRuntimeInfo(String file) throws IOException {
-        Preconditions.checkArgument(file != null, "Runtime Info file is null.");
-        Reader reader = null;
-        P4Info.Builder info = P4Info.newBuilder();
-        try {
-            reader = new FileReader(file);
-            TextFormat.merge(reader, info);
-            return info.build();
-        } finally {
-            if (reader != null) {
-                reader.close();
+        if (file != null) {
+            Reader reader = null;
+            P4Info.Builder info = P4Info.newBuilder();
+            try {
+                reader = new FileReader(file);
+                TextFormat.merge(reader, info);
+                return info.build();
+            } finally {
+                if (reader != null) {
+                    reader.close();
+                }
             }
         }
+        return null;
     }
 
     /**
@@ -40,9 +42,11 @@ public abstract class Utils {
      * p4c-bm2-ss simple_router.p4 --p4v 14 --toJSON simple_router.json
      */
     public static ByteString parseDeviceConfigInfo(String file) throws IOException {
-        Preconditions.checkArgument(file !=  null, "Device config file is null.");
-        InputStream input = new FileInputStream(new File(file));
-        return ByteString.readFrom(input);
+        if (file != null) {
+            InputStream input = new FileInputStream(new File(file));
+            return ByteString.readFrom(input);
+        }
+        return null;
     }
 
     /**
@@ -86,5 +90,38 @@ public abstract class Utils {
             buffer.append(" ");
         }
         return new String(buffer);
+    }
+
+    public static byte[] intToByteArray(final int integer) {
+        int byteNum = (40 - Integer.numberOfLeadingZeros (integer < 0 ? ~integer : integer)) / 8;
+        byte[] byteArray = new byte[4];
+        for (int n = 0; n < byteNum; n++)
+            byteArray[3 - n] = (byte) (integer>>> (n * 8));
+        return byteArray;
+    }
+
+    public static int byteArrayToInt(byte[] b, int offset) {
+        int value= 0;
+        for (int i = 0; i < 4; i++) {
+            int shift= (4 - 1 - i) * 8;
+            value +=(b[i + offset] & 0x000000FF) << shift;
+        }
+        return value;
+    }
+
+    public static String bytesToHexString(byte[] src){
+        StringBuilder stringBuilder = new StringBuilder("");
+        if (src == null || src.length <= 0) {
+            return null;
+        }
+        for (int i = 0; i < src.length; i++) {
+            int v = src[i] & 0xFF;
+            String hv = Integer.toHexString(v);
+            if (hv.length() < 2) {
+                stringBuilder.append(0);
+            }
+            stringBuilder.append(hv);
+        }
+        return stringBuilder.toString();
     }
 }

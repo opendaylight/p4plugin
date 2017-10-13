@@ -15,7 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
        <groupId>org.opendaylight.odlparent</groupId>
        <artifactId>odlparent-lite</artifactId>
-       <version>2.0.4</version>
+       <version>2.0.5</version>
        <relativePath/>
     </parent>
 
@@ -26,6 +26,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>features-aggregator</name>
 
     <modules>
+        <module>odl-p4plugin-netconf-adapter</module>
+        <module>odl-p4plugin-adapter</module>
         <module>odl-p4plugin-core</module>
         <module>odl-p4plugin-all</module>
         <module>features-p4plugin</module>

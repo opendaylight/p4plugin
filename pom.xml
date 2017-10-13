@@ -15,7 +15,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
        <groupId>org.opendaylight.odlparent</groupId>
        <artifactId>odlparent</artifactId>
-       <version>2.0.4</version>
+       <version>2.0.5</version>
        <relativePath/>
     </parent>
 
@@ -42,6 +42,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </developers>
 
     <modules>
+        <module>adapter</module>
         <module>core</module>
         <module>features</module>
         <module>karaf</module>

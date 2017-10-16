@@ -7,13 +7,16 @@
  */
 package org.opendaylight.p4plugin.netconf.adapter.impl;
 
+import java.util.Collection;
+
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
-//import org.opendaylight.yang.gen.v1.urn.ietf.interfaces.test.rev170908.NodeInterfacesState;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
+import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeGrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
@@ -23,20 +26,18 @@ import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
-
 
 public class NetconfStateChangeListener implements DataTreeChangeListener<Node> {
 
     private static final Logger LOG = LoggerFactory.getLogger(NetconfStateChangeListener.class);
 
-    //private DeviceInterfaceDataOperator deviceInterfaceDataOperator;
+    private DeviceInterfaceDataOperator deviceInterfaceDataOperator;
     private static final InstanceIdentifier<Node> NETCONF_NODE_IID = InstanceIdentifier
             .create(NetworkTopology.class).child(Topology.class, new TopologyKey(new TopologyId(TopologyNetconf
                     .QNAME.getLocalName()))).child(Node.class);
 
-    public NetconfStateChangeListener() {
-        //this.deviceInterfaceDataOperator = deviceInterfaceDataOperator;
+    public NetconfStateChangeListener(DeviceInterfaceDataOperator deviceInterfaceDataOperator) {
+        this.deviceInterfaceDataOperator = deviceInterfaceDataOperator;
     }
 
     @Override
@@ -74,33 +75,30 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
                             && (ncNodeOld.getConnectionStatus() != NetconfNodeConnectionStatus
                             .ConnectionStatus.Connected)) {
                         LOG.info("Node {} was connected", nodeAfter.getNodeId().getValue());
-                        LOG.info("Start write interfaces");
-//                        deviceInterfaceDataOperator.writeInterfacesToDevice(nodeAfter.getNodeId().getValue());
-//
-//                        LOG.info("Start read interfaces");
-//                        NodeInterfacesState interfacesData = deviceInterfaceDataOperator
-//                                .readInterfacesFromDevice(nodeAfter.getNodeId().getValue());
-//                        if (null == interfacesData) {
-//                            LOG.info("InterFacesData is null");
-//                        }
-//                        if (null != interfacesData.getNode() && 0 != interfacesData.getNode().size()) {
-//                            LOG.info("NodeList from device is {}", interfacesData.getNode());
-//                        }
-//
-//                        LOG.info("Send p4-device Info to module core");
-//                        deviceInterfaceDataOperator.sendP4DeviceInfo(interfacesData.getNode());
-//
-//                        LOG.info("Start write device interfaces info to controller data store");
-//                        deviceInterfaceDataOperator.writeInterfacesToControllerDataStore(interfacesData.getNode());
-//
-//                        LOG.info("Start read interfaces from controller data store");
-//                        NodeInterfacesState data1 = deviceInterfaceDataOperator.readInterfacesFromControllerDataStore();
-//                        LOG.info("Data from controller data store is {}", data1);
-//
-//                        LOG.info("Start read interfaces from controller data store again");
-//                        NodeInterfacesState data2 = deviceInterfaceDataOperator.readInterfacesFromControllerDataStore();
-//                        LOG.info("Data from controller data store is {}", data2);
 
+                        LOG.info("Start read interfaces");
+                        InterfacesState interfacesData = deviceInterfaceDataOperator
+                                .readInterfacesFromDevice(nodeAfter.getNodeId().getValue());
+                        if (null == interfacesData) {
+                            LOG.info("InterFacesData is null");
+                        }
+                        if (null != interfacesData.getInterface() && 0 != interfacesData.getInterface().size()) {
+                            LOG.info("InterfaceList from device is {}", interfacesData.getInterface());
+                        }
+
+                        LOG.info("Start read grpc info");
+                        NodeGrpcInfo grpcInfo = deviceInterfaceDataOperator
+                                .readGrpcFromDevice(nodeAfter.getNodeId().getValue());
+                        if (null == grpcInfo) {
+                            LOG.info("Node grpc info is null");
+                        }
+
+                        LOG.info("Send p4-device Info to module core");
+                        deviceInterfaceDataOperator.sendP4DeviceInfo(nodeAfter.getNodeId().getValue(), grpcInfo);
+
+                        LOG.info("Start write device interfaces info to controller data store");
+                        deviceInterfaceDataOperator.writeInterfacesToControllerDataStore(nodeAfter.getNodeId()
+                                .getValue(), interfacesData, grpcInfo);
                     }
                     break;
                 case DELETE:

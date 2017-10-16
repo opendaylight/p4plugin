@@ -1,0 +1,174 @@
+module p4plugin-netconf-adapter {
+    yang-version 1;
+    namespace "urn:p4plugin:netconf:adapter";
+    prefix "p4plugin-netconf-adapter";
+
+    revision "2017-09-08" {
+        description "Initial revision of driver model";
+    }
+
+    import ietf-yang-types {
+      prefix yang;
+      revision-date 2013-07-15;
+    }
+
+    import ietf-inet-types {
+      prefix inet;
+      revision-date 2013-07-15;
+    }
+
+    identity interface-type {
+      description
+        "Base identity from which specific interface types are
+       derived.";
+    }
+
+    grouping node-identifier {
+        leaf node-id {
+            type string;
+       }
+    }
+
+    grouping p4-device {
+
+       uses node-identifier;
+
+       leaf grpc-server-ip {
+         type inet:ipv4-address;
+       }
+
+       leaf grpc-server-port {
+         type inet:port-number;
+       }
+
+       leaf device-id {
+         type uint64;
+       }
+    }
+
+    grouping interfaces-state {
+      description
+        "Data nodes for the operational state of interfaces.";
+      list interface {
+        key "name";
+        ordered-by user;
+        leaf name {
+          type string;
+        }
+
+        leaf type {
+          type identityref {
+            base interface-type;
+          }
+          mandatory true;
+        }
+
+        leaf admin-status {
+          type enumeration {
+            enum "up" {
+              value 1;
+              description
+                "Ready to pass packets.";
+            }
+            enum "down" {
+              value 2;
+              description
+                "Not ready to pass packets and not in some test mode.";
+            }
+            enum "testing" {
+              value 3;
+              description
+                "In some test mode.";
+            }
+          }
+          mandatory true;
+        }
+
+        leaf oper-status {
+          type enumeration {
+            enum "up" {
+              value 1;
+              description
+                "Ready to pass packets.";
+            }
+            enum "down" {
+              value 2;
+              description
+                "The interface does not pass any packets.";
+            }
+            enum "testing" {
+              value 3;
+              description
+                "In some test mode.  No operational packets can
+               be passed.";
+            }
+            enum "unknown" {
+              value 4;
+              description
+                "Status cannot be determined for some reason.";
+            }
+            enum "dormant" {
+              value 5;
+              description
+                "Waiting for some external event.";
+            }
+            enum "not-present" {
+              value 6;
+              description
+                "Some component (typically hardware) is missing.";
+            }
+            enum "lower-layer-down" {
+              value 7;
+              description
+                "Down due to state of lower-layer interface(s).";
+            }
+          }
+          mandatory true;
+        }
+
+
+        leaf if-index {
+          type int32 {
+            range "1..2147483647";
+          }
+          mandatory true;
+        }
+
+        leaf phys-address {
+          type yang:phys-address;
+        }
+
+        leaf speed {
+          type yang:gauge64;
+          units "bits/second";
+        }
+      }
+    }
+
+    container node-grpc-info {
+      config false;
+      leaf ip {
+         type inet:ipv4-address;
+       }
+
+       leaf port {
+         type inet:port-number;
+       }
+
+       leaf id {
+         type uint64;
+       }
+    }
+    
+    container node-interfaces-state {
+       list node {
+         key "node-id";
+         ordered-by user;
+
+         uses p4-device;
+
+         uses interfaces-state;
+       }
+    }
+
+}

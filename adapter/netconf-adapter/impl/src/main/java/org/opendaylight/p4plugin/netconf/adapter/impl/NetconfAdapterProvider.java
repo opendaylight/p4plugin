@@ -19,12 +19,13 @@ public class NetconfAdapterProvider {
     private static final Logger LOG = LoggerFactory.getLogger(NetconfAdapterProvider.class);
 
     private final DataBroker dataBroker;
-    //private DeviceInterfaceDataOperator deviceInterfaceDataOperator;
+    private DeviceInterfaceDataOperator deviceInterfaceDataOperator;
     private NetconfStateChangeListener netconfStateChangeListener;
 
-    public NetconfAdapterProvider(final DataBroker dataBroker) {
+    public NetconfAdapterProvider(final DataBroker dataBroker,
+                                  DeviceInterfaceDataOperator deviceInterfaceDataOperator) {
         this.dataBroker = dataBroker;
-        //this.deviceInterfaceDataOperator = deviceInterfaceDataOperator;
+        this.deviceInterfaceDataOperator = deviceInterfaceDataOperator;
     }
 
     /**
@@ -32,7 +33,7 @@ public class NetconfAdapterProvider {
      */
     public void init() {
         LOG.info("register netconfstate listener");
-        netconfStateChangeListener = new NetconfStateChangeListener();
+        netconfStateChangeListener = new NetconfStateChangeListener(deviceInterfaceDataOperator);
         dataBroker.registerDataTreeChangeListener(new DataTreeIdentifier<Node>(
                 LogicalDatastoreType.OPERATIONAL, netconfStateChangeListener.getNodeId()), netconfStateChangeListener);
     }

@@ -24,7 +24,23 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <version>0.1.0-SNAPSHOT</version>
     <name>p4plugin netconf-adapter-api</name>
     <packaging>bundle</packaging>
+
+    <properties>
+        <ietf.interfaces.version>2014.05.08.12.0-SNAPSHOT</ietf.interfaces.version>
+        <ietf.topology.version>2013.10.21.12.0-SNAPSHOT</ietf.topology.version>
+    </properties>
+
     <dependencies>
+        <dependency>
+            <groupId>org.opendaylight.mdsal.model</groupId>
+            <artifactId>ietf-interfaces</artifactId>
+            <version>${ietf.interfaces.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.opendaylight.mdsal.model</groupId>
+            <artifactId>ietf-topology</artifactId>
+            <version>${ietf.topology.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.opendaylight.mdsal.model</groupId>
             <artifactId>ietf-yang-types-20130715</artifactId>

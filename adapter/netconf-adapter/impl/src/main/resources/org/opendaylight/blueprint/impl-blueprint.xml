@@ -17,8 +17,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <reference id="mountService"
                interface="org.opendaylight.controller.md.sal.binding.api.MountPointService" />
-<!--
-    <reference id="rpcConsumerRegistry"
+
+    <reference id="rpcProviderRegistry"
                interface="org.opendaylight.controller.sal.binding.api.RpcProviderRegistry" />
 
     <bean id="dataProcess"
@@ -30,7 +30,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bean id="deviceInterfaceDataOperator"
           class="org.opendaylight.p4plugin.netconf.adapter.impl.DeviceInterfaceDataOperator">
         <argument ref="dataProcess" />
-        <argument ref="rpcConsumerRegistry" />
+        <argument ref="rpcProviderRegistry" />
     </bean>
 
     <bean id="netconfAdapterServiceImpl"
@@ -39,12 +39,11 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="deviceInterfaceDataOperator" />
     </bean>
     <odl:rpc-implementation ref="netconfAdapterServiceImpl" />
--->
+
     <bean id="provider"
         class="org.opendaylight.p4plugin.netconf.adapter.impl.NetconfAdapterProvider"
         init-method="init" destroy-method="close">
         <argument ref="dataBroker" />
-        <!--<argument ref="deviceInterfaceDataOperator" />-->
+        <argument ref="deviceInterfaceDataOperator" />
     </bean>
-    
 </blueprint>

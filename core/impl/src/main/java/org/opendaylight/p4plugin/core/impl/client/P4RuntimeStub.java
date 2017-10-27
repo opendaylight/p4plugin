@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.p4plugin.core.impl.connection;
+package org.opendaylight.p4plugin.core.impl.client;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
@@ -73,7 +73,7 @@ public class P4RuntimeStub {
 
     /**
      * Send packet through stream channel, not support metadata now.
-     * @param payload
+     * @param payload packet payload;
      */
     public void transmitPacket(byte[] payload) {
         streamChannel.transmitPacket(payload);
@@ -142,7 +142,7 @@ public class P4RuntimeStub {
             requestBuilder.setPacket(packetOutBuilder);
             observer.onNext(requestBuilder.build());
             //For debug
-            LOG.info("Transmit packet = {}.", Utils.bytesToHexString(payload));
+            LOG.info("Transmit packet = {} to node = {}.", Utils.bytesToHexString(payload), nodeId);
         }
 
         private void onPacketReceived(StreamMessageResponse response) {
@@ -167,13 +167,13 @@ public class P4RuntimeStub {
             runtimeChannel.removeStub(P4RuntimeStub.this);
             DeviceManager.getInstance().removeDevice(nodeId);
             countDownLatch.countDown();
-            LOG.info("Stream channel on error, reason = {}, backtrace = {}.", t.getMessage(), t);
+            LOG.info("Stream channel on error, reason = {}, node = {}.", t.getMessage(), nodeId);
         }
 
         private void onStreamChannelCompleted() {
             runtimeChannel.removeStub(P4RuntimeStub.this);
             countDownLatch.countDown();
-            LOG.info("Stream channel on complete.");
+            LOG.info("Stream channel on complete, node = {}.", nodeId);
         }
 
         /**

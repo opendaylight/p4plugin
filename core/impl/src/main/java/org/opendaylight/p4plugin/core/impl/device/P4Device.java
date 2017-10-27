@@ -9,7 +9,7 @@ package org.opendaylight.p4plugin.core.impl.device;
 
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import org.opendaylight.p4plugin.core.impl.connection.P4RuntimeStub;
+import org.opendaylight.p4plugin.core.impl.client.P4RuntimeStub;
 import org.opendaylight.p4plugin.core.impl.utils.Utils;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.*;
@@ -67,7 +67,7 @@ import java.util.Optional;
  *                     |     ---------------------------     |
  *                     |                                     |
  *   -----------------------------------------------------------------------------
- *  |                                 Switches                                    |
+ *  |                                 Switch                                      |
  *  |   -----------------------------------------------------------------------   |
  *  |  |                            gRPC server                                |  |
  *  |   -----------------------------------------------------------------------   |

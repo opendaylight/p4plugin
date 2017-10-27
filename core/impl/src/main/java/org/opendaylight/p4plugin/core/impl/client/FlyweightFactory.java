@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.p4plugin.core.impl.connection;
+package org.opendaylight.p4plugin.core.impl.client;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,7 +15,6 @@ import java.util.stream.Collectors;
  * Flyweight factory is a P4 runtime channel factory, multiple devices share
  * the same gRPC channel, only one factory instance. P4 runtime stub is over
  * the runtime channel.
- *
  */
 public class FlyweightFactory {
     private final ConcurrentHashMap<String, P4RuntimeChannel> pool = new ConcurrentHashMap<>();

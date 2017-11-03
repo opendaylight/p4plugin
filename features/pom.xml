@@ -27,7 +27,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <modules>
         <module>odl-p4plugin-netconf-adapter</module>
-        <module>odl-p4plugin-adapter</module>
         <module>odl-p4plugin-core</module>
         <module>odl-p4plugin-all</module>
         <module>features-p4plugin</module>

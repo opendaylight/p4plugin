@@ -5,11 +5,13 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.p4plugin.core.impl.client;
+package org.opendaylight.p4plugin.core.impl.channel;
 
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import org.opendaylight.p4plugin.core.impl.NotificationServiceProvider;
+import org.opendaylight.p4plugin.core.impl.cluster.ElectionIdGenerator;
+import org.opendaylight.p4plugin.core.impl.cluster.ElectionIdObserver;
 import org.opendaylight.p4plugin.core.impl.device.DeviceManager;
 import org.opendaylight.p4plugin.core.impl.utils.Utils;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
@@ -21,21 +23,30 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An abstract runtime stub, including blocking and async stubs, and encapsulates
- * various methods for the upper layers.
+ * P4 runtime stub, including blocking and async stubs, electionId and etc. In addition,
+ * it encapsulates various methods for the upper layers.
  */
-public class P4RuntimeStub {
+public class P4RuntimeStub implements ElectionIdObserver {
     private static final Logger LOG = LoggerFactory.getLogger(P4RuntimeStub.class);
     private final P4RuntimeChannel runtimeChannel;
     private final P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
     private final P4RuntimeGrpc.P4RuntimeStub asyncStub;
     private StreamChannel streamChannel;
+    private ElectionIdGenerator.ElectionId electionId;
+
+    @Override
+    public void update(ElectionIdGenerator.ElectionId electionId) {
+        this.electionId = electionId;
+        sendMasterArbitration();
+    }
 
     public P4RuntimeStub(String nodeId, Long deviceId, String ip, Integer port) {
         runtimeChannel = FlyweightFactory.getInstance().getChannel(ip, port);
         blockingStub = P4RuntimeGrpc.newBlockingStub(runtimeChannel.getManagedChannel());
         asyncStub = P4RuntimeGrpc.newStub(runtimeChannel.getManagedChannel());
         streamChannel = new StreamChannel(nodeId, deviceId);
+        electionId = ElectionIdGenerator.getInstance().getElectionId();
+        ElectionIdGenerator.getInstance().addObserver(this);
     }
 
     private P4RuntimeGrpc.P4RuntimeBlockingStub getBlockingStub() {
@@ -73,7 +84,6 @@ public class P4RuntimeStub {
 
     /**
      * Send packet through stream channel, not support metadata now.
-     * @param payload packet payload;
      */
     public void transmitPacket(byte[] payload) {
         streamChannel.transmitPacket(payload);
@@ -84,6 +94,7 @@ public class P4RuntimeStub {
     }
 
     public void shutdown() {
+        ElectionIdGenerator.getInstance().deleteObserver(this);
         streamChannel.shutdown();
     }
 
@@ -116,15 +127,12 @@ public class P4RuntimeStub {
             return state;
         }
 
-        /**
-         * Not support for cluster right now, so the election id 0;
-         */
         private void sendMasterArbitration() {
             StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
             MasterArbitrationUpdate.Builder masterArbitrationBuilder = MasterArbitrationUpdate.newBuilder();
             Uint128.Builder electionIdBuilder = Uint128.newBuilder();
-            electionIdBuilder.setHigh(0);
-            electionIdBuilder.setLow(0);
+            electionIdBuilder.setHigh(electionId.getHigh());
+            electionIdBuilder.setLow(electionId.getLow());
             masterArbitrationBuilder.setDeviceId(deviceId);
             masterArbitrationBuilder.setElectionId(electionIdBuilder);
             requestBuilder.setArbitration(masterArbitrationBuilder);

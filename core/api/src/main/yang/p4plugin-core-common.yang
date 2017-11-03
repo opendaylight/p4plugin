@@ -10,7 +10,8 @@ module p4plugin-core-common {
         "ding.rui@zte.com.cn";
 
     description
-        "This module contains a set of common type definitions that are used across p4plugin";
+        "This module contains a set of common type definitions
+         that are used across p4plugin";
 
     revision "2017-08-08" {
         description "Initial revision.";

@@ -105,7 +105,7 @@ public class DeviceManager {
             return device;
         }
 
-        LOG.info("Connect to device = {} failed.", description);
+        LOG.error("Connect to device = {} failed.", description);
         return null;
     }
 

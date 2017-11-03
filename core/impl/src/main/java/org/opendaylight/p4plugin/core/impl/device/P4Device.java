@@ -9,14 +9,38 @@ package org.opendaylight.p4plugin.core.impl.device;
 
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
-import org.opendaylight.p4plugin.core.impl.connection.P4RuntimeStub;
+import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeStub;
 import org.opendaylight.p4plugin.core.impl.utils.Utils;
+import org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
+import org.opendaylight.p4plugin.p4runtime.proto.*;
+import org.opendaylight.p4plugin.p4runtime.proto.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.ActionProfileGroup;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.ActionProfileMember;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.TableEntry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.ActionParam;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.match.fields.Field;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.match.fields.field.MatchType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.match.fields.field.match.type.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.ParamValueType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.Field;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.MatchType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.EXACT;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.LPM;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.RANGE;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.TERNARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.ExactValueType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.LpmValueType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.RangeValueType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGESTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.TernaryValueType;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYSTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.ActionType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEGROUP;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEMEMBER;
@@ -24,7 +48,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev1708
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
@@ -67,7 +91,7 @@ import java.util.Optional;
  *                     |     ---------------------------     |
  *                     |                                     |
  *   -----------------------------------------------------------------------------
- *  |                                 Switches                                    |
+ *  |                                 Switch                                      |
  *  |   -----------------------------------------------------------------------   |
  *  |  |                            gRPC server                                |  |
  *  |   -----------------------------------------------------------------------   |
@@ -82,7 +106,7 @@ import java.util.Optional;
  *  |   ----------------------------               ----------------------------   |
  *   -----------------------------------------------------------------------------
  */
-public class P4Device {
+public class P4Device  {
     private static final Logger LOG = LoggerFactory.getLogger(P4Device.class);
     private P4RuntimeStub stub;
     private P4Info runtimeInfo;
@@ -94,7 +118,7 @@ public class P4Device {
     private State state = State.Unknown;
     private P4Device() {}
 
-    private int getTableId(String tableName) {
+    public int getTableId(String tableName) {
         Optional<org.opendaylight.p4plugin.p4info.proto.Table> container =
                 runtimeInfo.getTablesList().stream()
                 .filter(table -> table.getPreamble().getName().equals(tableName))
@@ -271,7 +295,7 @@ public class P4Device {
         return result;
     }
 
-    private int getActionProfileId(String actionProfileName) {
+    public int getActionProfileId(String actionProfileName) {
         int result = 0;
         Optional<org.opendaylight.p4plugin.p4info.proto.ActionProfile> actionProfileContainer =
                 runtimeInfo.getActionProfilesList().stream()
@@ -337,11 +361,9 @@ public class P4Device {
         stub.shutdown();
     }
 
-    public org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigResponse setPipelineConfig() {
-        org.opendaylight.p4plugin.p4runtime.proto.ForwardingPipelineConfig.Builder configBuilder =
-                org.opendaylight.p4plugin.p4runtime.proto.ForwardingPipelineConfig.newBuilder();
-        org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig.Builder p4DeviceConfigBuilder =
-                org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig.newBuilder();
+    public SetForwardingPipelineConfigResponse setPipelineConfig() {
+        ForwardingPipelineConfig.Builder configBuilder = ForwardingPipelineConfig.newBuilder();
+        P4DeviceConfig.Builder p4DeviceConfigBuilder = P4DeviceConfig.newBuilder();
         if (deviceConfig != null) {
             p4DeviceConfigBuilder.setDeviceData(deviceConfig);
         }
@@ -350,14 +372,11 @@ public class P4Device {
         }
         configBuilder.setP4DeviceConfig(p4DeviceConfigBuilder.build().toByteString());
         configBuilder.setDeviceId(deviceId);
-        org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigRequest request =
-                org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigRequest.newBuilder()
-                .setAction(org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigRequest.Action
-                        .VERIFY_AND_COMMIT)
-                .addConfigs(configBuilder.build())
+        SetForwardingPipelineConfigRequest request = SetForwardingPipelineConfigRequest.newBuilder()
+                .setAction(SetForwardingPipelineConfigRequest.Action.VERIFY_AND_COMMIT)
+                .addConfigs(configBuilder)
                 .build();
-        org.opendaylight.p4plugin.p4runtime.proto.SetForwardingPipelineConfigResponse response;
-
+        SetForwardingPipelineConfigResponse response;
         try {
             /* response is empty now */
             response = stub.setPipelineConfig(request);
@@ -370,13 +389,11 @@ public class P4Device {
         return null;
     }
 
-    public org.opendaylight.p4plugin.p4runtime.proto.GetForwardingPipelineConfigResponse getPipelineConfig() {
-        org.opendaylight.p4plugin.p4runtime.proto.GetForwardingPipelineConfigRequest request =
-                org.opendaylight.p4plugin.p4runtime.proto.GetForwardingPipelineConfigRequest.newBuilder()
+    public GetForwardingPipelineConfigResponse getPipelineConfig() {
+        GetForwardingPipelineConfigRequest request = GetForwardingPipelineConfigRequest.newBuilder()
                 .addDeviceIds(deviceId)
                 .build();
-        org.opendaylight.p4plugin.p4runtime.proto.GetForwardingPipelineConfigResponse response;
-
+        GetForwardingPipelineConfigResponse response;
         try {
             /* response is empty now */
             response = stub.getPipelineConfig(request);
@@ -389,9 +406,8 @@ public class P4Device {
         return null;
     }
 
-    public org.opendaylight.p4plugin.p4runtime.proto.WriteResponse write(
-            org.opendaylight.p4plugin.p4runtime.proto.WriteRequest request) {
-        org.opendaylight.p4plugin.p4runtime.proto.WriteResponse response;
+    public WriteResponse write(WriteRequest request) {
+        WriteResponse response;
         try {
             response = stub.write(request);
             return response;
@@ -401,9 +417,8 @@ public class P4Device {
         return null;
     }
 
-    public Iterator<org.opendaylight.p4plugin.p4runtime.proto.ReadResponse> read(
-            org.opendaylight.p4plugin.p4runtime.proto.ReadRequest request) {
-        Iterator<org.opendaylight.p4plugin.p4runtime.proto.ReadResponse> responses;
+    public Iterator<ReadResponse> read(ReadRequest request) {
+        Iterator<ReadResponse> responses;
         try {
             responses = stub.read(request);
             return responses;
@@ -421,23 +436,22 @@ public class P4Device {
         stub.transmitPacket(payload);
     }
 
-    private org.opendaylight.p4plugin.p4runtime.proto.TableAction BuildTableAction(ActionType actionType) {
-        ActionParser parser = null;
+    private TableAction buildTableAction(ActionType actionType) {
+        AbstractActionParser parser;
         if (actionType instanceof DIRECTACTION) {
-            parser = new DirectActionParser((DIRECTACTION) actionType);
+            parser = new DirectActionParser((DIRECTACTION)actionType);
         } else if (actionType instanceof ACTIONPROFILEMEMBER) {
             parser = new ActionProfileMemberParser((ACTIONPROFILEMEMBER) actionType);
         } else if (actionType instanceof ACTIONPROFILEGROUP) {
             parser = new ActionProfileGroupParser((ACTIONPROFILEGROUP) actionType);
         } else {
-            LOG.info("Invalid action type.");
+            throw new IllegalArgumentException("Invalid action type = " + actionType);
         }
-        return parser == null ? null : parser.parse();
+        return parser.parse();
     }
 
-    private org.opendaylight.p4plugin.p4runtime.proto.FieldMatch BuildFieldMatch(
-            Field field, String tableName) {
-        MatchFieldsParser parser = null;
+    private FieldMatch buildFieldMatch(Field field, String tableName) {
+        AbstractMatchFieldParser parser;
         MatchType matchType = field.getMatchType();
         String fieldName = field.getFieldName();
         if (matchType instanceof EXACT) {
@@ -448,41 +462,41 @@ public class P4Device {
             parser = new TernaryMatchParser((TERNARY) matchType, tableName, fieldName);
         } else if (matchType instanceof RANGE) {
             parser = new RangeMatchParser((RANGE) matchType, tableName, fieldName);
-        } else if (matchType instanceof VALID) {
-            parser = new ValidMatchParser((VALID) matchType, tableName, fieldName);
         } else {
-            LOG.info("Invalid match type.");
+            throw new IllegalArgumentException("Invalid match type = " + matchType);
         }
-        return parser == null ? null : parser.parse();
+        return parser.parse();
     }
 
     /**
-     * Input table entry serialize to protobuf message, used for add/modify.
+     * Input table entry serialize to protobuf message. Used for adding and modifying an entry.
      * When this method is called, the device must be configured.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.TableEntry toTableEntryMessage(TableEntry input) {
+    public org.opendaylight.p4plugin.p4runtime.proto.TableEntry toMessage(TableEntry input) {
         String tableName = input.getTable();
         int tableId = getTableId(tableName);
         org.opendaylight.p4plugin.p4runtime.proto.TableEntry.Builder tableEntryBuilder =
                 org.opendaylight.p4plugin.p4runtime.proto.TableEntry.newBuilder();
         List<Field> fields = input.getField();
         fields.forEach(field -> {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch fieldMatch = BuildFieldMatch(field, tableName);
+            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch fieldMatch = buildFieldMatch(field, tableName);
             tableEntryBuilder.addMatch(fieldMatch);
         });
         ActionType actionType = input.getActionType();
-        org.opendaylight.p4plugin.p4runtime.proto.TableAction tableAction = BuildTableAction(actionType);
+        org.opendaylight.p4plugin.p4runtime.proto.TableAction tableAction = buildTableAction(actionType);
+        tableEntryBuilder.setPriority(input.getPriority());
+        tableEntryBuilder.setControllerMetadata(input.getControllerMetadata().longValue());
         tableEntryBuilder.setTableId(tableId);
         tableEntryBuilder.setAction(tableAction);
         return tableEntryBuilder.build();
     }
 
     /**
-     * Used for delete table entry, when delete a table entry, only need table name
+     * Used for deleting table entry, when delete a table entry, only need table name
      * and match fields actually. BTW, this the only way for search a table entry,
      * not support table entry id.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.TableEntry toTableEntryMessage(EntryKey input) {
+    public org.opendaylight.p4plugin.p4runtime.proto.TableEntry toMessage(EntryKey input) {
         String tableName = input.getTable();
         int tableId = getTableId(tableName);
         org.opendaylight.p4plugin.p4runtime.proto.TableEntry.Builder tableEntryBuilder =
@@ -490,7 +504,7 @@ public class P4Device {
         List<Field> fields = input.getField();
         fields.forEach(field -> {
             org.opendaylight.p4plugin.p4runtime.proto.FieldMatch fieldMatch =
-                    BuildFieldMatch(field, tableName);
+                    buildFieldMatch(field, tableName);
             tableEntryBuilder.addMatch(fieldMatch);
         });
         tableEntryBuilder.setTableId(tableId);
@@ -498,10 +512,10 @@ public class P4Device {
     }
 
     /**
-     * Input action profile member serialize to protobuf message, used for add/modify.
-     * When this method is called, the device must be configured.
+     * Input action profile member serialize to protobuf message, used for adding and
+     * modifying a member. When this method is called, the device must be configured.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toActionProfileMemberMessage(
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(
             ActionProfileMember member) {
         String actionName = member.getActionName();
         Long memberId = member.getMemberId();
@@ -517,13 +531,21 @@ public class P4Device {
             org.opendaylight.p4plugin.p4runtime.proto.Action.Param.Builder paramBuilder =
                     org.opendaylight.p4plugin.p4runtime.proto.Action.Param.newBuilder();
             String paramName = actionParam.getParamName();
-            String paramValue = actionParam.getParamValue();
+            ParamValueType valueType = actionParam.getParamValueType();
             int paramId = getParamId(actionName, paramName);
             int paramWidth = getParamWidth(actionName, paramName);
+
+            if (valueType instanceof PARAMSTRING) {
+                String valueStr = ((PARAMSTRING) valueType).getParamValue();
+                byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
+                paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
+            } else if (valueType instanceof PARAMBINARY) {
+                byte[] valueBytes = ((PARAMBINARY) valueType).getParamValue();
+                paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
+            } else {
+                throw new IllegalArgumentException("Invalid value type.");
+            }
             paramBuilder.setParamId(paramId);
-            byte[] valueByteArr = Utils.strToByteArray(paramValue, paramWidth);
-            ByteString valueByteStr = ByteString.copyFrom(valueByteArr);
-            paramBuilder.setValue(valueByteStr);
             actionBuilder.addParams(paramBuilder);
         });
 
@@ -537,7 +559,7 @@ public class P4Device {
      * Used for delete one member in action profile.table. When delete a member,
      * only need action profile name and member id.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toActionProfileMemberMessage(
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(
             MemberKey key) {
         Long memberId = key.getMemberId();
         String actionProfile = key.getActionProfile();
@@ -552,7 +574,7 @@ public class P4Device {
      * Input action profile group serialize to protobuf message, used for add/modify.
      * When this method is called, the device must be configured.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toActionProfileGroupMessage(
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage (
             ActionProfileGroup group) {
         Long groupId = group.getGroupId();
         String actionProfile = group.getActionProfile();
@@ -584,7 +606,7 @@ public class P4Device {
      * Used for delete one group in action profile. When delete a group,
      * only need action profile name and group id.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toActionProfileGroupMessage(
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage(
             GroupKey key) {
         Long groupId = key.getGroupId();
         String actionProfile = key.getActionProfile();
@@ -598,7 +620,7 @@ public class P4Device {
     /**
      * Table entry object to human-readable string, for read table entry.
      */
-    public String toTableEntryString(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
+    public String toString(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
         org.opendaylight.p4plugin.p4runtime.proto.TableAction tableAction = entry.getAction();
         int tableId = entry.getTableId();
         String tableName = getTableName(tableId);
@@ -637,8 +659,6 @@ public class P4Device {
                 }
                 //TODO
                 case RANGE:
-                    break;
-                case VALID:
                     break;
                 default:
                     break;
@@ -681,7 +701,7 @@ public class P4Device {
     /**
      * Action profile member to human-readable string.
      */
-    public String toActionProfileMemberString(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember member) {
+    public String toString(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember member) {
         int profileId = member.getActionProfileId();
         int memberId = member.getMemberId();
         org.opendaylight.p4plugin.p4runtime.proto.Action action = member.getAction();
@@ -704,7 +724,7 @@ public class P4Device {
     /**
      * Action profile group to human-readable string.
      */
-    public String toActionProfileGroupString(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup group) {
+    public String toString(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup group) {
         int profileId = group.getActionProfileId();
         int groupId = group.getGroupId();
         String actionProfile = getActionProfileName(profileId);
@@ -712,10 +732,6 @@ public class P4Device {
         buffer.append(String.format("%s - %d : ", actionProfile, groupId));
         group.getMembersList().forEach(member -> buffer.append(member.getMemberId()).append(" "));
         return new String(buffer);
-    }
-
-    public TableManager newTableManager() {
-        return new TableManager();
     }
 
     public static Builder newBuilder() {
@@ -779,153 +795,177 @@ public class P4Device {
         Configured,
     }
 
-    private interface ActionParser {
-        org.opendaylight.p4plugin.p4runtime.proto.TableAction parse();
+    /**
+     * Abstract action parser, we think there are three types actions for
+     * direct action, action profile member and action profile group currently.
+     * Each action parser must extends the abstract action parser.
+     * @param <T> Action type.
+     */
+    private abstract class AbstractActionParser<T> {
+        protected T action;
+        public AbstractActionParser(T action) {
+            this.action = action;
+        }
+        protected abstract TableAction parse();
     }
 
-    private class DirectActionParser implements ActionParser {
-        private DIRECTACTION action;
-        private DirectActionParser(DIRECTACTION action) {
-            this.action = action;
+    private class DirectActionParser extends AbstractActionParser<DIRECTACTION> {
+        public DirectActionParser(DIRECTACTION action) {
+            super(action);
         }
 
         @Override
-        public org.opendaylight.p4plugin.p4runtime.proto.TableAction parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.TableAction.Builder tableActionBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.TableAction.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.Action.Builder actionBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.Action.newBuilder();
+        public TableAction parse() {
+            TableAction.Builder tableActionBuilder = TableAction.newBuilder();
+            Action.Builder actionBuilder = Action.newBuilder();
             List<ActionParam> params = action.getActionParam();
             String actionName = action.getActionName();
             actionBuilder.setActionId(getActionId(actionName));
             for (ActionParam p : params) {
-                org.opendaylight.p4plugin.p4runtime.proto.Action.Param.Builder paramBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Action.Param.newBuilder();
+                Action.Param.Builder paramBuilder = Action.Param.newBuilder();
                 String paramName = p.getParamName();
-                String paramValue = p.getParamValue();
                 int paramId = getParamId(actionName, paramName);
                 int paramWidth = getParamWidth(actionName, paramName);
                 paramBuilder.setParamId(paramId);
-                byte[] valueByteArr = Utils.strToByteArray(paramValue, paramWidth);
-                ByteString valueByteStr = ByteString.copyFrom(valueByteArr);
-                paramBuilder.setValue(valueByteStr);
+                ParamValueType valueType = p.getParamValueType();
+
+                if (valueType instanceof PARAMSTRING) {
+                    String valueStr = ((PARAMSTRING) valueType).getParamValue();
+                    byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
+                    paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
+                } else if (valueType instanceof PARAMBINARY) {
+                    byte[] valueBytes = ((PARAMBINARY) valueType).getParamValue();
+                    paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
+                } else {
+                    throw new IllegalArgumentException("Invalid value type.");
+                }
+
                 actionBuilder.addParams(paramBuilder);
             }
             return tableActionBuilder.setAction(actionBuilder).build();
         }
     }
 
-    private class ActionProfileMemberParser implements ActionParser {
-        private ACTIONPROFILEMEMBER action;
-        private ActionProfileMemberParser(ACTIONPROFILEMEMBER action) {
-            this.action = action;
+    private class ActionProfileMemberParser extends AbstractActionParser<ACTIONPROFILEMEMBER> {
+        public ActionProfileMemberParser(ACTIONPROFILEMEMBER action) {
+            super(action);
         }
 
         @Override
-        public org.opendaylight.p4plugin.p4runtime.proto.TableAction parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.TableAction.Builder builder =
-                    org.opendaylight.p4plugin.p4runtime.proto.TableAction.newBuilder();
+        public TableAction parse() {
+            TableAction.Builder builder = TableAction.newBuilder();
             builder.setActionProfileMemberId(action.getMemberId().intValue());
             return builder.build();
         }
     }
 
-    private class ActionProfileGroupParser implements ActionParser {
-        private ACTIONPROFILEGROUP action;
-        private ActionProfileGroupParser(ACTIONPROFILEGROUP action) {
-            this.action = action;
+    private class ActionProfileGroupParser extends AbstractActionParser<ACTIONPROFILEGROUP> {
+        public ActionProfileGroupParser(ACTIONPROFILEGROUP action) {
+            super(action);
         }
 
         @Override
-        public org.opendaylight.p4plugin.p4runtime.proto.TableAction parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.TableAction.Builder builder =
-                    org.opendaylight.p4plugin.p4runtime.proto.TableAction.newBuilder();
+        public TableAction parse() {
+            TableAction.Builder builder = TableAction.newBuilder();
             builder.setActionProfileGroupId(action.getGroupId().intValue());
             return builder.build();
         }
     }
 
-    private abstract class MatchFieldsParser {
-        protected org.opendaylight.yang.gen.v1.urn.opendaylight
-                .p4plugin.core.table.rev170808.match.fields.field.MatchType matchType;
+    /**
+     * Abstract match field parser, according to P4_16, there isn't valid match type.
+     * Range match is limited in uin64, a little different from protobuf;
+     * @param <T> Field match type.
+     */
+    private abstract class AbstractMatchFieldParser<T> {
+        protected T matchType;
         protected Integer matchFieldId;
         protected Integer matchFieldWidth;
 
-        private MatchFieldsParser(
-                org.opendaylight.yang.gen.v1.urn.opendaylight
-                        .p4plugin.core.table.rev170808.match.fields.field.MatchType matchType,
-                String tableName, String fieldName) {
+        private AbstractMatchFieldParser(T matchType, String tableName, String fieldName) {
             this.matchType = matchType;
             this.matchFieldId = getMatchFieldId(tableName, fieldName);
             this.matchFieldWidth = getMatchFieldWidth(tableName, fieldName);
         }
 
-        public abstract org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse();
+        public abstract FieldMatch parse();
     }
 
-    private class ExactMatchParser extends MatchFieldsParser {
+    private class ExactMatchParser extends AbstractMatchFieldParser<EXACT> {
         private ExactMatchParser(EXACT exact, String tableName, String fieldName) {
             super(exact, tableName, fieldName);
         }
 
-        public org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Builder fieldMatchBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Exact.Builder exactBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Exact.newBuilder();
-            EXACT exact = (EXACT) matchType;
-            String value = exact.getExactValue();
-            exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
+        @Override
+        public FieldMatch parse() {
+            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
+            FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
+            EXACT exact = matchType;
+            ExactValueType valueType = exact.getExactValueType();
+            if (valueType instanceof EXACTSTRING) {
+                String valueStr = ((EXACTSTRING) valueType).getExactValue();
+                exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
+            } else if (valueType instanceof EXACTBINARY) {
+                byte[] valyeBytes = ((EXACTBINARY) valueType).getExactValue();
+                exactBuilder.setValue(ByteString.copyFrom(valyeBytes, 0, matchFieldWidth));
+            } else {
+                throw new IllegalArgumentException("Invalid exact value type");
+            }
             fieldMatchBuilder.setExact(exactBuilder);
             fieldMatchBuilder.setFieldId(matchFieldId);
             return fieldMatchBuilder.build();
         }
     }
 
-    private class LpmMatchParser extends MatchFieldsParser {
+    private class LpmMatchParser extends AbstractMatchFieldParser<LPM> {
         private LpmMatchParser(LPM lpm, String tableName, String fieldName) {
             super(lpm, tableName, fieldName);
         }
 
-        public org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Builder fieldMatchBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.LPM.Builder lpmBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.LPM.newBuilder();
-            LPM lpm = (LPM) matchType;
-            String value = lpm.getLpmValue();
-            int prefixLen = lpm.getLpmPrefixLen();
-            // Value must match ipv4 address
-            if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
-                            + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
-                            + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
-                lpmBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
-                lpmBuilder.setPrefixLen(prefixLen);
+        @Override
+        public FieldMatch parse() {
+            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
+            FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
+            LPM lpm = matchType;
+            Long prefixLen = lpm.getLpmPrefixLen();
+            LpmValueType valueType = lpm.getLpmValueType();
+            if (valueType instanceof LPMSTRING) {
+                String valueStr = ((LPMSTRING) valueType).getLpmValue();
+                lpmBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
+            } else if (valueType instanceof LPMBINARY) {
+                byte[] valueBytes = ((LPMBINARY) valueType).getLpmValue();
+                lpmBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
+            } else {
+                throw new IllegalArgumentException("Invalid lpm value type");
             }
+            lpmBuilder.setPrefixLen(prefixLen.intValue());
             fieldMatchBuilder.setLpm(lpmBuilder);
             fieldMatchBuilder.setFieldId(matchFieldId);
             return fieldMatchBuilder.build();
         }
     }
 
-    private class TernaryMatchParser extends MatchFieldsParser {
+    private class TernaryMatchParser extends AbstractMatchFieldParser<TERNARY>  {
         private TernaryMatchParser(TERNARY ternary, String tableName, String fieldName) {
             super(ternary, tableName, fieldName);
         }
 
-        public org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Builder fieldMatchBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Ternary.Builder ternaryBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Ternary.newBuilder();
-            TERNARY ternary = (TERNARY) matchType;
+        @Override
+        public FieldMatch parse() {
+            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
+            FieldMatch.Ternary.Builder ternaryBuilder = FieldMatch.Ternary.newBuilder();
+            TERNARY ternary = matchType;
             String mask = ternary.getTernaryMask();
-            String value = ternary.getTernaryValue();
+            TernaryValueType valueType = ternary.getTernaryValueType();
 
-            if (value.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
-                            + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
-                            + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
-                ternaryBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(value, matchFieldWidth)));
+            if (valueType instanceof TERNARYSTRING) {
+                String valueStr = ((TERNARYSTRING) valueType).getTernaryValue();
+                ternaryBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
+            } else if (valueType instanceof TERNARYBINARY) {
+                byte[] valueBytes = ((TERNARYBINARY) valueType).getTernaryValue();
+                ternaryBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
+            } else {
+                throw new IllegalArgumentException("Invalid ternary value type");
             }
 
             if (mask.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
@@ -958,316 +998,35 @@ public class P4Device {
         }
     }
 
-    private class RangeMatchParser extends MatchFieldsParser {
+    private class RangeMatchParser extends AbstractMatchFieldParser<RANGE> {
         private RangeMatchParser(RANGE range, String tableName, String fieldName) {
             super(range, tableName, fieldName);
         }
 
-        public org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Builder fieldMatchBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Range.Builder rangeBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Range.newBuilder();
-            RANGE range = (RANGE) matchType;
-            Long high = range.getRangeHigh();
-            Long low = range.getRangeLow();
-            rangeBuilder.setHigh(ByteString.copyFrom(Utils.intToByteArray(high.intValue())));
-            rangeBuilder.setLow(ByteString.copyFrom(Utils.intToByteArray(low.intValue())));
+        @Override
+        public FieldMatch parse() {
+            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
+            FieldMatch.Range.Builder rangeBuilder = FieldMatch.Range.newBuilder();
+            RANGE range = matchType;
+            RangeValueType valueType = range.getRangeValueType();
+            if (valueType instanceof RANGESTRING) {
+                String highStr = ((RANGESTRING) valueType).getRangeHigh();
+                String lowStr = ((RANGESTRING) valueType).getRangeLow();
+                byte[] highBytes = BigInteger.valueOf(Integer.parseInt(highStr)).toByteArray();
+                byte[] lowBytes = BigInteger.valueOf(Integer.parseInt(lowStr)).toByteArray();
+                rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
+                rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
+            } else if (valueType instanceof RANGEBINARY) {
+                byte[] highBytes = ((RANGEBINARY) valueType).getRangeHigh();
+                byte[] lowBytes = ((RANGEBINARY) valueType).getRangeLow();
+                rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
+                rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
+            } else {
+                throw new IllegalArgumentException("Invalid range value type");
+            }
             fieldMatchBuilder.setFieldId(matchFieldId);
             fieldMatchBuilder.setRange(rangeBuilder);
             return fieldMatchBuilder.build();
-        }
-    }
-
-    private class ValidMatchParser extends MatchFieldsParser {
-        private ValidMatchParser(VALID valid, String tableName, String fieldName) {
-            super(valid, tableName, fieldName);
-        }
-
-        public org.opendaylight.p4plugin.p4runtime.proto.FieldMatch parse() {
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Builder fieldMatchBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Valid.Builder validBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.FieldMatch.Valid.newBuilder();
-            VALID valid = (VALID) matchType;
-            validBuilder.setValue(valid.isValidValue());
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            fieldMatchBuilder.setValid(validBuilder);
-            return fieldMatchBuilder.build();
-        }
-    }
-
-    public class TableManager {
-        public TableManager() {}
-
-        public boolean addTableEntry(TableEntry entry) {
-            return new AddTableEntryOperator(entry).operate();
-        }
-
-        public boolean modifyTableEntry(TableEntry entry) {
-            return new ModifyTableEntryOperator(entry).operate();
-        }
-
-        public boolean deleteTableEntry(EntryKey entry) {
-            return new DeleteTableEntryOperator(entry).operate();
-        }
-
-        public List<String> readTableEntry(String tableName) {
-            org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.Builder request =
-                    org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.TableEntry.Builder entryBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.TableEntry.newBuilder();
-            entryBuilder.setTableId(tableName == null ? 0 : getTableId(tableName));
-            entityBuilder.setTableEntry(entryBuilder);
-            request.addEntities(entityBuilder);
-            request.setDeviceId(getDeviceId());
-
-            Iterator<org.opendaylight.p4plugin.p4runtime.proto.ReadResponse> responses =
-                    read(request.build());
-            List<String> result = new ArrayList<>();
-
-            while (responses.hasNext()) {
-                org.opendaylight.p4plugin.p4runtime.proto.ReadResponse response = responses.next();
-                List<org.opendaylight.p4plugin.p4runtime.proto.Entity> entityList =
-                        response.getEntitiesList();
-                boolean isCompleted = response.getComplete();
-                entityList.forEach(entity-> {
-                    String str = toTableEntryString(entity.getTableEntry());
-                    result.add(str);
-                });
-                if (isCompleted) break;
-            }
-            return result;
-        }
-
-        private abstract class TableEntryOperator {
-            private org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry;
-            private org.opendaylight.p4plugin.p4runtime.proto.Update.Type type;
-
-            protected void setEntry(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
-                this.entry = entry;
-            }
-
-            protected void setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type type) {
-                this.type = type;
-            }
-
-            protected boolean operate() {
-                org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.Builder requestBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Update.Builder updateBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Update.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-                entityBuilder.setTableEntry(entry);
-                updateBuilder.setType(type);
-                updateBuilder.setEntity(entityBuilder);
-                requestBuilder.setDeviceId(getDeviceId());
-                requestBuilder.addUpdates(updateBuilder);
-                return write(requestBuilder.build()) != null;
-            }
-        }
-
-        private class AddTableEntryOperator extends TableEntryOperator {
-            private AddTableEntryOperator(TableEntry entry) {
-                setEntry(toTableEntryMessage(entry));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.INSERT);
-            }
-        }
-
-        private class ModifyTableEntryOperator extends TableEntryOperator {
-            private ModifyTableEntryOperator(TableEntry entry ) {
-                setEntry(toTableEntryMessage(entry));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.MODIFY);
-            }
-        }
-
-        private class DeleteTableEntryOperator extends TableEntryOperator {
-            private DeleteTableEntryOperator(EntryKey key ) {
-                setEntry(toTableEntryMessage(key));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.DELETE);
-            }
-        }
-
-        public boolean addActionProfileMember(ActionProfileMember actionProfileMember) {
-            return new AddActionProfileMemberOperator(actionProfileMember).operate();
-        }
-
-        public boolean modifyActionProfileMember(ActionProfileMember actionProfileMember) {
-            return new ModifyActionProfileMemberOperator(actionProfileMember).operate();
-        }
-
-        public boolean deleteActionProfileMember(MemberKey key) {
-            return new DeleteActionProfileMemberOperator(key).operate();
-        }
-
-        public List<String> readActionProfileMember(String actionProfileName) {
-            org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.Builder requestBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember.Builder memberBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember.newBuilder();
-
-            memberBuilder.setActionProfileId(actionProfileName == null ? 0 : getActionProfileId(actionProfileName));
-            entityBuilder.setActionProfileMember(memberBuilder);
-            requestBuilder.setDeviceId(getDeviceId());
-            requestBuilder.addEntities(entityBuilder);
-
-            Iterator<org.opendaylight.p4plugin.p4runtime.proto.ReadResponse> responses = read(requestBuilder.build());
-            List<String> result = new ArrayList<>();
-
-            while (responses.hasNext()) {
-                org.opendaylight.p4plugin.p4runtime.proto.ReadResponse response = responses.next();
-                List<org.opendaylight.p4plugin.p4runtime.proto.Entity> entityList = response.getEntitiesList();
-                boolean isCompleted = response.getComplete();
-                entityList.forEach(entity-> {
-                    String str = toActionProfileMemberString(entity.getActionProfileMember());
-                    result.add(str);
-                });
-                if (isCompleted) break;
-            }
-            return result;
-        }
-
-        private abstract class ActionProfileMemberOperator {
-            private org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember member;
-            private org.opendaylight.p4plugin.p4runtime.proto.Update.Type type;
-
-            protected void setMember(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember member) {
-                this.member = member;
-            }
-
-            protected void setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type type) {
-                this.type = type;
-            }
-
-            protected boolean operate() {
-                org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.Builder requestBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Update.Builder updateBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Update.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-                entityBuilder.setActionProfileMember(member);
-                updateBuilder.setType(type);
-                updateBuilder.setEntity(entityBuilder);
-                requestBuilder.addUpdates(updateBuilder);
-                requestBuilder.setDeviceId(getDeviceId());
-                return write(requestBuilder.build()) != null;
-            }
-        }
-
-        private class AddActionProfileMemberOperator extends ActionProfileMemberOperator {
-            private AddActionProfileMemberOperator(ActionProfileMember member) {
-                setMember(toActionProfileMemberMessage(member));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.INSERT);
-            }
-        }
-
-        private class ModifyActionProfileMemberOperator extends ActionProfileMemberOperator {
-            private ModifyActionProfileMemberOperator(ActionProfileMember member) {
-                setMember(toActionProfileMemberMessage(member));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.MODIFY);
-            }
-        }
-
-        private class DeleteActionProfileMemberOperator extends ActionProfileMemberOperator {
-            private DeleteActionProfileMemberOperator(MemberKey key) {
-                setMember(toActionProfileMemberMessage(key));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.DELETE);
-            }
-        }
-
-        public boolean addActionProfileGroup(ActionProfileGroup actionProfileGroup) {
-            return new AddActionProfileGroupOperator(actionProfileGroup).operate();
-        }
-
-        public boolean modifyActionProfileGroup(ActionProfileGroup actionProfileGroup) {
-            return new ModifyActionProfileGroupOperator(actionProfileGroup).operate();
-        }
-
-        public boolean deleteActionProfileGroup(GroupKey key) {
-            return new DeleteActionProfileGroupOperator(key).operate();
-        }
-
-        public List<String> readActionProfileGroup(String actionProfileName) {
-            org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.Builder requestBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.ReadRequest.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-            org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup.Builder groupBuilder =
-                    org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup.newBuilder();
-            groupBuilder.setActionProfileId(actionProfileName == null ? 0 : getActionProfileId(actionProfileName));
-            entityBuilder.setActionProfileGroup(groupBuilder);
-            requestBuilder.setDeviceId(getDeviceId());
-            requestBuilder.addEntities(entityBuilder);
-
-            Iterator<org.opendaylight.p4plugin.p4runtime.proto.ReadResponse> responses = read(requestBuilder.build());
-            List<String> result = new ArrayList<>();
-
-            while (responses.hasNext()) {
-                org.opendaylight.p4plugin.p4runtime.proto.ReadResponse response = responses.next();
-                List<org.opendaylight.p4plugin.p4runtime.proto.Entity> entityList = response.getEntitiesList();
-                boolean isCompleted = response.getComplete();
-                entityList.forEach(entity-> {
-                    String str = toActionProfileGroupString(entity.getActionProfileGroup());
-                    result.add(str);
-                });
-                if (isCompleted) break;
-            }
-            return result;
-        }
-
-        private abstract class ActionProfileGroupOperator {
-            private org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup group;
-            private org.opendaylight.p4plugin.p4runtime.proto.Update.Type type;
-
-            protected void setGroup(org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup group) {
-                this.group = group;
-            }
-
-            protected void setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type type) {
-                this.type = type;
-            }
-
-            protected boolean operate() {
-                org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.Builder requestBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.WriteRequest.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Update.Builder updateBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Update.newBuilder();
-                org.opendaylight.p4plugin.p4runtime.proto.Entity.Builder entityBuilder =
-                        org.opendaylight.p4plugin.p4runtime.proto.Entity.newBuilder();
-                entityBuilder.setActionProfileGroup(group);
-                updateBuilder.setEntity(entityBuilder);
-                updateBuilder.setType(type);
-                requestBuilder.addUpdates(updateBuilder);
-                requestBuilder.setDeviceId(getDeviceId());
-                return write(requestBuilder.build()) != null;
-            }
-        }
-
-        private class AddActionProfileGroupOperator extends ActionProfileGroupOperator {
-            private AddActionProfileGroupOperator(ActionProfileGroup group) {
-                setGroup(toActionProfileGroupMessage(group));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.INSERT);
-            }
-        }
-
-        private class ModifyActionProfileGroupOperator extends ActionProfileGroupOperator {
-            private ModifyActionProfileGroupOperator(ActionProfileGroup group) {
-                setGroup(toActionProfileGroupMessage(group));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.MODIFY);
-            }
-        }
-
-        private class DeleteActionProfileGroupOperator extends ActionProfileGroupOperator {
-            private DeleteActionProfileGroupOperator(GroupKey key) {
-                setGroup(toActionProfileGroupMessage(key));
-                setType(org.opendaylight.p4plugin.p4runtime.proto.Update.Type.DELETE);
-            }
         }
     }
 }

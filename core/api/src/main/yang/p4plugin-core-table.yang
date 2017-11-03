@@ -38,13 +38,30 @@ module p4plugin-core-table {
                 type string;
             }
 
-            leaf param-value {
-                type string;
+            choice param-value-type {
+                case PARAM-STRING {
+                    leaf param-value {
+                        type string {
+                            pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                        }
+
+                        description
+                         "If you use STRING type, you can only fill it with a
+                          decimal or hexadecimal number.";
+                    }
+                }
+
+                case PARAM-BINARY {
+                    leaf param-value {
+                        type binary;
+                    }
+                }
             }
         }
     }
 
-    grouping match-fields {
+    //According to P4_16 spec, no valid match and using 'key' as keyword;
+    grouping key {
         list field {
             key "field-name";
             leaf field-name {
@@ -54,51 +71,125 @@ module p4plugin-core-table {
             choice match-type {
                 default EXACT;
                 case EXACT {
-                    leaf exact-value {
-                        type string;
+                    choice exact-value-type {
+                        case EXACT-STRING {
+                            leaf exact-value {
+                                type string {
+                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                }
+
+                                description
+                                 "If you use STRING type, you can only fill it with a
+                                  decimal or hexadecimal number.";
+                            }
+                        }
+
+                        case EXACT-BINARY {
+                            leaf exact-value {
+                                type binary;
+                            }
+                        }
                     }
                 }
 
                 case TERNARY {
-                    leaf ternary-Value {
-                        type string;
+                    choice ternary-value-type {
+                        case TERNARY-STRING {
+                            leaf ternary-value {
+                                type string {
+                                    pattern '^([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                          + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                          + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))$';
+                                }
+
+                                description
+                                 "If you use STRING type, you can only fill it with one
+                                  of decimal number, hexadecimal number, ipv4 address and
+                                  mac address.";
+                            }
+                        }
+
+                        case TERNARY-BINARY {
+                            leaf ternary-value {
+                                type binary;
+                            }
+                        }
                     }
 
                     leaf ternary-mask {
                         type string {
-                            pattern '([1-9]|[1-2][0-9]|3[0-2])|'                          +
-                                    '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|'        +
-                                    '25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4]'  +
-                                    '[0-9]|25[0-5]))';
+                            pattern '([1-9]|[1-2][0-9]|3[0-2])|'
+                                  + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|'
+                                  + '25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4]'
+                                  + '[0-9]|25[0-5]))';
                         }
                     }
                 }
 
                 case LPM {
-                    leaf lpm-value {
-                        type string;
+                    choice lpm-value-type {
+                        case LPM-STRING {
+                            leaf lpm-value {
+                                type string {
+                                    pattern '^([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                          + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                          + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))$';
+                                }
+
+                                description
+                                 "If you use STRING type, you can only fill it with one
+                                  of decimal number, hexadecimal number, ipv4 address and
+                                  mac address.";
+                            }
+                        }
+
+                        case LPM-BINARY {
+                            leaf lpm-value {
+                                type binary;
+                            }
+                        }
                     }
 
                     leaf lpm-prefixLen {
-                        type uint8 {
-                            range 0..32;
-                        }
+                        type uint32;
                    }
                 }
 
                 case RANGE {
-                    leaf range-high {
-                        type uint32;
-                    }
+                    choice range-value-type {
+                        case RANGE-STRING {
+                            leaf range-high {
+                                type string {
+                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                }
 
-                    leaf range-low {
-                        type uint32;
-                    }
-                }
+                                description
+                                 "If you use STRING type, you can only fill it with a
+                                  decimal or hexadecimal number.";
+                            }
 
-                case VALID {
-                    leaf valid-value {
-                        type boolean;
+                            leaf range-low {
+                                type string {
+                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                }
+
+                                description
+                                 "If you use STRING type, you can only fill it with a
+                                  decimal or hexadecimal number.";
+                            }
+                        }
+
+                        case RANGE-BINARY {
+                            leaf range-high {
+                                type binary;
+                            }
+
+                            leaf range-low {
+                                type binary;
+                            }
+                        }
                     }
                 }
             }
@@ -109,7 +200,7 @@ module p4plugin-core-table {
         leaf table {
             type string;
         }
-        uses match-fields;
+        uses key;
     }
 
     grouping table-entry {
@@ -131,6 +222,19 @@ module p4plugin-core-table {
                     type uint32;
                 }
             }
+        }
+
+        leaf priority {
+            type int32;
+            description
+             "Ignored unless match implies a TCAM lookup, i.e. at least one
+              of the match fields is TERNARY or RANGE.";
+        }
+
+        leaf controller-metadata {
+            type uint64;
+            description
+             "Cookie to the target, it will be returned in a read RPC.";
         }
     }
 

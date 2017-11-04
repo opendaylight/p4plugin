@@ -9,7 +9,7 @@ package org.opendaylight.p4plugin.core.impl;
 
 import org.opendaylight.controller.md.sal.binding.api.DataBroker;
 import org.opendaylight.controller.md.sal.binding.api.NotificationPublishService;
-import org.opendaylight.p4plugin.core.impl.connection.P4RuntimeChannel;
+import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeChannel;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

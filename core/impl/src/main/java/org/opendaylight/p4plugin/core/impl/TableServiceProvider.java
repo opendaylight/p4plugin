@@ -9,19 +9,20 @@ package org.opendaylight.p4plugin.core.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
-import org.opendaylight.p4plugin.core.impl.device.DeviceManager;
-import org.opendaylight.p4plugin.core.impl.device.P4Device;
+import org.opendaylight.p4plugin.core.impl.table.ActionProfileGroupOperator;
+import org.opendaylight.p4plugin.core.impl.table.ActionProfileMemberOperator;
+import org.opendaylight.p4plugin.core.impl.table.TableEntryOperator;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.Future;
 
 public class TableServiceProvider implements P4pluginCoreTableService {
     private static final Logger LOG = LoggerFactory.getLogger(TableServiceProvider.class);
-    private final DeviceManager manager =  DeviceManager.getInstance();
 
     @Override
     public Future<RpcResult<AddTableEntryOutput>> addTableEntry(AddTableEntryInput input) {
@@ -29,8 +30,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddTableEntryOutputBuilder builder = new AddTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().addTableEntry(input));
+            boolean result = new TableEntryOperator.AddTableEntryOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -44,8 +45,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         ModifyTableEntryOutputBuilder builder = new ModifyTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().modifyTableEntry(input));
+            boolean result = new TableEntryOperator.ModifyTableEntryOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -59,8 +60,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         DeleteTableEntryOutputBuilder builder = new DeleteTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().deleteTableEntry(input));
+            boolean result = new TableEntryOperator.DeleteTableEntryOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -75,8 +76,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         String nodeId = input.getNodeId();
         String tableName = input.getTable();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setContent(device.newTableManager().readTableEntry(tableName));
+            List<String> result = new TableEntryOperator.ReadTableEntryOperator(nodeId, tableName).read();
+            builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {
             builder.setResult(false);
@@ -91,8 +92,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddActionProfileMemberOutputBuilder builder = new AddActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().addActionProfileMember(input));
+            boolean result = new ActionProfileMemberOperator.AddActionProfileMemberOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -101,13 +102,14 @@ public class TableServiceProvider implements P4pluginCoreTableService {
     }
 
     @Override
-    public Future<RpcResult<ModifyActionProfileMemberOutput>> modifyActionProfileMember(ModifyActionProfileMemberInput input){
+    public Future<RpcResult<ModifyActionProfileMemberOutput>> modifyActionProfileMember(
+            ModifyActionProfileMemberInput input){
         Preconditions.checkArgument(input != null, "Modify action profile member RPC input is null.");
         ModifyActionProfileMemberOutputBuilder builder = new ModifyActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().modifyActionProfileMember(input));
+            boolean result = new ActionProfileMemberOperator.ModifyActionProfileMemberOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -116,13 +118,14 @@ public class TableServiceProvider implements P4pluginCoreTableService {
     }
 
     @Override
-    public Future<RpcResult<DeleteActionProfileMemberOutput>> deleteActionProfileMember(DeleteActionProfileMemberInput input) {
+    public Future<RpcResult<DeleteActionProfileMemberOutput>> deleteActionProfileMember(
+            DeleteActionProfileMemberInput input) {
         Preconditions.checkArgument(input != null, "Delete action profile member RPC input is null.");
         DeleteActionProfileMemberOutputBuilder builder = new DeleteActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().deleteActionProfileMember(input));
+            boolean result = new ActionProfileMemberOperator.DeleteActionProfileMemberOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -131,14 +134,16 @@ public class TableServiceProvider implements P4pluginCoreTableService {
     }
 
     @Override
-    public Future<RpcResult<ReadActionProfileMemberOutput>> readActionProfileMember(ReadActionProfileMemberInput input) {
+    public Future<RpcResult<ReadActionProfileMemberOutput>> readActionProfileMember(
+            ReadActionProfileMemberInput input) {
         Preconditions.checkArgument(input != null, "Read action profile member RPC input is null.");
         ReadActionProfileMemberOutputBuilder builder = new ReadActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         String actionProfile = input.getActionProfile();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setContent(device.newTableManager().readActionProfileMember(actionProfile));
+            List<String> result = new ActionProfileMemberOperator.ReadActionProfileMemberOperator(nodeId, actionProfile)
+                    .read();
+            builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {
             builder.setResult(false);
@@ -153,8 +158,8 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddActionProfileGroupOutputBuilder builder = new AddActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().addActionProfileGroup(input));
+            boolean result = new ActionProfileGroupOperator.AddActionProfileGroupOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -163,13 +168,14 @@ public class TableServiceProvider implements P4pluginCoreTableService {
     }
 
     @Override
-    public Future<RpcResult<ModifyActionProfileGroupOutput>> modifyActionProfileGroup(ModifyActionProfileGroupInput input) {
+    public Future<RpcResult<ModifyActionProfileGroupOutput>> modifyActionProfileGroup(
+            ModifyActionProfileGroupInput input) {
         Preconditions.checkArgument(input != null, "Add action profile group RPC input is null.");
         ModifyActionProfileGroupOutputBuilder builder = new ModifyActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().modifyActionProfileGroup(input));
+            boolean result = new ActionProfileGroupOperator.ModifyActionProfileGroupOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -178,13 +184,14 @@ public class TableServiceProvider implements P4pluginCoreTableService {
     }
 
     @Override
-    public Future<RpcResult<DeleteActionProfileGroupOutput>> deleteActionProfileGroup(DeleteActionProfileGroupInput input) {
+    public Future<RpcResult<DeleteActionProfileGroupOutput>> deleteActionProfileGroup(
+            DeleteActionProfileGroupInput input) {
         Preconditions.checkArgument(input != null, "Add action profile group RPC input is null.");
         DeleteActionProfileGroupOutputBuilder builder = new DeleteActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setResult(device.newTableManager().deleteActionProfileGroup(input));
+            boolean result = new ActionProfileGroupOperator.DeleteActionProfileGroupOperator(nodeId, input).operate();
+            builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
             e.printStackTrace();
@@ -199,8 +206,9 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         String nodeId = input.getNodeId();
         String actionProfile = input.getActionProfile();
         try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            builder.setContent(device.newTableManager().readActionProfileGroup(actionProfile));
+            List<String> result = new ActionProfileGroupOperator.ReadActionProfileGroupOperator(nodeId, actionProfile)
+                    .read();
+            builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {
             builder.setResult(false);

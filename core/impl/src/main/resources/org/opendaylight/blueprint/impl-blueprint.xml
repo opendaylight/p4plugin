@@ -35,8 +35,12 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <bean id="packetServiceProvider"
           class="org.opendaylight.p4plugin.core.impl.PacketServiceProvider">
     </bean>
+    <bean id="clusterServiceProvider"
+          class="org.opendaylight.p4plugin.core.impl.ClusterServiceProvider">
+    </bean>
 
     <odl:rpc-implementation ref="deviceServiceProvider" />
     <odl:rpc-implementation ref="tableServiceProvider" />
     <odl:rpc-implementation ref="packetServiceProvider" />
+    <odl:rpc-implementation ref="clusterServiceProvider" />
 </blueprint>

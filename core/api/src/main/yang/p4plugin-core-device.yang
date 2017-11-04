@@ -33,17 +33,27 @@ module p4plugin-core-device {
         }
     }
 
-    grouping grpc-server-ip {
+    grouping grpc-server-address {
         leaf ip {
             type inet:ipv4-address;
         }
-    }
 
-    grouping grpc-server-port {
         leaf port {
             type inet:port-number;
         }
     }
+
+    //grouping grpc-server-ip {
+    //    leaf ip {
+    //        type inet:ipv4-address;
+    //    }
+    //}
+
+    //grouping grpc-server-port {
+    //    leaf port {
+    //        type inet:port-number;
+    //    }
+    //}
 
     grouping logic-device-id {
         leaf device-id {
@@ -55,21 +65,34 @@ module p4plugin-core-device {
         leaf config-file {
             type string;
         }
-    }
 
-    grouping runtime-info {
         leaf runtime-file {
             type string;
         }
     }
 
+    //grouping device-config {
+    //    leaf config-file {
+    //        type string;
+    //    }
+    //}
+
+    //grouping runtime-info {
+    //    leaf runtime-file {
+    //        type string;
+    //    }
+    //}
+
     grouping device-identifier {
         uses node;
-        uses grpc-server-ip;
-        uses grpc-server-port;
+        uses grpc-server-address;
         uses logic-device-id;
         uses device-config;
-        uses runtime-info;
+        //uses grpc-server-ip;
+        //uses grpc-server-port;
+        //uses logic-device-id;
+        //uses device-config;
+        //uses runtime-info;
     }
 
     rpc add-node {

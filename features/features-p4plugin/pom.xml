@@ -24,7 +24,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>features-p4plugin</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>feature</packaging>
-    <name>features-p4plugin</name>
+    <name>ODL :: p4plugin ::features-p4plugin</name>
 
     <dependencies>
         <dependency>

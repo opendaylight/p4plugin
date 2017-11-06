@@ -23,7 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <artifactId>odl-p4plugin-netconf-adapter</artifactId>
     <version>0.1.0-SNAPSHOT</version>
     <packaging>feature</packaging>
-    <name>odl-p4plugin-netconf-adapter</name>
+    <name>OpenDaylight :: p4plugin :: netconf :: adapter</name>
     
     <properties>
         <mdsal.version>1.7.0-SNAPSHOT</mdsal.version>

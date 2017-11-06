@@ -23,6 +23,10 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>pom</packaging>
     <name>p4plugin-karaf</name>
 
+    <properties>
+        <karaf.localFeature>odl-p4plugin-all</karaf.localFeature>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.karaf.features</groupId>

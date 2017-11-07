@@ -16,7 +16,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
-import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeGrpcInfo;
+import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
@@ -87,7 +87,7 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
                         }
 
                         LOG.info("Start read grpc info");
-                        NodeGrpcInfo grpcInfo = deviceInterfaceDataOperator
+                        GrpcInfo grpcInfo = deviceInterfaceDataOperator
                                 .readGrpcFromDevice(nodeAfter.getNodeId().getValue());
                         if (null == grpcInfo) {
                             LOG.info("Node grpc info is null");

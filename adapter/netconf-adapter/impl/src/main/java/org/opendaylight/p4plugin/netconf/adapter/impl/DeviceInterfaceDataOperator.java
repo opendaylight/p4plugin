@@ -19,10 +19,10 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigOutput;
-import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeGrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeInterfacesState;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.NodeKey;
+import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yangtools.yang.binding.InstanceIdentifier;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
@@ -38,8 +38,8 @@ public class DeviceInterfaceDataOperator {
     private static final InstanceIdentifier<InterfacesState> IETF_INTERFACE_IID = InstanceIdentifier
             .create(InterfacesState.class);
 
-    private static final InstanceIdentifier<NodeGrpcInfo> NODE_GRPC_INFO_IID = InstanceIdentifier
-            .create(NodeGrpcInfo.class);
+    private static final InstanceIdentifier<GrpcInfo> GRPC_INFO_IID = InstanceIdentifier
+            .create(GrpcInfo.class);
 
     private static final InstanceIdentifier<NodeInterfacesState> NODE_INTERFACE_STATE_IID = InstanceIdentifier
             .create(NodeInterfacesState.class);
@@ -56,16 +56,16 @@ public class DeviceInterfaceDataOperator {
         return dataProcess.readInterfaces(nodeId, IETF_INTERFACE_IID);
     }
 
-    public NodeGrpcInfo readGrpcFromDevice(String nodeId) {
+    public GrpcInfo readGrpcFromDevice(String nodeId) {
         LOG.info("Start read grpc info from device");
-        return dataProcess.readGrpcInfo(nodeId, NODE_GRPC_INFO_IID);
+        return dataProcess.readGrpcInfo(nodeId, GRPC_INFO_IID);
     }
 
-    public void sendP4DeviceInfo(String nodeId, NodeGrpcInfo grpcInfo) {
+    public void sendP4DeviceInfo(String nodeId, GrpcInfo grpcInfo) {
         try {
             LOG.info("Call rpc addNode");
             Future<RpcResult<AddNodeOutput>> addNodeRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginCoreDeviceService.class).addNode(constructRpcAddNodeInput(nodeId, grpcInfo));
+                    .getRpcService(P4pluginCoreDeviceService.class).addNode(constructRpcAddNodeInput(grpcInfo));
             if (addNodeRpcResult.get().isSuccessful()) {
                 LOG.info("Rpc addNode called success, node: {}", nodeId);
                 if (addNodeRpcResult.get().getResult().isResult()) {
@@ -90,12 +90,12 @@ public class DeviceInterfaceDataOperator {
         }
     }
 
-    private AddNodeInput constructRpcAddNodeInput(String nodeId, NodeGrpcInfo grpcInfo) {
+    private AddNodeInput constructRpcAddNodeInput(GrpcInfo grpcInfo) {
         AddNodeInputBuilder builder = new AddNodeInputBuilder();
-        builder.setNodeId(nodeId);
-        builder.setIp(grpcInfo.getIp());
-        builder.setPort(grpcInfo.getPort());
-        builder.setDeviceId(grpcInfo.getId());
+        builder.setNodeId(grpcInfo.getNodeId());
+        builder.setIp(grpcInfo.getGrpcIp());
+        builder.setPort(grpcInfo.getGrpcPort());
+        builder.setDeviceId(grpcInfo.getDeviceId());
         builder.setRuntimeFile("/home/opendaylight/odl/p4src/switch.proto.txt");
         builder.setConfigFile(null);
         return builder.build();
@@ -108,7 +108,7 @@ public class DeviceInterfaceDataOperator {
     }
 
     public void writeInterfacesToControllerDataStore(String nodeId, InterfacesState interfacesData,
-                                                     NodeGrpcInfo grpcInfo) {
+                                                     GrpcInfo grpcInfo) {
         LOG.info("Start write data to controller data store");
         InstanceIdentifier path = getNodePath(nodeId);
         dataProcess.writeToDataStore(nodeId, interfacesData, grpcInfo, path);

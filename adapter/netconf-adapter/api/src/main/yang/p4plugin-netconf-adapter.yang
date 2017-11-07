@@ -4,7 +4,7 @@ module p4plugin-netconf-adapter {
     prefix "p4plugin-netconf-adapter";
 
     revision "2017-09-08" {
-        description "Initial revision of driver model";
+      description "Initial revision";
     }
 
     import ietf-yang-types {
@@ -21,29 +21,6 @@ module p4plugin-netconf-adapter {
       description
         "Base identity from which specific interface types are
        derived.";
-    }
-
-    grouping node-identifier {
-        leaf node-id {
-            type string;
-       }
-    }
-
-    grouping p4-device {
-
-       uses node-identifier;
-
-       leaf grpc-server-ip {
-         type inet:ipv4-address;
-       }
-
-       leaf grpc-server-port {
-         type inet:port-number;
-       }
-
-       leaf device-id {
-         type uint64;
-       }
     }
 
     grouping interfaces-state {
@@ -145,27 +122,50 @@ module p4plugin-netconf-adapter {
       }
     }
 
-    container node-grpc-info {
-      config false;
-      leaf ip {
-         type inet:ipv4-address;
-       }
-
-       leaf port {
-         type inet:port-number;
-       }
-
-       leaf id {
-         type uint64;
-       }
+    grouping node-identifier {
+        leaf node-id {
+          type string;
+        }
     }
+
+    grouping node-grpc-info {
+
+        uses node-identifier;
+
+        leaf grpc-server-ip {
+          type inet:ipv4-address;
+        }
+
+        leaf grpc-server-port {
+          type inet:port-number;
+        }
+
+        leaf grpc-server-device-id {
+          type uint64;
+        }
+    }
+
+    //container node-grpc-info {
+      //config false;
+      //leaf ip {
+         //type inet:ipv4-address;
+       //}
+
+       //leaf port {
+         //type inet:port-number;
+       //}
+
+       //leaf id {
+         //type uint64;
+       //}
+    //}
 
     container node-interfaces-state {
        list node {
          key "node-id";
          ordered-by user;
 
-         uses p4-device;
+         uses node-grpc-info;
 
          uses interfaces-state;
        }

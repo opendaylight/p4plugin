@@ -4,7 +4,7 @@ module p4plugin-netconf-adapter-api {
     prefix "p4plugin-netconf-adapter-api";
 
     revision "2017-09-08" {
-        description "Initial revision of driver model";
+       description "Initial revision";
     }
 
 

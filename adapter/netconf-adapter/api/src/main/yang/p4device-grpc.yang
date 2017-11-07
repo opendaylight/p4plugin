@@ -1,0 +1,49 @@
+module p4device-grpc {
+
+    yang-version 1;
+
+    namespace "urn:p4plugin:yang:p4device:grpc";
+
+    prefix "p4-grpc";
+
+    import ietf-inet-types {
+       prefix inet;
+       revision-date 2013-07-15;
+    }
+
+    organization "p4plugin project";
+
+    contact
+       "p4plugin-dev@lists.opendaylight.org";
+
+    description
+       "Data Model for managing the grpc information of p4device ";
+
+    revision "2017-09-08" {
+       description "Initial revision";
+    }
+
+    grouping p4device {
+
+       leaf node-id {
+          type string;
+       }
+
+       leaf grpc-ip {
+          type inet:ipv4-address;
+       }
+
+       leaf grpc-port {
+          type inet:port-number;
+       }
+
+       leaf device-id {
+          type uint64;
+       }
+    }
+
+    container grpc-info {
+       config false;
+       uses p4device;
+    }
+}

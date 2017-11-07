@@ -20,12 +20,12 @@ import org.opendaylight.controller.md.sal.common.api.data.ReadFailedException;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.InterfaceType;
-import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeGrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeInterfacesState;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.interfaces.state.Interface;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.interfaces.state.InterfaceBuilder;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.interfaces.state.InterfaceKey;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.NodeBuilder;
+import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
@@ -65,7 +65,7 @@ public class DataProcess {
         return readData(nodeDataBroker, path);
     }
 
-    public NodeGrpcInfo readGrpcInfo(String nodeId, InstanceIdentifier<NodeGrpcInfo> path) {
+    public GrpcInfo readGrpcInfo(String nodeId, InstanceIdentifier<GrpcInfo> path) {
         final DataBroker nodeDataBroker = getDataBroker(nodeId, mountPointService);
         if (null == nodeDataBroker) {
             return null;
@@ -73,7 +73,7 @@ public class DataProcess {
         return readData(nodeDataBroker, path);
     }
 
-    public void writeToDataStore(String nodeId, InterfacesState interfacesData, NodeGrpcInfo grpcInfo,
+    public void writeToDataStore(String nodeId, InterfacesState interfacesData, GrpcInfo grpcInfo,
                                  InstanceIdentifier<org.opendaylight.yang.gen.v1.urn.p4plugin.netconf
                                          .adapter.rev170908.node.interfaces.state.Node> path) {
         org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node node =
@@ -86,14 +86,14 @@ public class DataProcess {
     }
 
     private org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node
-            constructNode(String nodeId, InterfacesState interfacesData, NodeGrpcInfo grpcInfo) {
+            constructNode(String nodeId, InterfacesState interfacesData, GrpcInfo grpcInfo) {
         NodeBuilder builder = new NodeBuilder();
         builder.setKey(new org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node
                 .interfaces.state.NodeKey(nodeId));
         builder.setNodeId(nodeId);
-        builder.setGrpcServerIp(grpcInfo.getIp());
-        builder.setGrpcServerPort(grpcInfo.getPort());
-        builder.setDeviceId(grpcInfo.getId());
+        builder.setGrpcServerIp(grpcInfo.getGrpcIp());
+        builder.setGrpcServerPort(grpcInfo.getGrpcPort());
+        builder.setGrpcServerDeviceId(grpcInfo.getDeviceId());
         builder.setInterface(constructInterfaceInfo(interfacesData));
         return builder.build();
     }

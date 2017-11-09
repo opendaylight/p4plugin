@@ -7,8 +7,10 @@
  */
 package org.opendaylight.p4plugin.netconf.adapter.impl;
 
+import com.google.common.collect.Maps;
 import java.util.Collection;
 
+import java.util.Map;
 import org.opendaylight.controller.md.sal.binding.api.DataObjectModification;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeChangeListener;
 import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
@@ -18,6 +20,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev15
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.network.topology.topology.topology.types.TopologyNetconf;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NetworkTopology;
+import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.TopologyId;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.Topology;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.network.topology.TopologyKey;
@@ -31,6 +34,9 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
 
     private static final Logger LOG = LoggerFactory.getLogger(NetconfStateChangeListener.class);
 
+    private Map<NodeId, Node> nodeAddedMap = Maps.newHashMap();
+    private Map<NodeId, Node> nodeModifiedMap = Maps.newHashMap();
+    private Map<NodeId, Node> nodeDeletedMap = Maps.newHashMap();
     private DeviceInterfaceDataOperator deviceInterfaceDataOperator;
     private static final InstanceIdentifier<Node> NETCONF_NODE_IID = InstanceIdentifier
             .create(NetworkTopology.class).child(Topology.class, new TopologyKey(new TopologyId(TopologyNetconf
@@ -66,9 +72,11 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
             switch (rootNode.getModificationType()) {
                 case WRITE:
                     LOG.info("Node {} was created", nodeAfter.getNodeId().getValue());
+                    nodeAddedMap.put(nodeAfter.getNodeId(), nodeAfter);
                     break;
                 case SUBTREE_MODIFIED:
                     LOG.info("Process modify procedure");
+                    nodeModifiedMap.put(nodeAfter.getNodeId(), nodeAfter);
                     NetconfNode ncNodeNew = nodeAfter.getAugmentation(NetconfNode.class);
                     NetconfNode ncNodeOld = nodeBefore.getAugmentation(NetconfNode.class);
                     if ((ncNodeNew.getConnectionStatus() == NetconfNodeConnectionStatus.ConnectionStatus.Connected)
@@ -79,31 +87,36 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
                         LOG.info("Start read interfaces");
                         InterfacesState interfacesData = deviceInterfaceDataOperator
                                 .readInterfacesFromDevice(nodeAfter.getNodeId().getValue());
-                        if (null == interfacesData) {
-                            LOG.info("InterFacesData is null");
-                        }
-                        if (null != interfacesData.getInterface() && 0 != interfacesData.getInterface().size()) {
-                            LOG.info("InterfaceList from device is {}", interfacesData.getInterface());
+                        if (null == interfacesData || null == interfacesData.getInterface()
+                                || interfacesData.getInterface().isEmpty()) {
+                            LOG.info("InterFacesData of {} is null", nodeAfter.getNodeId().getValue());
+                            //websocket to app
                         }
 
                         LOG.info("Start read grpc info");
                         GrpcInfo grpcInfo = deviceInterfaceDataOperator
                                 .readGrpcFromDevice(nodeAfter.getNodeId().getValue());
-                        if (null == grpcInfo) {
+
+                        if (null == grpcInfo || null == grpcInfo.getNodeId() || null == grpcInfo.getGrpcIp()
+                                || null == grpcInfo.getGrpcPort() || null == grpcInfo.getDeviceId()) {
                             LOG.info("Node grpc info is null");
+                            //websocket to app
+                        } else {
+                            LOG.info("Send p4-device Info to module core");
+                            deviceInterfaceDataOperator.sendP4DeviceInfo(nodeAfter.getNodeId().getValue(), grpcInfo);
+
+                            if (null != interfacesData && null != interfacesData.getInterface()
+                                    && !interfacesData.getInterface().isEmpty()) {
+                                LOG.info("Start write device interfaces info to controller data store");
+                                deviceInterfaceDataOperator.writeInterfacesToControllerDataStore(nodeAfter.getNodeId()
+                                        .getValue(), interfacesData, grpcInfo);
+                            }
                         }
-
-                        LOG.info("Send p4-device Info to module core");
-                        deviceInterfaceDataOperator.sendP4DeviceInfo(nodeAfter.getNodeId().getValue(), grpcInfo);
-
-                        LOG.info("Start write device interfaces info to controller data store");
-                        deviceInterfaceDataOperator.writeInterfacesToControllerDataStore(nodeAfter.getNodeId()
-                                .getValue(), interfacesData, grpcInfo);
                     }
                     break;
                 case DELETE:
                     LOG.info("Node {} was deleted", nodeBefore.getNodeId().getValue());
-                    //do something, such as remove notification
+                    nodeDeletedMap.put(nodeBefore.getNodeId(), nodeBefore);
                     break;
                 default:
                     throw new IllegalArgumentException("Unhandled modification type : {}"
@@ -114,6 +127,18 @@ public class NetconfStateChangeListener implements DataTreeChangeListener<Node> 
 
     public InstanceIdentifier<Node> getNodeId() {
         return NETCONF_NODE_IID;
+    }
+
+    public Map<NodeId, Node> getNodeAddedMap() {
+        return nodeAddedMap;
+    }
+
+    public Map<NodeId, Node> getNodeModifiedMap() {
+        return nodeModifiedMap;
+    }
+
+    public Map<NodeId, Node> getNodeDeletedMap() {
+        return nodeDeletedMap;
     }
 
 }

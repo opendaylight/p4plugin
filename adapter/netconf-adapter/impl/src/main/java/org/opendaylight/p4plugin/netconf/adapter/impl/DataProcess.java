@@ -185,7 +185,7 @@ public class DataProcess {
 
     private <T extends DataObject> T readData(DataBroker nodeDataBroker, InstanceIdentifier<T> path) {
         final ReadTransaction readTransaction = nodeDataBroker.newReadOnlyTransaction();
-        Optional<T> optionalData = null;
+        Optional<T> optionalData;
         try {
             optionalData = readTransaction.read(LogicalDatastoreType.OPERATIONAL, path).checkedGet();
             if (optionalData.isPresent()) {

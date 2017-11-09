@@ -81,6 +81,8 @@ public class DeviceInterfaceDataOperator {
                     } else {
                         LOG.info("Rpc setPipelineConfig called failed, node: {}", nodeId);
                     }
+                } else {
+                    LOG.info("Add node {} failed", nodeId);
                 }
             } else {
                 LOG.info("Rpc addNode called failed, node: {}", nodeId);

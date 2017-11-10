@@ -31,12 +31,20 @@ import org.opendaylight.controller.md.sal.binding.api.DataTreeModification;
 import org.opendaylight.controller.md.sal.binding.api.MountPoint;
 import org.opendaylight.controller.md.sal.binding.api.MountPointService;
 import org.opendaylight.controller.md.sal.binding.api.WriteTransaction;
-import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+//import org.opendaylight.controller.md.sal.binding.test.AbstractConcurrentDataBrokerTest;
+import org.opendaylight.controller.md.sal.binding.test.AbstractDataBrokerTest;
 import org.opendaylight.controller.md.sal.common.api.data.LogicalDatastoreType;
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfaceType;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesStateBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.interfaces.state.Interface;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.interfaces.state.InterfaceBuilder;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.interfaces.state.InterfaceKey;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.Gauge64;
+import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.rev130715.PhysAddress;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
@@ -63,7 +71,7 @@ import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 
 @RunWith(MockitoJUnitRunner.class)
-public class NetconfStateChangeListenerTest extends AbstractConcurrentDataBrokerTest {
+public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
 
     @Mock
     private MountPoint mountPoint;
@@ -186,39 +194,77 @@ public class NetconfStateChangeListenerTest extends AbstractConcurrentDataBroker
         netconfStateChangeListener.onDataTreeChanged(modifications);
 
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        //assertTestModifiedNodeTwoGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeTwoGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
     }
 
-//    @Test
-//    public void testOnDataTreeChangedModifiedNodeThree() throws Exception {
-//        buildMock();
-//
-//        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
-//        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
-//        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
-//                .ModificationType.SUBTREE_MODIFIED);
-//
-//        writeDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
-//        netconfStateChangeListener.onDataTreeChanged(modifications);
-//
-//        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-//        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-//        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
-//    }
+    @Test
+    public void testOnDataTreeChangedModifiedNodeThree() throws Exception {
+        buildMock();
 
-//    @Test
-//    public void testOnDataTreeChangedModifiedNodeFour() throws Exception {
-//        buildMock();
-//
-//        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
-//        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
-//        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
-//                .ModificationType.SUBTREE_MODIFIED);
-//
-//        writeDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceInfo());
-//        writeDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
-//        netconfStateChangeListener.onDataTreeChanged(modifications);
-//    }
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeFour() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(Interface.OperStatus.Up,
+                Interface.AdminStatus.Up));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeFive() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.NotPresent, Interface.AdminStatus.Down));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeSix() throws Exception {
+        modifications = Collections.singletonList(dataTreeModification);
+        when(dataTreeModification.getRootNode()).thenReturn(dataObjectModification);
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        dataProcess = new DataProcess(dataBroker, null);
+        deviceInterfaceDataOperator = new DeviceInterfaceDataOperator(dataProcess, rpcProviderRegistry);
+        netconfStateChangeListener = new NetconfStateChangeListener(deviceInterfaceDataOperator);
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+    }
 
     @Test
     public void testOnDataTreeChangedDeletedNode() throws Exception {
@@ -240,9 +286,33 @@ public class NetconfStateChangeListenerTest extends AbstractConcurrentDataBroker
         return builder.build();
     }
 
-//    private InterfacesState constructInterfaceInfo() {
-//        return null;
-//    }
+    private InterfacesState constructInterfaceState(Interface.OperStatus operStatus,
+                                                    Interface.AdminStatus adminStatus) {
+        Interface interface1 = constructInterface("Interface1", 1001, "819200", operStatus, adminStatus,
+                "00:11:11:11:11:11");
+        Interface interface2 = constructInterface("Interface2", 2002, "819200", operStatus, adminStatus,
+                "00:00:00:00:00:11");
+        List<Interface> list = new ArrayList<>();
+        list.add(interface1);
+        list.add(interface2);
+        InterfacesStateBuilder builder = new InterfacesStateBuilder();
+        builder.setInterface(list);
+        return builder.build();
+    }
+
+    private Interface constructInterface(String name, int ifIndex, String speed, Interface.OperStatus operStatus,
+                                         Interface.AdminStatus adminStatus, String py) {
+        InterfaceBuilder builder = new InterfaceBuilder();
+        builder.setKey(new InterfaceKey(name));
+        builder.setName(name);
+        builder.setType(InterfaceType.class);
+        builder.setAdminStatus(adminStatus);
+        builder.setOperStatus(operStatus);
+        builder.setIfIndex(ifIndex);
+        builder.setPhysAddress(new PhysAddress(py));
+        builder.setSpeed(new Gauge64(new BigInteger(speed)));
+        return builder.build();
+    }
 
     private <T extends DataObject> void writeTestDataToDataStore(DataBroker dataBroker,
                                                              InstanceIdentifier<T> path, T data) {

@@ -21,8 +21,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev1708
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.TableEntry;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.ActionParam;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.ParamValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMVALUETYPEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.Field;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.MatchType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.EXACT;
@@ -30,17 +30,17 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev1708
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.RANGE;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.TERNARY;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.ExactValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTVALUETYPEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.LpmValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMVALUETYPEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.RangeValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGESTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEVALUETYPEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.TernaryValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYSTRING;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYVALUEBINARY;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.ActionType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEGROUP;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEMEMBER;
@@ -535,12 +535,12 @@ public class P4Device  {
             int paramId = getParamId(actionName, paramName);
             int paramWidth = getParamWidth(actionName, paramName);
 
-            if (valueType instanceof PARAMSTRING) {
-                String valueStr = ((PARAMSTRING) valueType).getParamValue();
+            if (valueType instanceof PARAMVALUETYPESTRING) {
+                String valueStr = ((PARAMVALUETYPESTRING) valueType).getParamStringValue();
                 byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
                 paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
-            } else if (valueType instanceof PARAMBINARY) {
-                byte[] valueBytes = ((PARAMBINARY) valueType).getParamValue();
+            } else if (valueType instanceof PARAMVALUETYPEBINARY) {
+                byte[] valueBytes = ((PARAMVALUETYPEBINARY) valueType).getParamBinaryValue();
                 paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
             } else {
                 throw new IllegalArgumentException("Invalid value type.");
@@ -829,12 +829,12 @@ public class P4Device  {
                 paramBuilder.setParamId(paramId);
                 ParamValueType valueType = p.getParamValueType();
 
-                if (valueType instanceof PARAMSTRING) {
-                    String valueStr = ((PARAMSTRING) valueType).getParamValue();
+                if (valueType instanceof PARAMVALUETYPESTRING) {
+                    String valueStr = ((PARAMVALUETYPESTRING) valueType).getParamStringValue();
                     byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
                     paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
-                } else if (valueType instanceof PARAMBINARY) {
-                    byte[] valueBytes = ((PARAMBINARY) valueType).getParamValue();
+                } else if (valueType instanceof PARAMVALUETYPEBINARY) {
+                    byte[] valueBytes = ((PARAMVALUETYPEBINARY) valueType).getParamBinaryValue();
                     paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
                 } else {
                     throw new IllegalArgumentException("Invalid value type.");
@@ -902,12 +902,12 @@ public class P4Device  {
             FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
             EXACT exact = matchType;
             ExactValueType valueType = exact.getExactValueType();
-            if (valueType instanceof EXACTSTRING) {
-                String valueStr = ((EXACTSTRING) valueType).getExactValue();
+            if (valueType instanceof EXACTVALUETYPESTRING) {
+                String valueStr = ((EXACTVALUETYPESTRING) valueType).getExactStringValue();
                 exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof EXACTBINARY) {
-                byte[] valyeBytes = ((EXACTBINARY) valueType).getExactValue();
-                exactBuilder.setValue(ByteString.copyFrom(valyeBytes, 0, matchFieldWidth));
+            } else if (valueType instanceof EXACTVALUETYPEBINARY) {
+                byte[] valueBytes = ((EXACTVALUETYPEBINARY) valueType).getExactBinaryValue();
+                exactBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
             } else {
                 throw new IllegalArgumentException("Invalid exact value type");
             }
@@ -929,11 +929,11 @@ public class P4Device  {
             LPM lpm = matchType;
             Long prefixLen = lpm.getLpmPrefixLen();
             LpmValueType valueType = lpm.getLpmValueType();
-            if (valueType instanceof LPMSTRING) {
-                String valueStr = ((LPMSTRING) valueType).getLpmValue();
+            if (valueType instanceof LPMVALUETYPESTRING) {
+                String valueStr = ((LPMVALUETYPESTRING) valueType).getLpmStringValue();
                 lpmBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof LPMBINARY) {
-                byte[] valueBytes = ((LPMBINARY) valueType).getLpmValue();
+            } else if (valueType instanceof LPMVALUETYPEBINARY) {
+                byte[] valueBytes = ((LPMVALUETYPEBINARY) valueType).getLpBinaryValue();
                 lpmBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
             } else {
                 throw new IllegalArgumentException("Invalid lpm value type");
@@ -958,11 +958,11 @@ public class P4Device  {
             String mask = ternary.getTernaryMask();
             TernaryValueType valueType = ternary.getTernaryValueType();
 
-            if (valueType instanceof TERNARYSTRING) {
-                String valueStr = ((TERNARYSTRING) valueType).getTernaryValue();
+            if (valueType instanceof TERNARYVALUETYPESTRING) {
+                String valueStr = ((TERNARYVALUETYPESTRING) valueType).getTernaryStringValue();
                 ternaryBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof TERNARYBINARY) {
-                byte[] valueBytes = ((TERNARYBINARY) valueType).getTernaryValue();
+            } else if (valueType instanceof TERNARYVALUEBINARY) {
+                byte[] valueBytes = ((TERNARYVALUEBINARY) valueType).getTernaryBinaryValue();
                 ternaryBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
             } else {
                 throw new IllegalArgumentException("Invalid ternary value type");
@@ -1009,16 +1009,16 @@ public class P4Device  {
             FieldMatch.Range.Builder rangeBuilder = FieldMatch.Range.newBuilder();
             RANGE range = matchType;
             RangeValueType valueType = range.getRangeValueType();
-            if (valueType instanceof RANGESTRING) {
-                String highStr = ((RANGESTRING) valueType).getRangeHigh();
-                String lowStr = ((RANGESTRING) valueType).getRangeLow();
+            if (valueType instanceof RANGEVALUETYPESTRING) {
+                String highStr = ((RANGEVALUETYPESTRING) valueType).getHighValueString();
+                String lowStr = ((RANGEVALUETYPESTRING) valueType).getLowValueString();
                 byte[] highBytes = BigInteger.valueOf(Integer.parseInt(highStr)).toByteArray();
                 byte[] lowBytes = BigInteger.valueOf(Integer.parseInt(lowStr)).toByteArray();
                 rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
                 rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
-            } else if (valueType instanceof RANGEBINARY) {
-                byte[] highBytes = ((RANGEBINARY) valueType).getRangeHigh();
-                byte[] lowBytes = ((RANGEBINARY) valueType).getRangeLow();
+            } else if (valueType instanceof RANGEVALUETYPEBINARY) {
+                byte[] highBytes = ((RANGEVALUETYPEBINARY) valueType).getHighBinaryValue();
+                byte[] lowBytes = ((RANGEVALUETYPEBINARY) valueType).getLowValueBinary();
                 rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
                 rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
             } else {

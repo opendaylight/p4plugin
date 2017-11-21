@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * the runtime channel.
  */
 public class FlyweightFactory {
-    private final ConcurrentHashMap<String, P4RuntimeChannel> pool = new ConcurrentHashMap<>();
+    public final ConcurrentHashMap<String, P4RuntimeChannel> pool = new ConcurrentHashMap<>();
     private static FlyweightFactory singleton = new FlyweightFactory();
     private FlyweightFactory() {}
     public static FlyweightFactory getInstance() {

@@ -112,11 +112,6 @@ public class NetconfAdapterServiceImpl implements P4pluginNetconfAdapterApiServi
         LOG.info("Convert node");
         org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node inventoryNode = convertData(node);
         LOG.info("Inventory node is {}", inventoryNode);
-        if (null == inventoryNode || null == inventoryNode.getNodeConnector()
-                || 0 == inventoryNode.getNodeConnector().size()) {
-            LOG.info("Data converted failed");
-            return false;
-        }
         LOG.info("Write");
         return write(dataBroker, inventoryNode, path);
     }

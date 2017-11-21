@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
  * the runtime channel.
  */
 public class FlyweightFactory {
-    private final ConcurrentHashMap<String, P4RuntimeChannel> pool = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, P4RuntimeChannel> pool = new ConcurrentHashMap<>();
     private static FlyweightFactory singleton = new FlyweightFactory();
     private FlyweightFactory() {}
     public static FlyweightFactory getInstance() {
@@ -32,7 +32,7 @@ public class FlyweightFactory {
         String key = String.format("%s:%d", ip, port);
         P4RuntimeChannel channel = pool.get(key);
         if (channel == null) {
-            channel = new P4RuntimeChannel(ip, port);
+            channel = makeP4RuntimeChannel(ip, port);
             pool.put(key, channel);
         }
         return channel;
@@ -50,5 +50,13 @@ public class FlyweightFactory {
             pool.get(key).shutdown();
             pool.remove(key);
         });
+    }
+
+    public P4RuntimeChannel makeP4RuntimeChannel(String ip, Integer port) {
+        return new P4RuntimeChannel(ip, port);
+    }
+
+    private void setPool(ConcurrentHashMap<String, P4RuntimeChannel> pool) {
+        this.pool = pool;
     }
 }

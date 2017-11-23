@@ -59,7 +59,13 @@ public class FlyweightFactoryTest {
         Mockito.doReturn(0).when(p2).getStubsCount();
         Mockito.doReturn(p1).when(flyweightFactory).makeP4RuntimeChannel("127.0.0.1", 50051);
         Mockito.doReturn(p2).when(flyweightFactory).makeP4RuntimeChannel("127.0.0.1", 50052);
+        pool.put("127.0.0.1:50051", p1);
+        pool.put("127.0.0.1:50052", p2);
+        Mockito.doNothing().when(p2).shutdown();
+        Mockito.doReturn(true).when(pool).remove("127.0.0.1", 50052);
         flyweightFactory.gc();
+        Mockito.verify(p2).shutdown();
+        Mockito.verify(pool).remove("127.0.0.1:50052");
         Assert.assertEquals("Test GC", p1, flyweightFactory.getChannel("127.0.0.1", 50051));
         Assert.assertEquals("Test GC", 1, pool.size());
     }

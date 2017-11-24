@@ -66,7 +66,7 @@ public class NetconfAdapterServiceImplTest extends AbstractDataBrokerTest {
     private static final InstanceIdentifier<Node> NODE_PATH = InstanceIdentifier
             .create(NodeInterfacesState.class).child(Node.class, new NodeKey(NODE_ID.getValue()));
     private static final InstanceIdentifier<org.opendaylight.yang.gen.v1.urn.opendaylight.inventory
-    .rev130819.nodes.Node> INVENTORY_NODE_ID = InstanceIdentifier.create(Nodes.class)
+            .rev130819.nodes.Node> INVENTORY_NODE_ID = InstanceIdentifier.create(Nodes.class)
             .child(org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node.class,
                         new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey(
                                 new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId(
@@ -168,8 +168,9 @@ public class NetconfAdapterServiceImplTest extends AbstractDataBrokerTest {
     }
 
     private org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.Node constructInventoryData(
-            String nodeId) {org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeBuilder builder
-            = new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeBuilder();
+            String nodeId) {
+        org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeBuilder builder =
+                new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeBuilder();
         builder.setKey(new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.nodes.NodeKey(new
                 org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId(nodeId)));
         builder.setId(new org.opendaylight.yang.gen.v1.urn.opendaylight.inventory.rev130819.NodeId(nodeId));

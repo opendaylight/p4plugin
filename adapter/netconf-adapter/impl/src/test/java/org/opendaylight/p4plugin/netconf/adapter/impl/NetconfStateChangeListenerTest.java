@@ -153,6 +153,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
     public void testOnDataTreeChangedAddedNode() throws Exception {
         buildMock();
 
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+
         when(dataObjectModification.getDataAfter()).thenReturn(buildNodeControllerConfig());
         netconfStateChangeListener.onDataTreeChanged(modifications);
 
@@ -252,6 +254,96 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
 
     @Test
     public void testOnDataTreeChangedModifiedNodeSix() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.Down, Interface.AdminStatus.Down));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeSeven() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.Testing, Interface.AdminStatus.Down));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeEight() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.Dormant, Interface.AdminStatus.Testing));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeNine() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.Unknown, Interface.AdminStatus.Up));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeTen() throws Exception {
+        buildMock();
+
+        when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());
+        when(dataObjectModification.getDataBefore()).thenReturn(buildNodeBefore());
+        when(dataObjectModification.getModificationType()).thenReturn(DataObjectModification
+                .ModificationType.SUBTREE_MODIFIED);
+
+        writeTestDataToDataStore(dataBroker, IETF_INTERFACE_IID, constructInterfaceState(
+                Interface.OperStatus.LowerLayerDown, Interface.AdminStatus.Down));
+        writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
+        netconfStateChangeListener.onDataTreeChanged(modifications);
+        assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+    }
+
+    @Test
+    public void testOnDataTreeChangedModifiedNodeEleven() throws Exception {
         modifications = Collections.singletonList(dataTreeModification);
         when(dataTreeModification.getRootNode()).thenReturn(dataObjectModification);
         when(dataObjectModification.getDataAfter()).thenReturn(buildNodeAfter());

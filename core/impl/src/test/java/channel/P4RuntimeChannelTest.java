@@ -14,11 +14,15 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;
+import org.mockito.invocation.InvocationOnMock;
+import org.mockito.stubbing.Answer;
 import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeChannel;
 import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeStub;
+import org.opendaylight.p4plugin.p4runtime.proto.P4RuntimeGrpc;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class P4RuntimeChannelTest {
     @InjectMocks
@@ -35,6 +39,9 @@ public class P4RuntimeChannelTest {
         MockitoAnnotations.initMocks(this);
     }
 
+    @Mock
+    P4RuntimeStub stub;
+
     @Test
     public void testGetManagedChannel() {
         Assert.assertEquals(channel, p4RuntimeChannel.getManagedChannel());
@@ -42,11 +49,42 @@ public class P4RuntimeChannelTest {
 
     @Test
     public void testAddStub() {
-        P4RuntimeStub stub = Mockito.mock(P4RuntimeStub.class);
         p4RuntimeChannel.addStub(stub);
         Mockito.verify(stubs).add(stub);
         Assert.assertEquals(1, stubs.size());
         Assert.assertTrue(stubs.contains(stub));
+    }
+
+    @Test
+    public void testRemoveStub() {
+        p4RuntimeChannel.addStub(stub);
+        p4RuntimeChannel.removeStub(stub);
+        Mockito.verify(stubs).add(stub);
+        Mockito.verify(stubs).remove(stub);
+        Assert.assertEquals(0, stubs.size());
+        Assert.assertFalse(stubs.contains(stub));
+    }
+
+    @Test
+    public void testGetStubsCount() {
+        p4RuntimeChannel.addStub(stub);
+        Mockito.verify(stubs).add(stub);
+        Assert.assertEquals((Integer) 1, p4RuntimeChannel.getStubsCount());
+        Assert.assertTrue(stubs.contains(stub));
+
+        p4RuntimeChannel.removeStub(stub);
+        Mockito.verify(stubs).remove(stub);
+        Assert.assertEquals((Integer) 0, p4RuntimeChannel.getStubsCount());
+        Assert.assertFalse(stubs.contains(stub));
+    }
+
+    @Test
+    public void testShutdown() throws InterruptedException {
+        Mockito.doReturn(channel).when(channel).shutdown();
+        Mockito.doReturn(true).doThrow(new InterruptedException()).when(channel).awaitTermination(5, TimeUnit.SECONDS);
+        p4RuntimeChannel.shutdown();
+        p4RuntimeChannel.shutdown();
+        Mockito.verify(channel, Mockito.timeout(5000).times(2)).shutdown();
     }
 
     @After

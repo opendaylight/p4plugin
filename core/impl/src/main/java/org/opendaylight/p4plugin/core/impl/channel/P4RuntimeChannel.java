@@ -31,7 +31,6 @@ public class P4RuntimeChannel {
         stubs = new ArrayList<>();
     }
 
-    public P4RuntimeChannel() {}
     public ManagedChannel getManagedChannel() {
         return channel;
     }

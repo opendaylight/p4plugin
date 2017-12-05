@@ -19,8 +19,8 @@ import java.util.concurrent.TimeUnit;
  * the stubs. Multiple stubs can share the same channel.
  */
 public class P4RuntimeChannel {
-    private final ManagedChannel channel;
-    private final List<P4RuntimeStub> stubs;
+    private ManagedChannel channel;
+    private List<P4RuntimeStub> stubs;
 
     public P4RuntimeChannel(String ip, Integer port) {
         this(ManagedChannelBuilder.forAddress(ip, port).usePlaintext(true));
@@ -31,6 +31,7 @@ public class P4RuntimeChannel {
         stubs = new ArrayList<>();
     }
 
+    public P4RuntimeChannel() {}
     public ManagedChannel getManagedChannel() {
         return channel;
     }

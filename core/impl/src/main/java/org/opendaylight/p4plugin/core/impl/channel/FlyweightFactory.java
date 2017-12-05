@@ -55,8 +55,4 @@ public class FlyweightFactory {
     public P4RuntimeChannel makeP4RuntimeChannel(String ip, Integer port) {
         return new P4RuntimeChannel(ip, port);
     }
-
-    private void setPool(ConcurrentHashMap<String, P4RuntimeChannel> pool) {
-        this.pool = pool;
-    }
 }

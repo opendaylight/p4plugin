@@ -46,22 +46,6 @@ public class ElectionIdGenerator {
         observers.forEach(observer -> observer.update(electionId));
     }
 
-    public static class ElectionId {
-        private Long high;
-        private Long low;
 
-        public ElectionId(Long high, Long low) {
-            this.high = high;
-            this.low = low;
-        }
-
-        public Long getHigh() {
-            return high;
-        }
-
-        public Long getLow() {
-            return low;
-        }
-    }
 }
 

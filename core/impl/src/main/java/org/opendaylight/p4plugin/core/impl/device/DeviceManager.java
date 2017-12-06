@@ -41,7 +41,7 @@ public class DeviceManager {
         return keyContainer.isPresent();
     }
 
-    public boolean isDeviceExist(String ip, Integer port, Long deviceId) {
+    private boolean isDeviceExist(String ip, Integer port, Long deviceId) {
         Optional<String> keyContainer = devices.keySet()
                 .stream()
                 .filter(k -> devices.get(k).getDeviceId().equals(deviceId)
@@ -51,7 +51,7 @@ public class DeviceManager {
         return keyContainer.isPresent();
     }
 
-    public boolean isDuplicateDevice(String nodeId, String ip, Integer port, Long deviceId) {
+    private boolean isDuplicateDevice(String nodeId, String ip, Integer port, Long deviceId) {
         return isNodeExist(nodeId) && isDeviceExist(ip, port, deviceId);
     }
 
@@ -105,7 +105,7 @@ public class DeviceManager {
             return device;
         }
 
-        LOG.error("Connect to device = {} failed.", description);
+        LOG.info("Connect to device = {} failed.", description);
         return null;
     }
 

@@ -9,6 +9,7 @@ package org.opendaylight.p4plugin.core.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
+import org.opendaylight.p4plugin.core.impl.cluster.ElectionId;
 import org.opendaylight.p4plugin.core.impl.cluster.ElectionIdGenerator;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.cluster.rev170808.GetElectionIdOutput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.cluster.rev170808.GetElectionIdOutputBuilder;
@@ -23,7 +24,7 @@ import java.util.concurrent.Future;
 public class ClusterServiceProvider implements P4pluginCoreClusterService {
     @Override
     public Future<RpcResult<GetElectionIdOutput>> getElectionId() {
-        ElectionIdGenerator.ElectionId electionId = ElectionIdGenerator.getInstance().getElectionId();
+        ElectionId electionId = ElectionIdGenerator.getInstance().getElectionId();
         GetElectionIdOutputBuilder builder = new GetElectionIdOutputBuilder();
         builder.setHigh(BigInteger.valueOf(electionId.getHigh()));
         builder.setLow(BigInteger.valueOf(electionId.getLow()));
@@ -35,7 +36,7 @@ public class ClusterServiceProvider implements P4pluginCoreClusterService {
         Preconditions.checkArgument(input != null, "Set election Id input is null.");
         long high = input.getHigh().longValue();
         long low = input.getLow().longValue();
-        ElectionIdGenerator.getInstance().setElectionId(new ElectionIdGenerator.ElectionId(high, low));
+        ElectionIdGenerator.getInstance().setElectionId(new ElectionId(high, low));
         return Futures.immediateFuture(RpcResultBuilder.success((Void)null).build());
     }
 }

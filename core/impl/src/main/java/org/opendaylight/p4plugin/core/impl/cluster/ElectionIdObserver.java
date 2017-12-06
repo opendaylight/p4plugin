@@ -8,5 +8,5 @@
 package org.opendaylight.p4plugin.core.impl.cluster;
 
 public interface ElectionIdObserver {
-    void update(ElectionIdGenerator.ElectionId electionId);
+    void update(ElectionId electionId);
 }

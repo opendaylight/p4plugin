@@ -10,6 +10,7 @@ package org.opendaylight.p4plugin.core.impl.channel;
 import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import org.opendaylight.p4plugin.core.impl.NotificationServiceProvider;
+import org.opendaylight.p4plugin.core.impl.cluster.ElectionId;
 import org.opendaylight.p4plugin.core.impl.cluster.ElectionIdGenerator;
 import org.opendaylight.p4plugin.core.impl.cluster.ElectionIdObserver;
 import org.opendaylight.p4plugin.core.impl.device.DeviceManager;
@@ -28,17 +29,11 @@ import java.util.concurrent.TimeUnit;
  */
 public class P4RuntimeStub implements ElectionIdObserver {
     private static final Logger LOG = LoggerFactory.getLogger(P4RuntimeStub.class);
-    private final P4RuntimeChannel runtimeChannel;
-    private final P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
-    private final P4RuntimeGrpc.P4RuntimeStub asyncStub;
+    private P4RuntimeChannel runtimeChannel;
+    private P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
+    private P4RuntimeGrpc.P4RuntimeStub asyncStub;
     private StreamChannel streamChannel;
-    private ElectionIdGenerator.ElectionId electionId;
-
-    @Override
-    public void update(ElectionIdGenerator.ElectionId electionId) {
-        this.electionId = electionId;
-        sendMasterArbitration();
-    }
+    private ElectionId electionId;
 
     public P4RuntimeStub(String nodeId, Long deviceId, String ip, Integer port) {
         runtimeChannel = FlyweightFactory.getInstance().getChannel(ip, port);
@@ -47,6 +42,16 @@ public class P4RuntimeStub implements ElectionIdObserver {
         streamChannel = new StreamChannel(nodeId, deviceId);
         electionId = ElectionIdGenerator.getInstance().getElectionId();
         ElectionIdGenerator.getInstance().addObserver(this);
+    }
+
+    @Override
+    public void update(ElectionId electionId) {
+        this.electionId = electionId;
+        sendMasterArbitration();
+    }
+
+    public ElectionId getElectionId() {
+        return electionId;
     }
 
     private P4RuntimeGrpc.P4RuntimeBlockingStub getBlockingStub() {
@@ -89,8 +94,11 @@ public class P4RuntimeStub implements ElectionIdObserver {
         streamChannel.transmitPacket(payload);
     }
 
+    /**
+     * Send master arbitration update message.
+     */
     public void sendMasterArbitration() {
-        streamChannel.sendMasterArbitration();
+        streamChannel.sendMasterArbitration(electionId);
     }
 
     public void shutdown() {
@@ -98,20 +106,20 @@ public class P4RuntimeStub implements ElectionIdObserver {
         streamChannel.shutdown();
     }
 
-    /**
-     * There is a single StreamChannel bi-directional stream per (P4RuntimeStub, Switch)
-     * pair. The first thing a controller needs to do when it opens the stream is send a
-     * MasterArbitrationUpdate message, advertising its election id. This message includes
-     * a device id. All subsequent arbitration & packet IO messages on that stream will be
-     * for that device.
-     */
-    private class StreamChannel {
-        private final Long deviceId;
-        private final String nodeId;
+    public class StreamChannel {
+        /**
+         * There is a single StreamChannel bi-directional stream per (P4RuntimeStub, Switch)
+         * pair. The first thing a controller needs to do when it opens the stream is send a
+         * MasterArbitrationUpdate message, advertising its election id. This message includes
+         * a device id. All subsequent arbitration & packet IO messages on that stream will be
+         * for that device.
+         */
+        private Long deviceId;
+        private String nodeId;
         private StreamObserver<StreamMessageRequest> observer;
         private CountDownLatch countDownLatch;
 
-        private StreamChannel(String nodeId, Long deviceId) {
+        public StreamChannel(String nodeId, Long deviceId) {
             this.deviceId = deviceId;
             this.nodeId = nodeId;
         }
@@ -127,7 +135,7 @@ public class P4RuntimeStub implements ElectionIdObserver {
             return state;
         }
 
-        private void sendMasterArbitration() {
+        public void sendMasterArbitration(ElectionId electionId) {
             StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
             MasterArbitrationUpdate.Builder masterArbitrationBuilder = MasterArbitrationUpdate.newBuilder();
             Uint128.Builder electionIdBuilder = Uint128.newBuilder();
@@ -142,7 +150,7 @@ public class P4RuntimeStub implements ElectionIdObserver {
         /**
          * Not support metadata in p4_v14, we will support it in the near future.
          */
-        private void transmitPacket(byte[] payload) {
+        public void transmitPacket(byte[] payload) {
             StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
             PacketOut.Builder packetOutBuilder = PacketOut.newBuilder();
             packetOutBuilder.setPayload(ByteString.copyFrom(payload));
@@ -153,7 +161,7 @@ public class P4RuntimeStub implements ElectionIdObserver {
             LOG.info("Transmit packet = {} to node = {}.", Utils.bytesToHexString(payload), nodeId);
         }
 
-        private void onPacketReceived(StreamMessageResponse response) {
+        public void onPacketReceived(StreamMessageResponse response) {
             switch(response.getUpdateCase()) {
                 case PACKET: {
                     P4PacketReceivedBuilder builder = new P4PacketReceivedBuilder();
@@ -171,14 +179,14 @@ public class P4RuntimeStub implements ElectionIdObserver {
             }
         }
 
-        private void onStreamChannelError(Throwable t) {
+        public void onStreamChannelError(Throwable t) {
             runtimeChannel.removeStub(P4RuntimeStub.this);
             DeviceManager.getInstance().removeDevice(nodeId);
             countDownLatch.countDown();
             LOG.info("Stream channel on error, reason = {}, node = {}.", t.getMessage(), nodeId);
         }
 
-        private void onStreamChannelCompleted() {
+        public void onStreamChannelCompleted() {
             runtimeChannel.removeStub(P4RuntimeStub.this);
             countDownLatch.countDown();
             LOG.info("Stream channel on complete, node = {}.", nodeId);
@@ -189,7 +197,7 @@ public class P4RuntimeStub implements ElectionIdObserver {
          * using the streamChannel RPC, the connector should advertise its election id right
          * away using a MasterArbitrationUpdate message.
          */
-        void openStreamChannel() {
+        public void openStreamChannel() {
             runtimeChannel.addStub(P4RuntimeStub.this);
             countDownLatch = new CountDownLatch(1);
             StreamObserver<StreamMessageResponse> response = new StreamObserver<StreamMessageResponse>() {
@@ -197,20 +205,22 @@ public class P4RuntimeStub implements ElectionIdObserver {
                 public void onNext(StreamMessageResponse response) {
                     onPacketReceived(response);
                 }
+
                 @Override
                 public void onError(Throwable t) {
                     onStreamChannelError(t);
                 }
+
                 @Override
                 public void onCompleted() {
                     onStreamChannelCompleted();
                 }
             };
             observer = getAsyncStub().streamChannel(response);
-            sendMasterArbitration();
+            sendMasterArbitration(electionId);
         }
 
-        void shutdown() {
+        public void shutdown() {
             observer.onCompleted();
         }
     }

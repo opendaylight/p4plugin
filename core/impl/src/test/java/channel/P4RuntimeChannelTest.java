@@ -7,18 +7,14 @@
  */
 package channel;
 
-import com.google.inject.Inject;
 import io.grpc.ManagedChannel;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.*;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeChannel;
 import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeStub;
-import org.opendaylight.p4plugin.p4runtime.proto.P4RuntimeGrpc;
 
 import java.util.ArrayList;
 import java.util.List;

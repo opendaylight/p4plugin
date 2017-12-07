@@ -10,16 +10,19 @@ package org.opendaylight.p4plugin.core.impl.device;
 import com.google.protobuf.ByteString;
 import io.grpc.StatusRuntimeException;
 import org.opendaylight.p4plugin.core.impl.channel.P4RuntimeStub;
+import org.opendaylight.p4plugin.core.impl.table.action.AbstractActionParser;
+import org.opendaylight.p4plugin.core.impl.table.action.DirectActionParser;
+import org.opendaylight.p4plugin.core.impl.table.action.GroupActionParser;
+import org.opendaylight.p4plugin.core.impl.table.action.MemberActionParser;
+import org.opendaylight.p4plugin.core.impl.table.match.*;
 import org.opendaylight.p4plugin.core.impl.utils.Utils;
 import org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
-import org.opendaylight.p4plugin.p4runtime.proto.Action;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.*;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.ActionProfileGroup;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.ActionProfileMember;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.TableEntry;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.ActionParam;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.ParamValueType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMVALUETYPEBINARY;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.action.action.param.param.value.type.PARAMVALUETYPESTRING;
@@ -29,18 +32,6 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev1708
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.LPM;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.RANGE;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.TERNARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.ExactValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTVALUETYPEBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.exact.exact.value.type.EXACTVALUETYPESTRING;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.LpmValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMVALUETYPEBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.lpm.lpm.value.type.LPMVALUETYPESTRING;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.RangeValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEVALUETYPEBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.range.range.value.type.RANGEVALUETYPESTRING;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.TernaryValueType;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYVALUEBINARY;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.key.field.match.type.ternary.ternary.value.type.TERNARYVALUETYPESTRING;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.ActionType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEGROUP;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.table.entry.action.type.ACTIONPROFILEMEMBER;
@@ -48,10 +39,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev1708
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * The relationship between P4Device, P4RuntimeStub, P4RuntimeChannel and Stream channel
@@ -109,7 +98,7 @@ import java.util.Optional;
 public class P4Device  {
     private static final Logger LOG = LoggerFactory.getLogger(P4Device.class);
     private P4RuntimeStub stub;
-    private P4Info runtimeInfo;
+    private P4RuntimeInfo info;
     private ByteString deviceConfig;
     private String ip;
     private Integer port;
@@ -119,204 +108,51 @@ public class P4Device  {
     private P4Device() {}
 
     public int getTableId(String tableName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Table> container =
-                runtimeInfo.getTablesList().stream()
-                .filter(table -> table.getPreamble().getName().equals(tableName))
-                .findFirst();
-        int result = 0;
-        if (container.isPresent()) {
-            result = container.get().getPreamble().getId();
-        }
-        return result;
+        return info.getTableId(tableName);
     }
 
-    private String getTableName(int tableId) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Table> container =
-                runtimeInfo.getTablesList()
-                .stream()
-                .filter(table -> table.getPreamble().getId() == tableId)
-                .findFirst();
-        String result = null;
-        if (container.isPresent()) {
-            result = container.get().getPreamble().getName();
-        }
-        return result;
+    public String getTableName(int tableId) {
+        return info.getTableName(tableId);
     }
 
-    private int getMatchFieldId(String tableName, String matchFieldName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Table> tableContainer =
-                runtimeInfo.getTablesList()
-                .stream()
-                .filter(table -> table.getPreamble().getName().equals(tableName))
-                .findFirst();
-        int result = 0;
-        if (tableContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer =
-                    tableContainer.get()
-                    .getMatchFieldsList()
-                    .stream()
-                    .filter(matchField -> matchField.getName().equals(matchFieldName))
-                    .findFirst();
-            if (matchFieldContainer.isPresent()) {
-                result = matchFieldContainer.get().getId();
-            }
-        }
-        return result;
+    public int getMatchFieldId(String tableName, String matchFieldName) {
+        return info.getMatchFieldId(tableName, matchFieldName);
     }
 
-    private String getMatchFieldName(int tableId, int matchFieldId) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Table> tableContainer =
-                runtimeInfo.getTablesList()
-                .stream()
-                .filter(table -> table.getPreamble().getId() == tableId)
-                .findFirst();
-        String result = null;
-        if (tableContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer =
-                    tableContainer.get()
-                    .getMatchFieldsList()
-                    .stream()
-                    .filter(matchField -> matchField.getId() == (matchFieldId))
-                    .findFirst();
-            if (matchFieldContainer.isPresent()) {
-                result = matchFieldContainer.get().getName();
-            }
-        }
-        return result;
+    public String getMatchFieldName(int tableId, int matchFieldId) {
+        return info.getMatchFieldName(tableId, matchFieldId);
     }
 
-    private int getMatchFieldWidth(String tableName, String matchFieldName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Table> tableContainer =
-                runtimeInfo.getTablesList()
-                .stream()
-                .filter(table -> table.getPreamble().getName().equals(tableName))
-                .findFirst();
-        int result = 0;
-        if (tableContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer =
-                    tableContainer.get()
-                    .getMatchFieldsList()
-                    .stream()
-                    .filter(matchField -> matchField.getName().equals(matchFieldName))
-                    .findFirst();
-            if (matchFieldContainer.isPresent()) {
-                result = (matchFieldContainer.get().getBitwidth() + 7) / 8;
-            }
-        }
-        return result;
+    public int getMatchFieldWidth(String tableName, String matchFieldName) {
+        return info.getMatchFieldWidth(tableName, matchFieldName);
     }
 
-    private int getActionId(String actionName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer =
-                runtimeInfo.getActionsList()
-                .stream()
-                .filter(action -> action.getPreamble().getName().equals(actionName))
-                .findFirst();
-        int result = 0;
-        if (actionContainer.isPresent()) {
-            result = actionContainer.get().getPreamble().getId();
-        }
-        return result;
+    public int getActionId(String actionName) {
+        return info.getActionId(actionName);
     }
 
-    private String getActionName(int actionId) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer =
-                runtimeInfo.getActionsList()
-                .stream()
-                .filter(action -> action.getPreamble().getId() == actionId)
-                .findFirst();
-        String result = null;
-        if (actionContainer.isPresent()) {
-            result = actionContainer.get().getPreamble().getName();
-        }
-        return result;
+    public String getActionName(int actionId) {
+        return info.getActionName(actionId);
     }
 
-    private int getParamId(String actionName, String paramName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer =
-                runtimeInfo.getActionsList()
-                .stream()
-                .filter(action -> action.getPreamble().getName().equals(actionName))
-                .findFirst();
-        int result = 0;
-        if (actionContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer =
-                    actionContainer.get()
-                    .getParamsList()
-                    .stream()
-                    .filter(param -> param.getName().equals(paramName))
-                    .findFirst();
-            if (paramContainer.isPresent()) {
-                result = paramContainer.get().getId();
-            }
-        }
-        return result;
+    public int getParamId(String actionName, String paramName) {
+        return info.getParamId(actionName, paramName);
     }
 
-    private String getParamName(int actionId, int paramId) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer =
-                runtimeInfo.getActionsList()
-                .stream()
-                .filter(action -> action.getPreamble().getId() == actionId)
-                .findFirst();
-        String result = null;
-        if (actionContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer =
-                    actionContainer.get()
-                    .getParamsList()
-                    .stream()
-                    .filter(param -> param.getId() == paramId)
-                    .findFirst();
-            if (paramContainer.isPresent()) {
-                result = paramContainer.get().getName();
-            }
-        }
-        return result;
+    public String getParamName(int actionId, int paramId) {
+        return info.getParamName(actionId, paramId);
     }
 
-    private int getParamWidth(String actionName, String paramName) {
-        Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer =
-                runtimeInfo.getActionsList()
-                .stream()
-                .filter(action -> action.getPreamble().getName().equals(actionName))
-                .findFirst();
-        int result = 0;
-        if (actionContainer.isPresent()) {
-            Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer =
-                    actionContainer.get()
-                    .getParamsList()
-                    .stream()
-                    .filter(param -> param.getName().equals(paramName))
-                    .findFirst();
-            if (paramContainer.isPresent()) {
-                result = (paramContainer.get().getBitwidth() + 7) / 8;
-            }
-        }
-        return result;
+    public int getParamWidth(String actionName, String paramName) {
+        return info.getParamWidth(actionName, paramName);
     }
 
     public int getActionProfileId(String actionProfileName) {
-        int result = 0;
-        Optional<org.opendaylight.p4plugin.p4info.proto.ActionProfile> actionProfileContainer =
-                runtimeInfo.getActionProfilesList().stream()
-                .filter(actionProfile -> actionProfile.getPreamble().getName().equals(actionProfileName))
-                .findFirst();
-        if (actionProfileContainer.isPresent()) {
-            result = actionProfileContainer.get().getPreamble().getId();
-        }
-        return result;
+        return info.getActionProfileId(actionProfileName);
     }
 
-    private String getActionProfileName(Integer actionProfileId) {
-        String result = null;
-        Optional<org.opendaylight.p4plugin.p4info.proto.ActionProfile> actionProfileContainer =
-                runtimeInfo.getActionProfilesList().stream()
-                .filter(actionProfile -> actionProfile.getPreamble().getId() == actionProfileId)
-                .findFirst();
-        if (actionProfileContainer.isPresent()) {
-            result = actionProfileContainer.get().getPreamble().getName();
-        }
-        return result;
+    public String getActionProfileName(Integer actionProfileId) {
+        return info.getActionProfileName(actionProfileId);
     }
 
     public Long getDeviceId() {
@@ -344,7 +180,7 @@ public class P4Device  {
     }
 
     public boolean isConfigured() {
-        return runtimeInfo != null
+        return info != null
             && deviceConfig != null
             && state == State.Configured;
     }
@@ -364,11 +200,12 @@ public class P4Device  {
     public SetForwardingPipelineConfigResponse setPipelineConfig() {
         ForwardingPipelineConfig.Builder configBuilder = ForwardingPipelineConfig.newBuilder();
         P4DeviceConfig.Builder p4DeviceConfigBuilder = P4DeviceConfig.newBuilder();
+        P4Info p4Info = info.getP4Info();
         if (deviceConfig != null) {
             p4DeviceConfigBuilder.setDeviceData(deviceConfig);
         }
-        if (runtimeInfo != null) {
-            configBuilder.setP4Info(runtimeInfo);
+        if (p4Info != null) {
+            configBuilder.setP4Info(p4Info);
         }
         configBuilder.setP4DeviceConfig(p4DeviceConfigBuilder.build().toByteString());
         configBuilder.setDeviceId(deviceId);
@@ -377,6 +214,7 @@ public class P4Device  {
                 .addConfigs(configBuilder)
                 .build();
         SetForwardingPipelineConfigResponse response;
+
         try {
             /* response is empty now */
             response = stub.setPipelineConfig(request);
@@ -386,6 +224,7 @@ public class P4Device  {
             LOG.info("Set pipeline config RPC failed: {}", e.getStatus());
             e.printStackTrace();
         }
+
         return null;
     }
 
@@ -394,6 +233,7 @@ public class P4Device  {
                 .addDeviceIds(deviceId)
                 .build();
         GetForwardingPipelineConfigResponse response;
+
         try {
             /* response is empty now */
             response = stub.getPipelineConfig(request);
@@ -403,6 +243,7 @@ public class P4Device  {
                     e.getStatus(), e.getMessage());
             e.printStackTrace();
         }
+
         return null;
     }
 
@@ -439,13 +280,13 @@ public class P4Device  {
     private TableAction buildTableAction(ActionType actionType) {
         AbstractActionParser parser;
         if (actionType instanceof DIRECTACTION) {
-            parser = new DirectActionParser((DIRECTACTION)actionType);
+            parser = new DirectActionParser(this, (DIRECTACTION)actionType);
         } else if (actionType instanceof ACTIONPROFILEMEMBER) {
-            parser = new ActionProfileMemberParser((ACTIONPROFILEMEMBER) actionType);
+            parser = new MemberActionParser((ACTIONPROFILEMEMBER) actionType);
         } else if (actionType instanceof ACTIONPROFILEGROUP) {
-            parser = new ActionProfileGroupParser((ACTIONPROFILEGROUP) actionType);
+            parser = new GroupActionParser(((ACTIONPROFILEGROUP) actionType));
         } else {
-            throw new IllegalArgumentException("Invalid action type = " + actionType);
+            throw new IllegalArgumentException("Invalid action type");
         }
         return parser.parse();
     }
@@ -455,15 +296,15 @@ public class P4Device  {
         MatchType matchType = field.getMatchType();
         String fieldName = field.getFieldName();
         if (matchType instanceof EXACT) {
-            parser = new ExactMatchParser((EXACT) matchType, tableName, fieldName);
+            parser = new ExactMatchParser(this, (EXACT) matchType, tableName, fieldName);
         } else if (matchType instanceof LPM) {
-            parser = new LpmMatchParser((LPM) matchType, tableName, fieldName);
+            parser = new LpmMatchParser(this, (LPM) matchType, tableName, fieldName);
         } else if (matchType instanceof TERNARY) {
-            parser = new TernaryMatchParser((TERNARY) matchType, tableName, fieldName);
+            parser = new TernaryMatchParser(this, (TERNARY) matchType, tableName, fieldName);
         } else if (matchType instanceof RANGE) {
-            parser = new RangeMatchParser((RANGE) matchType, tableName, fieldName);
+            parser = new RangeMatchParser(this, (RANGE) matchType, tableName, fieldName);
         } else {
-            throw new IllegalArgumentException("Invalid match type = " + matchType);
+            throw new IllegalArgumentException("Invalid match type");
         }
         return parser.parse();
     }
@@ -515,8 +356,7 @@ public class P4Device  {
      * Input action profile member serialize to protobuf message, used for adding and
      * modifying a member. When this method is called, the device must be configured.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(
-            ActionProfileMember member) {
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(ActionProfileMember member) {
         String actionName = member.getActionName();
         Long memberId = member.getMemberId();
         String actionProfile = member.getActionProfile();
@@ -545,6 +385,7 @@ public class P4Device  {
             } else {
                 throw new IllegalArgumentException("Invalid value type.");
             }
+
             paramBuilder.setParamId(paramId);
             actionBuilder.addParams(paramBuilder);
         });
@@ -559,8 +400,7 @@ public class P4Device  {
      * Used for delete one member in action profile.table. When delete a member,
      * only need action profile name and member id.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(
-            MemberKey key) {
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember toMessage(MemberKey key) {
         Long memberId = key.getMemberId();
         String actionProfile = key.getActionProfile();
         org.opendaylight.p4plugin.p4runtime.proto.ActionProfileMember.Builder memberBuilder =
@@ -574,8 +414,7 @@ public class P4Device  {
      * Input action profile group serialize to protobuf message, used for add/modify.
      * When this method is called, the device must be configured.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage (
-            ActionProfileGroup group) {
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage(ActionProfileGroup group) {
         Long groupId = group.getGroupId();
         String actionProfile = group.getActionProfile();
         org.opendaylight.yang.gen.v1.urn
@@ -606,8 +445,7 @@ public class P4Device  {
      * Used for delete one group in action profile. When delete a group,
      * only need action profile name and group id.
      */
-    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage(
-            GroupKey key) {
+    public org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup toMessage(GroupKey key) {
         Long groupId = key.getGroupId();
         String actionProfile = key.getActionProfile();
         org.opendaylight.p4plugin.p4runtime.proto.ActionProfileGroup.Builder groupBuilder =
@@ -779,11 +617,11 @@ public class P4Device  {
         public P4Device build() {
             P4Device device = new P4Device();
             device.deviceConfig = deviceConfig_;
-            device.runtimeInfo = runtimeInfo_;
             device.deviceId = deviceId_;
             device.nodeId = nodeId_;
             device.ip = ip_;
             device.port = port_;
+            device.info = new P4RuntimeInfo(runtimeInfo_);
             device.stub = new P4RuntimeStub(nodeId_, deviceId_, ip_, port_);
             return device;
         }
@@ -793,240 +631,5 @@ public class P4Device  {
         Unknown,
         Connected,
         Configured,
-    }
-
-    /**
-     * Abstract action parser, we think there are three types actions for
-     * direct action, action profile member and action profile group currently.
-     * Each action parser must extends the abstract action parser.
-     * @param <T> Action type.
-     */
-    private abstract class AbstractActionParser<T> {
-        protected T action;
-        public AbstractActionParser(T action) {
-            this.action = action;
-        }
-        protected abstract TableAction parse();
-    }
-
-    private class DirectActionParser extends AbstractActionParser<DIRECTACTION> {
-        public DirectActionParser(DIRECTACTION action) {
-            super(action);
-        }
-
-        @Override
-        public TableAction parse() {
-            TableAction.Builder tableActionBuilder = TableAction.newBuilder();
-            Action.Builder actionBuilder = Action.newBuilder();
-            List<ActionParam> params = action.getActionParam();
-            String actionName = action.getActionName();
-            actionBuilder.setActionId(getActionId(actionName));
-            for (ActionParam p : params) {
-                Action.Param.Builder paramBuilder = Action.Param.newBuilder();
-                String paramName = p.getParamName();
-                int paramId = getParamId(actionName, paramName);
-                int paramWidth = getParamWidth(actionName, paramName);
-                paramBuilder.setParamId(paramId);
-                ParamValueType valueType = p.getParamValueType();
-
-                if (valueType instanceof PARAMVALUETYPESTRING) {
-                    String valueStr = ((PARAMVALUETYPESTRING) valueType).getParamStringValue();
-                    byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
-                    paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
-                } else if (valueType instanceof PARAMVALUETYPEBINARY) {
-                    byte[] valueBytes = ((PARAMVALUETYPEBINARY) valueType).getParamBinaryValue();
-                    paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
-                } else {
-                    throw new IllegalArgumentException("Invalid value type.");
-                }
-
-                actionBuilder.addParams(paramBuilder);
-            }
-            return tableActionBuilder.setAction(actionBuilder).build();
-        }
-    }
-
-    private class ActionProfileMemberParser extends AbstractActionParser<ACTIONPROFILEMEMBER> {
-        public ActionProfileMemberParser(ACTIONPROFILEMEMBER action) {
-            super(action);
-        }
-
-        @Override
-        public TableAction parse() {
-            TableAction.Builder builder = TableAction.newBuilder();
-            builder.setActionProfileMemberId(action.getMemberId().intValue());
-            return builder.build();
-        }
-    }
-
-    private class ActionProfileGroupParser extends AbstractActionParser<ACTIONPROFILEGROUP> {
-        public ActionProfileGroupParser(ACTIONPROFILEGROUP action) {
-            super(action);
-        }
-
-        @Override
-        public TableAction parse() {
-            TableAction.Builder builder = TableAction.newBuilder();
-            builder.setActionProfileGroupId(action.getGroupId().intValue());
-            return builder.build();
-        }
-    }
-
-    /**
-     * Abstract match field parser, according to P4_16, there isn't valid match type.
-     * Range match is limited in uin64, a little different from protobuf;
-     * @param <T> Field match type.
-     */
-    private abstract class AbstractMatchFieldParser<T> {
-        protected T matchType;
-        protected Integer matchFieldId;
-        protected Integer matchFieldWidth;
-
-        private AbstractMatchFieldParser(T matchType, String tableName, String fieldName) {
-            this.matchType = matchType;
-            this.matchFieldId = getMatchFieldId(tableName, fieldName);
-            this.matchFieldWidth = getMatchFieldWidth(tableName, fieldName);
-        }
-
-        public abstract FieldMatch parse();
-    }
-
-    private class ExactMatchParser extends AbstractMatchFieldParser<EXACT> {
-        private ExactMatchParser(EXACT exact, String tableName, String fieldName) {
-            super(exact, tableName, fieldName);
-        }
-
-        @Override
-        public FieldMatch parse() {
-            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
-            FieldMatch.Exact.Builder exactBuilder = FieldMatch.Exact.newBuilder();
-            EXACT exact = matchType;
-            ExactValueType valueType = exact.getExactValueType();
-            if (valueType instanceof EXACTVALUETYPESTRING) {
-                String valueStr = ((EXACTVALUETYPESTRING) valueType).getExactStringValue();
-                exactBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof EXACTVALUETYPEBINARY) {
-                byte[] valueBytes = ((EXACTVALUETYPEBINARY) valueType).getExactBinaryValue();
-                exactBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
-            } else {
-                throw new IllegalArgumentException("Invalid exact value type");
-            }
-            fieldMatchBuilder.setExact(exactBuilder);
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            return fieldMatchBuilder.build();
-        }
-    }
-
-    private class LpmMatchParser extends AbstractMatchFieldParser<LPM> {
-        private LpmMatchParser(LPM lpm, String tableName, String fieldName) {
-            super(lpm, tableName, fieldName);
-        }
-
-        @Override
-        public FieldMatch parse() {
-            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
-            FieldMatch.LPM.Builder lpmBuilder = FieldMatch.LPM.newBuilder();
-            LPM lpm = matchType;
-            Long prefixLen = lpm.getLpmPrefixLen();
-            LpmValueType valueType = lpm.getLpmValueType();
-            if (valueType instanceof LPMVALUETYPESTRING) {
-                String valueStr = ((LPMVALUETYPESTRING) valueType).getLpmStringValue();
-                lpmBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof LPMVALUETYPEBINARY) {
-                byte[] valueBytes = ((LPMVALUETYPEBINARY) valueType).getLpBinaryValue();
-                lpmBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
-            } else {
-                throw new IllegalArgumentException("Invalid lpm value type");
-            }
-            lpmBuilder.setPrefixLen(prefixLen.intValue());
-            fieldMatchBuilder.setLpm(lpmBuilder);
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            return fieldMatchBuilder.build();
-        }
-    }
-
-    private class TernaryMatchParser extends AbstractMatchFieldParser<TERNARY>  {
-        private TernaryMatchParser(TERNARY ternary, String tableName, String fieldName) {
-            super(ternary, tableName, fieldName);
-        }
-
-        @Override
-        public FieldMatch parse() {
-            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
-            FieldMatch.Ternary.Builder ternaryBuilder = FieldMatch.Ternary.newBuilder();
-            TERNARY ternary = matchType;
-            String mask = ternary.getTernaryMask();
-            TernaryValueType valueType = ternary.getTernaryValueType();
-
-            if (valueType instanceof TERNARYVALUETYPESTRING) {
-                String valueStr = ((TERNARYVALUETYPESTRING) valueType).getTernaryStringValue();
-                ternaryBuilder.setValue(ByteString.copyFrom(Utils.strToByteArray(valueStr, matchFieldWidth)));
-            } else if (valueType instanceof TERNARYVALUEBINARY) {
-                byte[] valueBytes = ((TERNARYVALUEBINARY) valueType).getTernaryBinaryValue();
-                ternaryBuilder.setValue(ByteString.copyFrom(valueBytes, 0, matchFieldWidth));
-            } else {
-                throw new IllegalArgumentException("Invalid ternary value type");
-            }
-
-            if (mask.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
-                           + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
-                           + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
-                ternaryBuilder.setMask(ByteString.copyFrom(Utils.strToByteArray(mask, 4)));
-            } else if (mask.matches("([1-9]|[1-2][0-9]|3[0-2])")) {
-                StringBuffer buffer = new StringBuffer(32);
-                for (int i = 0; i < 32; i++) {
-                    if (i < Integer.parseInt(mask)) {
-                        buffer.append('1');
-                    } else {
-                        buffer.append('0');
-                    }
-                }
-
-                String[] resultStr = new String[4];
-                byte[] resultByte = new byte[4];
-                for (int i = 0; i < resultStr.length; i++) {
-                    resultStr[i] = buffer.substring(i * 8, i * 8 + 8);
-                    for (int m = resultStr[i].length() - 1, n = 0; m >= 0; m--, n++) {
-                        resultByte[i] += Byte.parseByte(resultStr[i].charAt(i) + "") * Math.pow(2, n);
-                    }
-                }
-                ternaryBuilder.setMask(ByteString.copyFrom(resultByte));
-            }
-            fieldMatchBuilder.setTernary(ternaryBuilder);
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            return fieldMatchBuilder.build();
-        }
-    }
-
-    private class RangeMatchParser extends AbstractMatchFieldParser<RANGE> {
-        private RangeMatchParser(RANGE range, String tableName, String fieldName) {
-            super(range, tableName, fieldName);
-        }
-
-        @Override
-        public FieldMatch parse() {
-            FieldMatch.Builder fieldMatchBuilder = FieldMatch.newBuilder();
-            FieldMatch.Range.Builder rangeBuilder = FieldMatch.Range.newBuilder();
-            RANGE range = matchType;
-            RangeValueType valueType = range.getRangeValueType();
-            if (valueType instanceof RANGEVALUETYPESTRING) {
-                String highStr = ((RANGEVALUETYPESTRING) valueType).getHighValueString();
-                String lowStr = ((RANGEVALUETYPESTRING) valueType).getLowValueString();
-                byte[] highBytes = BigInteger.valueOf(Integer.parseInt(highStr)).toByteArray();
-                byte[] lowBytes = BigInteger.valueOf(Integer.parseInt(lowStr)).toByteArray();
-                rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
-                rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
-            } else if (valueType instanceof RANGEVALUETYPEBINARY) {
-                byte[] highBytes = ((RANGEVALUETYPEBINARY) valueType).getHighBinaryValue();
-                byte[] lowBytes = ((RANGEVALUETYPEBINARY) valueType).getLowValueBinary();
-                rangeBuilder.setHigh(ByteString.copyFrom(highBytes, 0, matchFieldWidth));
-                rangeBuilder.setLow(ByteString.copyFrom(lowBytes, 0, matchFieldWidth));
-            } else {
-                throw new IllegalArgumentException("Invalid range value type");
-            }
-            fieldMatchBuilder.setFieldId(matchFieldId);
-            fieldMatchBuilder.setRange(rangeBuilder);
-            return fieldMatchBuilder.build();
-        }
     }
 }

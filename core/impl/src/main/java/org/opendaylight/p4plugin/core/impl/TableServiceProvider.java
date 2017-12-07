@@ -9,9 +9,9 @@ package org.opendaylight.p4plugin.core.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.Futures;
-import org.opendaylight.p4plugin.core.impl.table.ActionProfileGroupOperator;
-import org.opendaylight.p4plugin.core.impl.table.ActionProfileMemberOperator;
-import org.opendaylight.p4plugin.core.impl.table.TableEntryOperator;
+import org.opendaylight.p4plugin.core.impl.table.profile.ActionProfileGroupOperator;
+import org.opendaylight.p4plugin.core.impl.table.profile.ActionProfileMemberOperator;
+import org.opendaylight.p4plugin.core.impl.table.entry.TableEntryOperator;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.table.rev170808.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
@@ -30,7 +30,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddTableEntryOutputBuilder builder = new AddTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new TableEntryOperator.AddTableEntryOperator(nodeId, input).operate();
+            boolean result = new TableEntryOperator(nodeId).add(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -45,7 +45,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         ModifyTableEntryOutputBuilder builder = new ModifyTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new TableEntryOperator.ModifyTableEntryOperator(nodeId, input).operate();
+            boolean result = new TableEntryOperator(nodeId).modify(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -60,7 +60,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         DeleteTableEntryOutputBuilder builder = new DeleteTableEntryOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new TableEntryOperator.DeleteTableEntryOperator(nodeId, input).operate();
+            boolean result = new TableEntryOperator(nodeId).delete(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -76,7 +76,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         String nodeId = input.getNodeId();
         String tableName = input.getTable();
         try {
-            List<String> result = new TableEntryOperator.ReadTableEntryOperator(nodeId, tableName).read();
+            List<String> result = new TableEntryOperator(nodeId).read(tableName);
             builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {
@@ -92,7 +92,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddActionProfileMemberOutputBuilder builder = new AddActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileMemberOperator.AddActionProfileMemberOperator(nodeId, input).operate();
+            boolean result = new ActionProfileMemberOperator(nodeId).add(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -108,7 +108,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         ModifyActionProfileMemberOutputBuilder builder = new ModifyActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileMemberOperator.ModifyActionProfileMemberOperator(nodeId, input).operate();
+            boolean result = new ActionProfileMemberOperator(nodeId).modify(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -124,7 +124,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         DeleteActionProfileMemberOutputBuilder builder = new DeleteActionProfileMemberOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileMemberOperator.DeleteActionProfileMemberOperator(nodeId, input).operate();
+            boolean result = new ActionProfileMemberOperator(nodeId).delete(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -141,8 +141,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         String nodeId = input.getNodeId();
         String actionProfile = input.getActionProfile();
         try {
-            List<String> result = new ActionProfileMemberOperator.ReadActionProfileMemberOperator(nodeId, actionProfile)
-                    .read();
+            List<String> result = new ActionProfileMemberOperator(nodeId).read(actionProfile);
             builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {
@@ -158,7 +157,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         AddActionProfileGroupOutputBuilder builder = new AddActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileGroupOperator.AddActionProfileGroupOperator(nodeId, input).operate();
+            boolean result = new ActionProfileGroupOperator(nodeId).add(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -174,7 +173,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         ModifyActionProfileGroupOutputBuilder builder = new ModifyActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileGroupOperator.ModifyActionProfileGroupOperator(nodeId, input).operate();
+            boolean result = new ActionProfileGroupOperator(nodeId).modify(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -190,7 +189,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         DeleteActionProfileGroupOutputBuilder builder = new DeleteActionProfileGroupOutputBuilder();
         String nodeId = input.getNodeId();
         try {
-            boolean result = new ActionProfileGroupOperator.DeleteActionProfileGroupOperator(nodeId, input).operate();
+            boolean result = new ActionProfileGroupOperator(nodeId).delete(input);
             builder.setResult(result);
         } catch (Exception e) {
             builder.setResult(false);
@@ -206,8 +205,7 @@ public class TableServiceProvider implements P4pluginCoreTableService {
         String nodeId = input.getNodeId();
         String actionProfile = input.getActionProfile();
         try {
-            List<String> result = new ActionProfileGroupOperator.ReadActionProfileGroupOperator(nodeId, actionProfile)
-                    .read();
+            List<String> result = new ActionProfileGroupOperator(nodeId).read(actionProfile);
             builder.setContent(result);
             builder.setResult(true);
         } catch (Exception e) {

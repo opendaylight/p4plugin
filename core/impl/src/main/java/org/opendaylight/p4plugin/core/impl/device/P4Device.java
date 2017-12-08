@@ -185,7 +185,7 @@ public class P4Device  {
             && state == State.Configured;
     }
 
-    public boolean connectToDevice() {
+    public boolean connect() {
         return stub.connect();
     }
 

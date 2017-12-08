@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * Flyweight factory is a P4 runtime channel factory, multiple devices share
- * the same gRPC channel, only one factory instance. P4 runtime stub is over
+ * FlyweightFactory is a P4RuntimeChannel factory, multiple devices can share
+ * the same gRPC channel, only one factory instance. P4RuntimeStub is over
  * the runtime channel.
  */
 public class FlyweightFactory {

@@ -7,7 +7,6 @@
  */
 package org.opendaylight.p4plugin.core.impl.utils;
 
-import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import org.opendaylight.p4plugin.p4info.proto.*;
@@ -53,13 +52,13 @@ public abstract class Utils {
      * Only support ipv4 address, mac address and integer value.
      */
     public static byte[] strToByteArray(String str, int len) {
-        String[] strArray = null;
-        byte[] byteArray = null;
+        String[] strArray;
+        byte[] byteArray;
 
         /* regular ipv4 address match (1~255).(0~255).(0~255).(0~255) */
         if (str.matches("([1-9]|[1-9]\\d|1\\d{2}|2[0-4]|25[0-5])\\."
-                + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
-                + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
+                      + "((\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])\\.){2}"
+                      + "(\\d|[1-9]\\d|1\\d{2}|2[0-4]\\d|25[0-5])")) {
             strArray = str.split("\\.");
             byteArray = new byte[strArray.length];
             assert (len == strArray.length);
@@ -73,12 +72,14 @@ public abstract class Utils {
             for (int i = 0; i < strArray.length; i++) {
                 byteArray[i] = (byte) Integer.parseInt(strArray[i], 16);
             }
-        } else {
+        } else if (str.matches("[0-9]+")){
             int value = Integer.parseInt(str);
             byteArray = new byte[len];
             for (int i = 0; i < len; i++) {
                 byteArray[i] = (byte) (value >> ((len - i - 1) * 8) & 0xFF);
             }
+        } else {
+            throw new IllegalArgumentException("Invalid input.");
         }
         return byteArray;
     }

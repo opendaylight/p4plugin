@@ -9,7 +9,6 @@ package org.opendaylight.p4plugin.core.impl.table.action;
 
 import com.google.protobuf.ByteString;
 import org.opendaylight.p4plugin.core.impl.device.P4Device;
-import org.opendaylight.p4plugin.core.impl.device.P4RuntimeInfo;
 import org.opendaylight.p4plugin.core.impl.utils.Utils;
 import org.opendaylight.p4plugin.p4runtime.proto.Action;
 import org.opendaylight.p4plugin.p4runtime.proto.TableAction;
@@ -40,20 +39,20 @@ public class DirectActionParser extends AbstractActionParser<DIRECTACTION> {
             int paramWidth = device.getParamWidth(actionName, paramName);
             paramBuilder.setParamId(paramId);
             ParamValueType valueType = p.getParamValueType();
-
-            if (valueType instanceof PARAMVALUETYPESTRING) {
-                String valueStr = ((PARAMVALUETYPESTRING) valueType).getParamStringValue();
-                byte[] valueByteArr = Utils.strToByteArray(valueStr, paramWidth);
-                paramBuilder.setValue(ByteString.copyFrom(valueByteArr));
-            } else if (valueType instanceof PARAMVALUETYPEBINARY) {
-                byte[] valueBytes = ((PARAMVALUETYPEBINARY) valueType).getParamBinaryValue();
-                paramBuilder.setValue(ByteString.copyFrom(valueBytes, 0, paramWidth));
-            } else {
-                throw new IllegalArgumentException("Invalid value type.");
-            }
-
+            paramBuilder.setValue(ByteString.copyFrom(getValue(valueType, paramWidth), 0, paramWidth));
             actionBuilder.addParams(paramBuilder);
         }
         return tableActionBuilder.setAction(actionBuilder).build();
+    }
+
+    private byte[] getValue(ParamValueType valueType, int paramWidth) {
+        if (valueType instanceof PARAMVALUETYPESTRING) {
+            String valueStr = ((PARAMVALUETYPESTRING) valueType).getParamStringValue();
+            return Utils.strToByteArray(valueStr, paramWidth);
+        } else if (valueType instanceof PARAMVALUETYPEBINARY) {
+            return ((PARAMVALUETYPEBINARY) valueType).getParamBinaryValue();
+        } else {
+            throw new IllegalArgumentException("Invalid param value type");
+        }
     }
 }

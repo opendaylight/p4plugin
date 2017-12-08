@@ -21,8 +21,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Device manager is used to save the device info and provides the add/remove,
- * find, query and other methods, only one instance.
+ * DeviceManager is used to save the device info and provides
+ * the add/remove/find/query methods and etc.
  */
 public class DeviceManager {
     private static final Logger LOG = LoggerFactory.getLogger(DeviceManager.class);
@@ -98,7 +98,7 @@ public class DeviceManager {
         }
 
         P4Device device = newDevice(nodeId, deviceId, ip, port, runtimeFile, configFile);
-        if (device.connectToDevice()) {
+        if (device.connect()) {
             device.setDeviceState(P4Device.State.Connected);
             devices.put(nodeId, device);
             LOG.info("Add device = {} success.", description);

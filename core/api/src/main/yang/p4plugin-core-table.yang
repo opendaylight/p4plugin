@@ -46,13 +46,12 @@ module p4plugin-core-table {
                              pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
                                    + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
                                    + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
-                                   + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                   + '([0-9]+)';
                         }
 
                         description
-                         "If you use PARM-VALUE-TYPE-STRING type, you can only fill it with one
-                          of the types of decimal number, hexadecimal number, ipv4 address and mac
-                          address.";
+                         "If you use string type, you can only fill it with one of decimal number,
+                          ipv4 address and mac address.";
                     }
                 }
 
@@ -84,13 +83,12 @@ module p4plugin-core-table {
                                     pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
                                           + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
                                           + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
-                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                          + '([0-9]+)';
                                 }
 
                                 description
-                                 "If you use EXACT-VALUE-TYPE-STRING type, you can only fill it with one
-                                  of the types of decimal number, hexadecimal number, ipv4 address and mac
-                                  address.";
+                                  "If you use string type, you can only fill it with one of decimal number,
+                                   ipv4 address and mac address.";
                             }
                         }
 
@@ -111,13 +109,12 @@ module p4plugin-core-table {
                                     pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
                                           + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
                                           + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
-                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                          + '([0-9]+)';
                                 }
 
                                 description
-                                 "If you use TERNARY-VALUE-TYPE-STRING type, you can only fill it with one
-                                  of the types of decimal number, hexadecimal number, ipv4 address and mac
-                                  address.";
+                                  "If you use string type, you can only fill it with one of decimal number,
+                                   ipv4 address and mac address.";
                             }
                         }
 
@@ -147,13 +144,12 @@ module p4plugin-core-table {
                                     pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
                                           + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
                                           + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
-                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                          + '([0-9]+)';
                                 }
 
                                 description
-                                 "If you use LPM-VALUE-TYPE-STRING type, you can only fill it with one
-                                  of the types of decimal number, hexadecimal number, ipv4 address and
-                                  mac address.";
+                                  "If you use string type, you can only fill it with one of decimal number,
+                                   ipv4 address and mac address.";
                             }
                         }
 
@@ -175,22 +171,20 @@ module p4plugin-core-table {
                         case RANGE-VALUE-TYPE-STRING {
                             leaf high-value-string {
                                 type string {
-                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                    pattern '([0-9]+)';
                                 }
 
                                 description
-                                 "If you use RANGE-VALUE-TYPE-STRING type, you can only fill it with a
-                                  decimal or hexadecimal number.";
+                                  "If you use string type, you can only fill it with a decimal number.";
                             }
 
                             leaf low-value-string {
                                 type string {
-                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                    pattern '([0-9]+)';
                                 }
 
                                 description
-                                 "If you use RANGE-VALUE-TYPE-STRING type, you can only fill it with a
-                                  decimal or hexadecimal number.";
+                                  "If you use string type, you can only fill it with a decimal number.";
                             }
                         }
 

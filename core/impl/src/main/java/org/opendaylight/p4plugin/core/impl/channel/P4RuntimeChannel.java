@@ -15,8 +15,8 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * P4 runtime channel, including a gRPC channel and a list which records
- * the stubs. Multiple stubs can share the same channel.
+ * P4RuntimeChannel contains a gRPC channel and a list which records
+ * the P4RuntimeStub. Multiple stubs can share the same P4RuntimeChannel.
  */
 public class P4RuntimeChannel {
     private ManagedChannel channel;

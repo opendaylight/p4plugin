@@ -24,8 +24,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 /**
- * P4 runtime stub, including blocking and async stubs, electionId and etc. In addition,
- * it encapsulates various methods for the upper layers.
+ * P4RuntimeStub contains a blocking stub, an async stub and electionId
+ * and etc. In addition, it encapsulates various methods for the upper
+ * layers. It is also an observer of election id.
  */
 public class P4RuntimeStub implements ElectionIdObserver {
     private static final Logger LOG = LoggerFactory.getLogger(P4RuntimeStub.class);
@@ -63,8 +64,8 @@ public class P4RuntimeStub implements ElectionIdObserver {
     }
 
     /**
-     * Open the bi-directional stream channel.
-     * @return The result of the stream channel connection.
+     * Open the bi-directional stream channel. Return the result of the
+     * stream channel connection.
      */
     public boolean connect() {
         streamChannel.openStreamChannel();

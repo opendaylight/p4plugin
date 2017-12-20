@@ -48,18 +48,18 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.GetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.GetPipelineConfigOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.P4pluginCoreDeviceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.QueryNodesOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.RemoveNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.RemoveNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.GetPipelineConfigInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.GetPipelineConfigOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.P4pluginRuntimeDeviceService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.QueryNodesOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.RemoveNodeInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.RemoveNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutputBuilder;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfoBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -98,7 +98,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
 //    @Mock
 //    private ReadTransaction readTransaction;
 
-    private P4pluginCoreDeviceServiceMock p4pluginCoreDeviceServiceMock;
+    private P4pluginRuntimeDeviceServiceMock p4pluginRuntimeDeviceServiceMock;
 
     private static final NodeId CONTROLLER_CONFIG_ID = new NodeId("controller-config");
     private static final NodeId NODE_ID = new NodeId("device0");
@@ -123,9 +123,9 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         when(optionalDataBrokerObject.isPresent()).thenReturn(true);
         when(optionalDataBrokerObject.get()).thenReturn(dataBroker);
 
-        p4pluginCoreDeviceServiceMock = new P4pluginCoreDeviceServiceMock();
-        when(rpcProviderRegistry.getRpcService(P4pluginCoreDeviceService.class))
-                .thenReturn(p4pluginCoreDeviceServiceMock);
+        p4pluginRuntimeDeviceServiceMock = new P4pluginRuntimeDeviceServiceMock();
+        when(rpcProviderRegistry.getRpcService(P4pluginRuntimeDeviceService.class))
+                .thenReturn(p4pluginRuntimeDeviceServiceMock);
 
         dataProcess = new DataProcess(dataBroker, mountPointService);
         deviceInterfaceDataOperator = new DeviceInterfaceDataOperator(dataProcess, rpcProviderRegistry);
@@ -196,7 +196,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         netconfStateChangeListener.onDataTreeChanged(modifications);
 
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeTwoGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeTwoGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
     }
 
     @Test
@@ -212,8 +212,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         netconfStateChangeListener.onDataTreeChanged(modifications);
 
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -230,8 +230,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -248,8 +248,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -266,8 +266,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -284,8 +284,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -302,8 +302,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -320,8 +320,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -338,8 +338,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginCoreDeviceServiceMock.getAddNodeInputList());
-        assertTestModifiedNodeThreeSPCgInput(p4pluginCoreDeviceServiceMock.getSetPipelineConfigInputList());
+        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
     @Test
@@ -413,7 +413,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTransaction.submit();
     }
 
-    private static class P4pluginCoreDeviceServiceMock implements P4pluginCoreDeviceService {
+    private static class P4pluginRuntimeDeviceServiceMock implements P4pluginRuntimeDeviceService {
 
         private List<AddNodeInput> addNodeInputList = new ArrayList<>();
         private List<SetPipelineConfigInput> setPipelineConfigInputList = new ArrayList<>();

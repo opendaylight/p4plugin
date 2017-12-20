@@ -1,0 +1,456 @@
+module p4plugin-runtime-table {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:runtime:table";
+    prefix "table";
+
+    organization
+        "ZTE corporation";
+
+    contact
+        "ding.rui@zte.com.cn";
+
+    description
+        "This module contains a set of type definitions and
+         RPCs that are used across p4plugin";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import p4plugin-runtime-device {
+        prefix "device";
+        revision-date 2017-08-08;
+    }
+
+    import p4plugin-runtime-common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+
+    grouping action {
+        leaf action-name {
+            type string;
+        }
+
+        list action-param {
+            key "param-name";
+            leaf param-name {
+                type string;
+            }
+
+            choice param-value-type {
+                default PARAM-VALUE-TYPE-STRING;
+                case PARAM-VALUE-TYPE-STRING {
+                    leaf param-string-value {
+                        type string {
+                             pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                   + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                   + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                   + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                        }
+
+                        description
+                         "If you use PARM-VALUE-TYPE-STRING type, you can only fill it with one
+                          of the types of decimal number, hexadecimal number, ipv4 address and mac
+                          address.";
+                    }
+                }
+
+                case PARAM-VALUE-TYPE-BINARY {
+                    leaf param-binary-value {
+                        type binary;
+                    }
+                }
+            }
+        }
+    }
+
+    //According to P4_16 spec, no valid match and using 'key' as keyword;
+    grouping key {
+        list field {
+            key "field-name";
+            leaf field-name {
+                type string;
+            }
+
+            choice match-type {
+                default EXACT;
+                case EXACT {
+                    choice exact-value-type {
+                        default EXACT-VALUE-TYPE-STRING;
+                        case EXACT-VALUE-TYPE-STRING {
+                            leaf exact-string-value {
+                                type string {
+                                    pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                          + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                          + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                }
+
+                                description
+                                 "If you use EXACT-VALUE-TYPE-STRING type, you can only fill it with one
+                                  of the types of decimal number, hexadecimal number, ipv4 address and mac
+                                  address.";
+                            }
+                        }
+
+                        case EXACT-VALUE-TYPE-BINARY {
+                            leaf exact-binary-value {
+                                type binary;
+                            }
+                        }
+                    }
+                }
+
+                case TERNARY {
+                    choice ternary-value-type {
+                        default TERNARY-VALUE-TYPE-STRING;
+                        case TERNARY-VALUE-TYPE-STRING {
+                            leaf ternary-string-value {
+                                type string {
+                                    pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                          + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                          + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                }
+
+                                description
+                                 "If you use TERNARY-VALUE-TYPE-STRING type, you can only fill it with one
+                                  of the types of decimal number, hexadecimal number, ipv4 address and mac
+                                  address.";
+                            }
+                        }
+
+                        case TERNARY-VALUE-BINARY {
+                            leaf ternary-binary-value {
+                                type binary;
+                            }
+                        }
+                    }
+
+                    leaf ternary-mask {
+                        type string {
+                            pattern '([1-9]|[1-2][0-9]|3[0-2])|'
+                                  + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|'
+                                  + '25[0-5])\.){3}([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4]'
+                                  + '[0-9]|25[0-5]))';
+                        }
+                    }
+                }
+
+                case LPM {
+                    choice lpm-value-type {
+                        default LPM-VALUE-TYPE-STRING;
+                        case LPM-VALUE-TYPE-STRING {
+                            leaf lpm-string-value {
+                                type string {
+                                    pattern '([0-9a-fA-F]{2}(:[0-9a-fA-F]{2}){5})|'
+                                          + '((([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5])\.){3}'
+                                          + '([0-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-5]))|'
+                                          + '(([0-9]+)|((0x|0X)[0-9A-Fa-f]+))';
+                                }
+
+                                description
+                                 "If you use LPM-VALUE-TYPE-STRING type, you can only fill it with one
+                                  of the types of decimal number, hexadecimal number, ipv4 address and
+                                  mac address.";
+                            }
+                        }
+
+                        case LPM-VALUE-TYPE-BINARY {
+                            leaf lp-binary-value {
+                                type binary;
+                            }
+                        }
+                    }
+
+                    leaf lpm-prefixLen {
+                        type uint32;
+                   }
+                }
+
+                case RANGE {
+                    choice range-value-type {
+                        default RANGE-VALUE-TYPE-STRING;
+                        case RANGE-VALUE-TYPE-STRING {
+                            leaf high-value-string {
+                                type string {
+                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                }
+
+                                description
+                                 "If you use RANGE-VALUE-TYPE-STRING type, you can only fill it with a
+                                  decimal or hexadecimal number.";
+                            }
+
+                            leaf low-value-string {
+                                type string {
+                                    pattern '([0-9]+)|((0x|0X)[0-9A-Fa-f]+)';
+                                }
+
+                                description
+                                 "If you use RANGE-VALUE-TYPE-STRING type, you can only fill it with a
+                                  decimal or hexadecimal number.";
+                            }
+                        }
+
+                        case RANGE-VALUE-TYPE-BINARY {
+                            leaf high-binary-value {
+                                type binary;
+                            }
+
+                            leaf low-value-binary {
+                                type binary;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    grouping entry-key {
+        leaf table {
+            type string;
+        }
+        uses key;
+    }
+
+    grouping table-entry {
+        uses entry-key;
+        choice action-type {
+            default DIRECT-ACTION;
+            case DIRECT-ACTION {
+                uses action;
+            }
+
+            case ACTION-PROFILE-MEMBER {
+                leaf member-id {
+                    type uint32;
+                }
+            }
+
+            case ACTION-PROFILE-GROUP {
+                leaf group-id {
+                    type uint32;
+                }
+            }
+        }
+
+        leaf priority {
+            type int32;
+            description
+             "Ignored unless match implies a TCAM lookup, i.e. at least one
+              of the match fields is TERNARY or RANGE.";
+        }
+
+        leaf controller-metadata {
+            type uint64;
+            description
+             "Cookie to the target, it will be returned in a read RPC.";
+        }
+    }
+
+    grouping member-key {
+        leaf action-profile {
+            type string;
+        }
+
+        leaf member-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-member {
+        uses member-key;
+        uses action;
+    }
+
+    grouping group-key {
+        leaf action-profile {
+            type string;
+        }
+
+        leaf group-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-group {
+        uses group-key;
+        leaf group-type {
+            type enumeration {
+                enum UNSPECIFIED;
+                enum SELECT;
+                enum FAST_FAILOVER;
+            }
+        }
+
+        list group-member {
+            key "member-id";
+            leaf member-id {
+                type uint32;
+            }
+
+            leaf weight {
+                type int32;
+            }
+
+            leaf watch {
+                type int32;
+            }
+        }
+
+        leaf max-size {
+            type int32;
+        }
+    }
+
+    rpc add-table-entry {
+        input {
+            uses device:node;
+            uses table-entry;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc modify-table-entry {
+        input {
+            uses device:node;
+            uses table-entry;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-table-entry {
+        input {
+            uses device:node;
+            uses entry-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-table-entry {
+        input {
+            uses device:node;
+            leaf table {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string; //Need to improve;
+            }
+        }
+    }
+
+    rpc add-action-profile-member {
+        input {
+            uses device:node;
+            uses action-profile-member;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc modify-action-profile-member {
+        input {
+            uses device:node;
+            uses action-profile-member;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-action-profile-member {
+        input {
+            uses device:node;
+            uses member-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-action-profile-member {
+        input {
+            uses device:node;
+            leaf action-profile {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string;
+            }
+        }
+    }
+
+    rpc add-action-profile-group {
+        input {
+            uses device:node;
+            uses action-profile-group;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    //modify action profile group member, max_size cannot be modified after a group has been created
+    rpc modify-action-profile-group {
+        input {
+            uses device:node;
+            uses action-profile-group;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc delete-action-profile-group {
+        input {
+            uses device:node;
+            uses group-key;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc read-action-profile-group {
+        input {
+            uses device:node;
+            leaf action-profile {
+                type string;
+            }
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf-list content {
+                type string;
+            }
+        }
+    }
+}

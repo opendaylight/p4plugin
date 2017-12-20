@@ -12,13 +12,13 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.AddNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.P4pluginCoreDeviceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.core.device.rev170808.SetPipelineConfigOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.P4pluginRuntimeDeviceService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutput;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeInterfacesState;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.NodeKey;
@@ -65,13 +65,13 @@ public class DeviceInterfaceDataOperator {
         try {
             LOG.info("Call rpc addNode");
             Future<RpcResult<AddNodeOutput>> addNodeRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginCoreDeviceService.class).addNode(constructRpcAddNodeInput(grpcInfo));
+                    .getRpcService(P4pluginRuntimeDeviceService.class).addNode(constructRpcAddNodeInput(grpcInfo));
             if (addNodeRpcResult.get().isSuccessful()) {
                 LOG.info("Rpc addNode called success, node: {}", nodeId);
                 if (addNodeRpcResult.get().getResult().isResult()) {
                     LOG.info("Add node {} success, call rpc setPipelineConfig", nodeId);
                     Future<RpcResult<SetPipelineConfigOutput>> setPipelineConfigRpcResult = rpcProviderRegistry
-                            .getRpcService(P4pluginCoreDeviceService.class)
+                            .getRpcService(P4pluginRuntimeDeviceService.class)
                             .setPipelineConfig(constructRpcSetPipelineConfigInput(nodeId));
                     if (setPipelineConfigRpcResult.get().isSuccessful()) {
                         LOG.info("Rpc setPipelineConfig called success, node: {}", nodeId);

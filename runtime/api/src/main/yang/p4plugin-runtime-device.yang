@@ -1,0 +1,120 @@
+module p4plugin-runtime-device {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:runtime:device";
+    prefix "device";
+
+    organization
+        "ZTE corporation";
+
+    contact
+        "ding.rui@zte.com.cn";
+
+    description
+        "This module contains a set of type definitions and
+         RPCs that are used across p4plugin";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+
+    import p4plugin-runtime-common {
+        prefix "common";
+        revision-date 2017-08-08;
+    }
+
+    grouping node {
+        leaf node-id {
+            type string;
+        }
+    }
+
+    grouping grpc-server-address {
+        leaf ip {
+            type inet:ipv4-address;
+        }
+
+        leaf port {
+            type inet:port-number;
+        }
+    }
+
+    grouping logic-device-id {
+        leaf device-id {
+            type uint64;
+        }
+    }
+
+    grouping device-config {
+        leaf config-file {
+            type string;
+        }
+
+        leaf runtime-file {
+            type string;
+        }
+    }
+
+    grouping device-identifier {
+        uses node;
+        uses grpc-server-address;
+        uses logic-device-id;
+        uses device-config;
+    }
+
+    rpc add-node {
+        input {
+            uses device-identifier;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc remove-node {
+        input {
+            uses node;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc query-nodes {
+        output {
+            uses common:rpc-result;
+            leaf-list node {
+                type string;
+            }
+        }
+    }
+
+    rpc set-pipeline-config {
+        input {
+            uses node;
+        }
+
+        output {
+            uses common:rpc-result;
+        }
+    }
+
+    rpc get-pipeline-config {
+        input {
+            uses node;
+        }
+
+        output {
+            uses common:rpc-result;
+            leaf p4-info {
+                type string;
+            }
+        }
+    }
+}

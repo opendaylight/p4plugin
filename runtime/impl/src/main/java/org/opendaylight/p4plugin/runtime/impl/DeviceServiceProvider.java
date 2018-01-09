@@ -7,98 +7,144 @@
  */
 package org.opendaylight.p4plugin.runtime.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.Futures;
 import com.google.protobuf.TextFormat;
+import io.grpc.ConnectivityState;
+import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.runtime.impl.device.DeviceManager;
 import org.opendaylight.p4plugin.runtime.impl.device.P4Device;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.P4pluginRuntimeDeviceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.rev170808.match.field.field.match.type.EXACT;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.util.concurrent.Future;
+import java.util.Optional;
+import java.util.concurrent.*;
 
-public class DeviceServiceProvider implements P4pluginRuntimeDeviceService {
+public class DeviceServiceProvider implements P4pluginDeviceService {
     private static final Logger LOG = LoggerFactory.getLogger(DeviceServiceProvider.class);
-    private final DeviceManager manager =  DeviceManager.getInstance();
-    @Override
-    public Future<RpcResult<AddNodeOutput>> addNode(AddNodeInput input) {
-        Preconditions.checkArgument(input != null, "Add node RPC input is null.");
-        AddNodeOutputBuilder builder = new AddNodeOutputBuilder();
-        String nodeId = input.getNodeId();
-        String ip = input.getIp().getValue();
-        Integer port = input.getPort().getValue();
-        Long deviceId = input.getDeviceId().longValue();
-        String runtimeFile = input.getRuntimeFile();
-        String configFile = input.getConfigFile();
-        try {
-            P4Device device = manager.addDevice(nodeId, deviceId, ip, port, runtimeFile, configFile);
-            builder.setResult(device != null);
-        } catch (IOException | NullPointerException e) {
-            builder.setResult(false);
-            LOG.info("Add node exception, "
-                            + "node id = {},"
-                            + "device id = {}, "
-                            + "runtime file = {}, "
-                            + "config file = {}, "
-                            + "reason = {}.",
-                    nodeId, deviceId, ip, port, runtimeFile, configFile, e.getMessage());
-            e.printStackTrace();
-        }
-        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    private DeviceManager manager;
+    private ExecutorService executorService;
+
+    public void init() {
+        executorService = Executors.newFixedThreadPool(1);
+        manager = DeviceManager.getInstance();
+        LOG.info("P4plugin device service provider initiated.");
+    }
+
+    public void close() {
+        executorService.shutdown();
+        LOG.info("P4plugin device service provider closed.");
+    }
+
+    private <T> RpcResult<T> rpcResultSuccess(T value) {
+        return RpcResultBuilder.success(value).build();
+    }
+
+    private Callable<RpcResult<Void>> addDev(AddDeviceInput input) {
+        return ()->{
+            String nodeId = input.getNid();
+            String ip = input.getIp().getValue();
+            Integer port = input.getPort().getValue();
+            Long deviceId = input.getDid().longValue();
+            String runtimeFile = input.getRuntimeFilePath();
+            String configFile = input.getConfigFilePath();
+            manager.addDevice(nodeId, deviceId, ip, port, runtimeFile, configFile);
+            LOG.info("Add device = [{}-{}-{}:{}-{}-{}] RPC success." , nodeId, deviceId, ip, port, runtimeFile, configFile);
+            return rpcResultSuccess(null);
+        };
+    }
+
+    private Callable<RpcResult<Void>> removeDev(RemoveDeviceInput input) {
+        return ()->{
+            manager.removeDevice(input.getNid());
+            LOG.info("Remove device = {} RPC success.", input.getNid());
+            return rpcResultSuccess(null);
+        };
+    }
+
+    private Callable<RpcResult<ConnectToDeviceOutput>> connectToDev(ConnectToDeviceInput input) {
+        return ()->{
+            try {
+                String nodeId = input.getNid();
+                Optional<P4Device> optional = manager.findDevice(nodeId);
+                optional.orElseThrow(IllegalArgumentException::new).connectToDevice();
+                boolean connectStatus = optional.get().getConnectState();
+                LOG.info("Connect to device = {} RPC success, connect state = {}.", nodeId, connectStatus);
+                ConnectToDeviceOutputBuilder outputBuilder = new ConnectToDeviceOutputBuilder();
+                outputBuilder.setConnectStatus(connectStatus);
+                return rpcResultSuccess(outputBuilder.build());
+            } catch (Exception e) {
+                LOG.info("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ");
+                e.printStackTrace();
+                throw new RuntimeException(e);
+            }
+        };
+    }
+
+    private Callable<RpcResult<java.lang.Void>> setConfig(SetPipelineConfigInput input) {
+        return ()->{
+            String nodeId = input.getNid();
+            Optional<P4Device> optional = manager.findDevice(nodeId);
+            optional.orElseThrow(IllegalArgumentException::new).setPipelineConfig();
+            LOG.info("Set device = {} pipeline config RPC success.", nodeId);
+            return rpcResultSuccess(null);
+        };
+    }
+
+    private Callable<RpcResult<GetPipelineConfigOutput>> getConfig(GetPipelineConfigInput input) {
+        return ()->{
+            String nodeId = input.getNid();
+            Optional<P4Device> optional = manager.findConfiguredDevice(nodeId);
+            P4Info p4info = optional.orElseThrow(IllegalArgumentException::new)
+                    .getPipelineConfig()
+                    .getConfigs(0)
+                    .getP4Info();
+            String result = TextFormat.printToString(p4info);
+            GetPipelineConfigOutputBuilder outputBuilder = new GetPipelineConfigOutputBuilder();
+            outputBuilder.setP4Info(result);
+            LOG.info("Get device = {} pipeline config RPC success.", nodeId);
+            return rpcResultSuccess(outputBuilder.build());
+        };
+    }
+
+    private Callable<RpcResult<QueryDevicesOutput>> queryDevs() {
+        return ()->{
+            QueryDevicesOutputBuilder outputBuilder = new QueryDevicesOutputBuilder();
+            outputBuilder.setNode(manager.queryNodes());
+            LOG.info("Query devices RPC success.");
+            return rpcResultSuccess(outputBuilder.build());
+        };
     }
 
     @Override
-    public Future<RpcResult<RemoveNodeOutput>> removeNode(RemoveNodeInput input) {
-        Preconditions.checkArgument(input != null, "Remove node RPC input is null.");
-        RemoveNodeOutputBuilder builder = new RemoveNodeOutputBuilder();
-        String nodeId = input.getNodeId();
-        builder.setResult(manager.isNodeExist(nodeId));
-        manager.removeDevice(nodeId);
-        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    public Future<RpcResult<java.lang.Void>> addDevice(AddDeviceInput input) {
+        return executorService.submit(addDev(input));
     }
 
     @Override
-    public Future<RpcResult<SetPipelineConfigOutput>> setPipelineConfig(SetPipelineConfigInput input) {
-        Preconditions.checkArgument(input != null, "Set pipeline config RPC input is null.");
-        SetPipelineConfigOutputBuilder builder = new SetPipelineConfigOutputBuilder();
-        String nodeId = input.getNodeId();
-        try {
-            builder.setResult(manager.findDevice(nodeId).setPipelineConfig() != null);
-        } catch (Exception e) {
-            builder.setResult(false);
-            e.printStackTrace();
-        }
-        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    public Future<RpcResult<java.lang.Void>> removeDevice(RemoveDeviceInput input) {
+        return executorService.submit(removeDev(input));
+    }
+
+    @Override
+    public Future<RpcResult<ConnectToDeviceOutput>> connectToDevice(ConnectToDeviceInput input) {
+        return executorService.submit(connectToDev(input));
+    }
+
+    @Override
+    public Future<RpcResult<java.lang.Void>> setPipelineConfig(SetPipelineConfigInput input) {
+        return executorService.submit(setConfig(input));
     }
 
     @Override
     public Future<RpcResult<GetPipelineConfigOutput>> getPipelineConfig(GetPipelineConfigInput input) {
-        Preconditions.checkArgument(input != null, "Get pipeline config RPC input is null.");
-        GetPipelineConfigOutputBuilder builder = new GetPipelineConfigOutputBuilder();
-        String nodeId = input.getNodeId();
-        String content;
-        try {
-            P4Device device = manager.findConfiguredDevice(nodeId);
-            content = TextFormat.printToString(device.getPipelineConfig().getConfigs(0).getP4Info());
-            builder.setP4Info(content);
-            builder.setResult(true);
-        } catch (Exception e) {
-            builder.setResult(false);
-            e.printStackTrace();
-        }
-        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+        return executorService.submit(getConfig(input));
     }
 
     @Override
-    public Future<RpcResult<QueryNodesOutput>> queryNodes() {
-        QueryNodesOutputBuilder builder = new QueryNodesOutputBuilder();
-        builder.setResult(true);
-        builder.setNode(manager.queryNodes());
-        return Futures.immediateFuture(RpcResultBuilder.success(builder.build()).build());
+    public Future<RpcResult<QueryDevicesOutput>> queryDevices() {
+        return executorService.submit(queryDevs());
     }
 }

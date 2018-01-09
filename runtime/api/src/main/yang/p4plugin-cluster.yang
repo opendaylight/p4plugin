@@ -1,22 +1,14 @@
-module p4plugin-runtime-cluster {
+module p4plugin-cluster {
     yang-version 1;
-    namespace "urn:opendaylight:p4plugin:runtime:cluster";
-    prefix "cluster";
+    namespace "urn:opendaylight:p4plugin:cluster";
+    prefix "p4p-cluster";
 
-    organization
-        "ZTE corporation";
-
-    contact
-        "ding.rui@zte.com.cn";
-
-    description
-        "This module contains a set of type definitions and
-         RPCs that are used across p4plugin";
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
 
     revision "2017-08-08" {
         description "Initial revision.";
     }
-
 
     rpc set-election-id {
         input {

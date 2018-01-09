@@ -12,13 +12,7 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.P4pluginRuntimeDeviceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeInterfacesState;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.NodeKey;
@@ -63,49 +57,55 @@ public class DeviceInterfaceDataOperator {
 
     public void sendP4DeviceInfo(String nodeId, GrpcInfo grpcInfo) {
         try {
-            LOG.info("Call rpc addNode");
-            Future<RpcResult<AddNodeOutput>> addNodeRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginRuntimeDeviceService.class).addNode(constructRpcAddNodeInput(grpcInfo));
-            if (addNodeRpcResult.get().isSuccessful()) {
-                LOG.info("Rpc addNode called success, node: {}", nodeId);
-                if (addNodeRpcResult.get().getResult().isResult()) {
-                    LOG.info("Add node {} success, call rpc setPipelineConfig", nodeId);
-                    Future<RpcResult<SetPipelineConfigOutput>> setPipelineConfigRpcResult = rpcProviderRegistry
-                            .getRpcService(P4pluginRuntimeDeviceService.class)
+            Future<RpcResult<Void>> addDeviceRpcResult = rpcProviderRegistry
+                    .getRpcService(P4pluginDeviceService.class)
+                    .addDevice(constructRpcAddNodeInput(grpcInfo));
+            if (addDeviceRpcResult.get().isSuccessful()) {
+                Future<RpcResult<ConnectToDeviceOutput>> connectToDeviceRpcResult = rpcProviderRegistry
+                        .getRpcService(P4pluginDeviceService.class)
+                        .connectToDevice(constructRpcConnectToDeviceInput(nodeId));
+                if (connectToDeviceRpcResult.get().getResult().isConnectStatus()) {
+                    Future<RpcResult<Void>> setPipelineConfigRpcResult = rpcProviderRegistry
+                            .getRpcService(P4pluginDeviceService.class)
                             .setPipelineConfig(constructRpcSetPipelineConfigInput(nodeId));
                     if (setPipelineConfigRpcResult.get().isSuccessful()) {
-                        LOG.info("Rpc setPipelineConfig called success, node: {}", nodeId);
-                        if (setPipelineConfigRpcResult.get().getResult().isResult()) {
-                            LOG.info("Set node {} forwarding pipeline config success", nodeId);
-                        }
+                        LOG.info("Rpc setPipelineConfig call success, node: {}", nodeId);
                     } else {
-                        LOG.info("Rpc setPipelineConfig called failed, node: {}", nodeId);
+                        LOG.info("Rpc setPipelineConfig call failed, node: {}", nodeId);
                     }
+                    LOG.info("Rpc connectToDevice call success, node: {}", nodeId);
                 } else {
-                    LOG.info("Add node {} failed", nodeId);
+                    LOG.info("Rpc connectToDevice call failed, node: {}", nodeId);
                 }
+                LOG.info("Rpc addDevice call success, node: {}", nodeId);
             } else {
-                LOG.info("Rpc addNode called failed, node: {}", nodeId);
+                LOG.info("Rpc addDevice call failed, node: {}", nodeId);
             }
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Rpc interrupted by {}", e);
         }
     }
 
-    private AddNodeInput constructRpcAddNodeInput(GrpcInfo grpcInfo) {
-        AddNodeInputBuilder builder = new AddNodeInputBuilder();
-        builder.setNodeId(grpcInfo.getNodeId());
+    private ConnectToDeviceInput constructRpcConnectToDeviceInput(String nodeId) {
+        ConnectToDeviceInputBuilder builder = new ConnectToDeviceInputBuilder();
+        builder.setNid(nodeId);
+        return builder.build();
+    }
+
+    private AddDeviceInput constructRpcAddNodeInput(GrpcInfo grpcInfo) {
+        AddDeviceInputBuilder builder = new AddDeviceInputBuilder();
+        builder.setNid(grpcInfo.getNodeId());
         builder.setIp(grpcInfo.getGrpcIp());
         builder.setPort(grpcInfo.getGrpcPort());
-        builder.setDeviceId(grpcInfo.getDeviceId());
-        builder.setRuntimeFile("/home/opendaylight/odl/p4src/switch.proto.txt");
-        builder.setConfigFile(null);
+        builder.setDid(grpcInfo.getDeviceId());
+        builder.setRuntimeFilePath("/home/opendaylight/odl/p4src/switch.proto.txt");
+        builder.setConfigFilePath(null);
         return builder.build();
     }
 
     private SetPipelineConfigInput constructRpcSetPipelineConfigInput(String nodeId) {
         SetPipelineConfigInputBuilder builder = new SetPipelineConfigInputBuilder();
-        builder.setNodeId(nodeId);
+        builder.setNid(nodeId);
         return builder.build();
     }
 
@@ -114,7 +114,6 @@ public class DeviceInterfaceDataOperator {
         LOG.info("Start write data to controller data store");
         InstanceIdentifier path = getNodePath(nodeId);
         dataProcess.writeToDataStore(nodeId, interfacesData, grpcInfo, path);
-
     }
 
     public NodeInterfacesState readInterfacesFromControllerDataStore() {

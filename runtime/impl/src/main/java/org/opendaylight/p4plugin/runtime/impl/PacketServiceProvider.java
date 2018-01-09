@@ -7,28 +7,44 @@
  */
 package org.opendaylight.p4plugin.runtime.impl;
 
-import com.google.common.base.Preconditions;
-import com.google.common.util.concurrent.Futures;
 import org.opendaylight.p4plugin.runtime.impl.device.DeviceManager;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.packet.rev170808.P4TransmitPacketInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.packet.rev170808.P4pluginRuntimePacketService;
+import org.opendaylight.p4plugin.runtime.impl.device.P4Device;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.packet.rev170808.P4TransmitPacketInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.packet.rev170808.P4pluginPacketService;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-public class PacketServiceProvider implements P4pluginRuntimePacketService {
+public class PacketServiceProvider implements P4pluginPacketService {
     private static final Logger LOG = LoggerFactory.getLogger(PacketServiceProvider.class);
-    private final DeviceManager manager =  DeviceManager.getInstance();
+    private DeviceManager manager;
+    private ExecutorService executorService;
+
+    public void init() {
+        executorService = Executors.newFixedThreadPool(1);
+        manager = DeviceManager.getInstance();
+        LOG.info("P4plugin packet service provider initiated.");
+    }
+
+    public void close() {
+        executorService.shutdown();
+        LOG.info("P4plugin packet service provider closed.");
+    }
+
+    @Override
     public Future<RpcResult<Void>> p4TransmitPacket(P4TransmitPacketInput input) {
-        Preconditions.checkArgument(input != null, "Transmit packet input is null.");
-        try {
-            manager.findConfiguredDevice(input.getNodeId()).transmitPacket(input.getPayload());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return Futures.immediateFuture(RpcResultBuilder.success((Void)null).build());
+        return executorService.submit(()->{
+            String nodeId = input.getNid();
+            Optional<P4Device> optional = manager.findConfiguredDevice(nodeId);
+            optional.orElseThrow(IllegalArgumentException::new).transmitPacket(input.getPayload());
+            LOG.info("Transmit packet to device = {} RPC success.", nodeId);
+            return RpcResultBuilder.success((Void)null).build();
+        });
     }
 }

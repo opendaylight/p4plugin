@@ -48,18 +48,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.AddNodeOutputBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.GetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.GetPipelineConfigOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.P4pluginRuntimeDeviceService;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.QueryNodesOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.RemoveNodeInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.RemoveNodeOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigInput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutput;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.runtime.device.rev170808.SetPipelineConfigOutputBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfoBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -124,7 +113,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         when(optionalDataBrokerObject.get()).thenReturn(dataBroker);
 
         p4pluginRuntimeDeviceServiceMock = new P4pluginRuntimeDeviceServiceMock();
-        when(rpcProviderRegistry.getRpcService(P4pluginRuntimeDeviceService.class))
+        when(rpcProviderRegistry.getRpcService(P4pluginDeviceService.class))
                 .thenReturn(p4pluginRuntimeDeviceServiceMock);
 
         dataProcess = new DataProcess(dataBroker, mountPointService);
@@ -413,39 +402,50 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTransaction.submit();
     }
 
-    private static class P4pluginRuntimeDeviceServiceMock implements P4pluginRuntimeDeviceService {
+    private static class P4pluginRuntimeDeviceServiceMock implements P4pluginDeviceService {
 
-        private List<AddNodeInput> addNodeInputList = new ArrayList<>();
+        private List<AddDeviceInput> addDeviceInputList = new ArrayList<>();
         private List<SetPipelineConfigInput> setPipelineConfigInputList = new ArrayList<>();
 
         @Override
-        public Future<RpcResult<AddNodeOutput>> addNode(AddNodeInput input) {
-            addNodeInputList.add(input);
-            AddNodeOutputBuilder builder = new AddNodeOutputBuilder();
-            if (input.getIp().getValue().equals("127.0.0.1")) {
-                builder.setResult(false);
-            } else {
-                builder.setResult(true);
-            }
-            RpcResultBuilder<AddNodeOutput> rpcResultBuilder = RpcResultBuilder.success();
-            rpcResultBuilder.withResult(builder.build());
-            SettableFuture<RpcResult<AddNodeOutput>> future = SettableFuture.create();
+        public Future<RpcResult<Void>> addDevice(AddDeviceInput input) {
+            addDeviceInputList.add(input);
+//            AddDeviceOutputBuilder builder = new AddDeviceOutputBuilder();
+//            if (input.getIp().getValue().equals("127.0.0.1")) {
+//                builder.setResult(false);
+//            } else {
+//                builder.setResult(true);
+//            }
+            RpcResultBuilder<Void> rpcResultBuilder = RpcResultBuilder.success();
+            //rpcResultBuilder.withResult(builder.build());
+            SettableFuture<RpcResult<Void>> future = SettableFuture.create();
             future.set(rpcResultBuilder.build());
             return future;
         }
 
-        private List<AddNodeInput> getAddNodeInputList() {
-            return addNodeInputList;
+        private List<AddDeviceInput> getAddNodeInputList() {
+            return addDeviceInputList;
         }
 
         @Override
-        public Future<RpcResult<SetPipelineConfigOutput>> setPipelineConfig(SetPipelineConfigInput input) {
-            setPipelineConfigInputList.add(input);
-            SetPipelineConfigOutputBuilder builder = new SetPipelineConfigOutputBuilder();
-            builder.setResult(true);
-            RpcResultBuilder<SetPipelineConfigOutput> rpcResultBuilder = RpcResultBuilder.success();
+        public Future<RpcResult<ConnectToDeviceOutput>> connectToDevice(ConnectToDeviceInput var1){
+            ConnectToDeviceOutputBuilder builder = new ConnectToDeviceOutputBuilder();
+            builder.setConnectStatus(true);
+            RpcResultBuilder<ConnectToDeviceOutput> rpcResultBuilder = RpcResultBuilder.success();
             rpcResultBuilder.withResult(builder.build());
-            SettableFuture<RpcResult<SetPipelineConfigOutput>> future = SettableFuture.create();
+            SettableFuture<RpcResult<ConnectToDeviceOutput>> future = SettableFuture.create();
+            future.set(rpcResultBuilder.build());
+            return future;
+        }
+
+        @Override
+        public Future<RpcResult<Void>> setPipelineConfig(SetPipelineConfigInput input) {
+            setPipelineConfigInputList.add(input);
+//            SetPipelineConfigOutputBuilder builder = new SetPipelineConfigOutputBuilder();
+//            builder.setResult(true);
+            RpcResultBuilder<Void> rpcResultBuilder = RpcResultBuilder.success();
+            //rpcResultBuilder.withResult(builder.build());
+            SettableFuture<RpcResult<Void>> future = SettableFuture.create();
             future.set(rpcResultBuilder.build());
             return future;
         }
@@ -460,35 +460,35 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         }
 
         @Override
-        public Future<RpcResult<RemoveNodeOutput>> removeNode(RemoveNodeInput input) {
+        public Future<RpcResult<Void>> removeDevice(RemoveDeviceInput input) {
             return null;
         }
 
         @Override
-        public Future<RpcResult<QueryNodesOutput>> queryNodes() {
+        public Future<RpcResult<QueryDevicesOutput>> queryDevices() {
             return null;
         }
     }
 
-    private void assertTestModifiedNodeTwoGrpcInfo(List<AddNodeInput> list) {
+    private void assertTestModifiedNodeTwoGrpcInfo(List<AddDeviceInput> list) {
         Assert.assertEquals(list.size(), 1);
-        Assert.assertEquals(list.get(0).getNodeId(), NODE_ID.getValue());
+        Assert.assertEquals(list.get(0).getNid(), NODE_ID.getValue());
         Assert.assertEquals(list.get(0).getIp(), new Ipv4Address("127.0.0.1"));
         Assert.assertEquals(list.get(0).getPort(), new PortNumber(50051));
-        Assert.assertEquals(list.get(0).getConfigFile(), null);
+        Assert.assertEquals(list.get(0).getConfigFilePath(), null);
     }
 
-    private void assertTestModifiedNodeThreeGrpcInfo(List<AddNodeInput> list) {
+    private void assertTestModifiedNodeThreeGrpcInfo(List<AddDeviceInput> list) {
         Assert.assertEquals(list.size(), 1);
-        Assert.assertEquals(list.get(0).getNodeId(), NODE_ID.getValue());
+        Assert.assertEquals(list.get(0).getNid(), NODE_ID.getValue());
         Assert.assertEquals(list.get(0).getIp(), new Ipv4Address("10.42.89.15"));
         Assert.assertEquals(list.get(0).getPort(), new PortNumber(50051));
-        Assert.assertEquals(list.get(0).getConfigFile(), null);
+        Assert.assertEquals(list.get(0).getConfigFilePath(), null);
     }
 
     private void assertTestModifiedNodeThreeSPCgInput(List<SetPipelineConfigInput> list) {
         Assert.assertEquals(list.size(), 1);
-        Assert.assertEquals(list.get(0).getNodeId(), NODE_ID.getValue());
+        Assert.assertEquals(list.get(0).getNid(), NODE_ID.getValue());
     }
 
 }

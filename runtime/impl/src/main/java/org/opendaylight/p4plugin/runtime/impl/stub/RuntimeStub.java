@@ -20,8 +20,7 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.packet.rev170808.P
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Iterator;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
+
 
 public class RuntimeStub implements ElectionIdObserver {
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeStub.class);
@@ -94,7 +93,7 @@ public class RuntimeStub implements ElectionIdObserver {
         }
     }
 
-    public void StreamChannel() {
+    public void streamChannel() {
         StreamObserver<StreamMessageResponse> responseStreamObserver = new StreamObserver<StreamMessageResponse>() {
             @Override
             public void onNext(StreamMessageResponse value) {
@@ -204,6 +203,10 @@ public class RuntimeStub implements ElectionIdObserver {
     public void update(ElectionId electionId) {
         this.electionId = electionId;
         sendMasterArbitration(electionId);
+    }
+
+    public ElectionId getElectionId() {
+        return electionId;
     }
 
     private void awaitConnection(long milliseconds) {

@@ -469,7 +469,7 @@ public class P4Device  {
         }
         runtimeStub = new RuntimeStub(ip, port, deviceId, nodeId);
         runtimeStub.notifyWhenStateChanged(ConnectivityState.READY, ()->isConfigured = false);
-        runtimeStub.StreamChannel();
+        runtimeStub.streamChannel();
     }
 
     public void shutdown() {

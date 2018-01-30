@@ -22,7 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class DeviceManager {
     private static final Logger LOG = LoggerFactory.getLogger(DeviceManager.class);
     private static DeviceManager singleton = new DeviceManager();
-    private ConcurrentHashMap<String, P4Device> devices = new ConcurrentHashMap<>();
+    private volatile ConcurrentHashMap<String, P4Device> devices = new ConcurrentHashMap<>();
     private DeviceManager() {}
     public static DeviceManager getInstance() {
         return singleton;
@@ -50,7 +50,7 @@ public class DeviceManager {
         return Optional.ofNullable(devices.get(nodeId));
     }
 
-    public void addDevice(String nodeId, Long deviceId, String ip, Integer port,
+    public synchronized void addDevice(String nodeId, Long deviceId, String ip, Integer port,
                           String runtimeFile, String configFile) throws IOException {
         if (isDeviceExist(nodeId, ip, port, deviceId)) {
             throw new IllegalArgumentException("Device is existed.");
@@ -68,7 +68,7 @@ public class DeviceManager {
         devices.put(nodeId, builder.build());
     }
 
-    public void removeDevice(String nodeId) {
+    public synchronized void removeDevice(String nodeId) {
         Optional<P4Device> optional = findDevice(nodeId);
         optional.ifPresent((device)->{
             device.shutdown();

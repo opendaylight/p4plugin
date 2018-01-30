@@ -66,20 +66,14 @@ public class DeviceServiceProvider implements P4pluginDeviceService {
 
     private Callable<RpcResult<ConnectToDeviceOutput>> connectToDev(ConnectToDeviceInput input) {
         return ()->{
-            try {
-                String nodeId = input.getNid();
-                Optional<P4Device> optional = manager.findDevice(nodeId);
-                optional.orElseThrow(IllegalArgumentException::new).connectToDevice();
-                boolean connectStatus = optional.get().getConnectState();
-                LOG.info("Connect to device = {} RPC success, connect state = {}.", nodeId, connectStatus);
-                ConnectToDeviceOutputBuilder outputBuilder = new ConnectToDeviceOutputBuilder();
-                outputBuilder.setConnectStatus(connectStatus);
-                return rpcResultSuccess(outputBuilder.build());
-            } catch (Exception e) {
-                LOG.info("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ");
-                e.printStackTrace();
-                throw new RuntimeException(e);
-            }
+            String nodeId = input.getNid();
+            Optional<P4Device> optional = manager.findDevice(nodeId);
+            optional.orElseThrow(IllegalArgumentException::new).connectToDevice();
+            boolean connectStatus = optional.get().getConnectState();
+            LOG.info("Connect to device = {} RPC success, connect state = {}.", nodeId, connectStatus);
+            ConnectToDeviceOutputBuilder outputBuilder = new ConnectToDeviceOutputBuilder();
+            outputBuilder.setConnectStatus(connectStatus);
+            return rpcResultSuccess(outputBuilder.build());
         };
     }
 

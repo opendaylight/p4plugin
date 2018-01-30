@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 
-
 public class RuntimeStub implements ElectionIdObserver {
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeStub.class);
     private ManagedChannel channel;

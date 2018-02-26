@@ -22,7 +22,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>p4plugin-features-aggregator</artifactId>
     <packaging>pom</packaging>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.2.0-SNAPSHOT</version>
     <name>p4plugin:features-aggregator</name>
 
     <modules>

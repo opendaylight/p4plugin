@@ -61,25 +61,41 @@ public class DeviceInterfaceDataOperator {
                     .getRpcService(P4pluginDeviceService.class)
                     .addDevice(constructRpcAddNodeInput(grpcInfo));
             if (addDeviceRpcResult.get().isSuccessful()) {
-                Future<RpcResult<ConnectToDeviceOutput>> connectToDeviceRpcResult = rpcProviderRegistry
-                        .getRpcService(P4pluginDeviceService.class)
-                        .connectToDevice(constructRpcConnectToDeviceInput(nodeId));
-                if (connectToDeviceRpcResult.get().getResult().isConnectStatus()) {
-                    Future<RpcResult<Void>> setPipelineConfigRpcResult = rpcProviderRegistry
-                            .getRpcService(P4pluginDeviceService.class)
-                            .setPipelineConfig(constructRpcSetPipelineConfigInput(nodeId));
-                    if (setPipelineConfigRpcResult.get().isSuccessful()) {
-                        LOG.info("Rpc setPipelineConfig call success, node: {}", nodeId);
-                    } else {
-                        LOG.info("Rpc setPipelineConfig call failed, node: {}", nodeId);
-                    }
-                    LOG.info("Rpc connectToDevice call success, node: {}", nodeId);
-                } else {
-                    LOG.info("Rpc connectToDevice call failed, node: {}", nodeId);
-                }
                 LOG.info("Rpc addDevice call success, node: {}", nodeId);
+                connectP4Device(nodeId);
             } else {
                 LOG.info("Rpc addDevice call failed, node: {}", nodeId);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Rpc interrupted by {}", e);
+        }
+    }
+
+    private void connectP4Device(String nodeId) {
+        try {
+            Future<RpcResult<ConnectToDeviceOutput>> connectToDeviceRpcResult = rpcProviderRegistry
+                    .getRpcService(P4pluginDeviceService.class)
+                    .connectToDevice(constructRpcConnectToDeviceInput(nodeId));
+            if (connectToDeviceRpcResult.get().getResult().isConnectStatus()) {
+                LOG.info("Rpc connectToDevice call success, node: {}", nodeId);
+                setPip(nodeId);
+            } else {
+                LOG.info("Rpc connectToDevice call failed, node: {}", nodeId);
+            }
+        } catch (InterruptedException | ExecutionException e) {
+            LOG.error("Rpc interrupted by {}", e);
+        }
+    }
+
+    private void setPip(String nodeId) {
+        try {
+            Future<RpcResult<Void>> setPipelineConfigRpcResult = rpcProviderRegistry
+                    .getRpcService(P4pluginDeviceService.class)
+                    .setPipelineConfig(constructRpcSetPipelineConfigInput(nodeId));
+            if (setPipelineConfigRpcResult.get().isSuccessful()) {
+                LOG.info("Rpc setPipelineConfig call success, node: {}", nodeId);
+            } else {
+                LOG.info("Rpc setPipelineConfig call failed, node: {}", nodeId);
             }
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Rpc interrupted by {}", e);

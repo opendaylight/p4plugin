@@ -15,6 +15,7 @@ import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionId;
 import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionIdGenerator;
 import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionIdObserver;
 import org.opendaylight.p4plugin.runtime.impl.utils.NotificationPublisher;
+import org.opendaylight.p4plugin.runtime.impl.utils.SleepUtils;
 import org.opendaylight.p4plugin.runtime.impl.utils.Utils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.packet.rev170808.P4PacketReceivedBuilder;
 import org.slf4j.Logger;
@@ -112,7 +113,8 @@ public class RuntimeStub implements ElectionIdObserver {
 
         requestStreamObserver = asyncStub.streamChannel(responseStreamObserver);
         sendMasterArbitration(electionId);
-        awaitConnection(5000);
+        //awaitConnection(5000);
+        SleepUtils.seconds(5);
     }
 
     public void transmitPacket(byte[] payload) {

@@ -15,13 +15,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <parent>
         <groupId>org.opendaylight.controller</groupId>
         <artifactId>config-parent</artifactId>
-        <version>0.8.0-SNAPSHOT</version>
+        <version>0.8.0</version>
         <relativePath/>
     </parent>
 
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>p4plugin-runtime-impl</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <name>p4plugin:runtime-impl</name>
     <packaging>bundle</packaging>
 
@@ -66,7 +66,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <dependency>
             <groupId>org.opendaylight.p4plugin</groupId>
             <artifactId>p4plugin-runtime-api</artifactId>
-            <version>0.1.0-SNAPSHOT</version>
+            <version>0.1.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>

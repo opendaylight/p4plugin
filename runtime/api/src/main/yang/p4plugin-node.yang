@@ -1,7 +1,7 @@
-module p4plugin-device {
+module p4plugin-node {
     yang-version 1;
-    namespace "urn:opendaylight:p4plugin:device";
-    prefix "p4p-device";
+    namespace "urn:opendaylight:p4plugin:node";
+    prefix "p4p-node";
 
     organization "ZTE corporation";
     contact "ding.rui@zte.com.cn";
@@ -20,6 +20,12 @@ module p4plugin-device {
         revision-date 2017-08-08;
     }
 
+    grouping device-id {
+        leaf did {
+            type uint64;
+        }
+    }
+
     grouping grpc-server-address {
         leaf ip {
             type inet:ipv4-address;
@@ -30,18 +36,7 @@ module p4plugin-device {
         }
     }
 
-    grouping device-id {
-        leaf did {
-            type uint64;
-        }
-    }
-
-    grouping target {
-        uses device-id;
-        uses grpc-server-address;
-    }
-
-    grouping dataplane-config {
+    grouping pipeline-config {
         leaf config-file-path {
             type string;
         }
@@ -51,40 +46,33 @@ module p4plugin-device {
         }
     }
 
-    grouping device {
-        uses p4p-types:node-id;
-        uses target;
-        uses dataplane-config;
+    grouping target {
+        uses device-id;
+        uses grpc-server-address;
+        uses pipeline-config;
     }
 
-    rpc add-device {
+    grouping node {
+        uses p4p-types:node-id;
+        uses target;
+    }
+
+    rpc add-node {
         input {
-            uses device;
+            uses node;
         }
     }
 
-    rpc remove-device {
+    rpc remove-node {
         input {
             uses p4p-types:node-id;
         }
     }
 
-    rpc query-devices {
+    rpc query-nodes {
         output {
             leaf-list node {
                 type string;
-            }
-        }
-    }
-
-    rpc connect-to-device {
-        input {
-            uses p4p-types:node-id;
-        }
-
-        output {
-            leaf connect-status {
-                type boolean;
             }
         }
     }
@@ -101,8 +89,34 @@ module p4plugin-device {
         }
 
         output {
-            leaf p4-info {
+            leaf runtime-info {
                 type string;
+            }
+
+            leaf pipeline-config {
+                type binary;
+            }
+        }
+    }
+
+    rpc open-stream-channel {
+        input {
+            uses p4p-types:node-id;
+        }
+    }
+
+    rpc get-node-state {
+        input {
+            uses p4p-types:node-id;
+        }
+
+        output {
+            leaf channel-state {
+                type p4p-types:channel-state;
+            }
+
+            leaf config-state {
+                type p4p-types:config-state;
             }
         }
     }

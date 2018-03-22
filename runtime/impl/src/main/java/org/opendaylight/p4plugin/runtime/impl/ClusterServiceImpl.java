@@ -21,17 +21,17 @@ import org.slf4j.LoggerFactory;
 import java.math.BigInteger;
 import java.util.concurrent.Future;
 
-public class ClusterServiceProvider implements P4pluginClusterService {
-    private static final Logger LOG = LoggerFactory.getLogger(ClusterServiceProvider.class);
+public class ClusterServiceImpl implements P4pluginClusterService  {
+    private static final Logger LOG = LoggerFactory.getLogger(ClusterServiceImpl.class);
+
     @Override
-    public Future<RpcResult<java.lang.Void>> setElectionId(SetElectionIdInput input) {
+    public Future<RpcResult<Void>> setElectionId(SetElectionIdInput input) {
         long high = input.getHigh().longValue();
         long low = input.getLow().longValue();
         ElectionIdGenerator.getInstance().setElectionId(new ElectionId(high, low));
         LOG.info("Set election ID RPC success, high = {}, low = {}.", high, low);
         return RpcResultBuilder.success((Void)null).buildFuture();
     }
-
 
     @Override
     public Future<RpcResult<GetElectionIdOutput>> getElectionId() {

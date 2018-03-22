@@ -18,29 +18,29 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="notificationPublishService"
         interface="org.opendaylight.controller.md.sal.binding.api.NotificationPublishService"/>
 
-    <bean id="deviceServiceProvider"
-          class="org.opendaylight.p4plugin.runtime.impl.DeviceServiceProvider"
+    <bean id="nodeServiceImpl"
+          class="org.opendaylight.p4plugin.runtime.impl.NodeServiceImpl"
           init-method="init" destroy-method="close" >
     </bean>
 
-    <bean id="runtimeServiceProvider"
-        class="org.opendaylight.p4plugin.runtime.impl.RuntimeServiceProvider"
+    <bean id="tableServiceImpl"
+        class="org.opendaylight.p4plugin.runtime.impl.TableServiceImpl"
         init-method="init" destroy-method="close">
         <argument ref="dataBroker" />
         <argument ref="notificationPublishService" />
     </bean>
 
-    <bean id="packetServiceProvider"
-          class="org.opendaylight.p4plugin.runtime.impl.PacketServiceProvider"
+    <bean id="packetServiceImpl"
+          class="org.opendaylight.p4plugin.runtime.impl.PacketServiceImpl"
           init-method="init" destroy-method="close">
     </bean>
 
-    <bean id="clusterServiceProvider"
-          class="org.opendaylight.p4plugin.runtime.impl.ClusterServiceProvider">
+    <bean id="clusterServiceImpl"
+          class="org.opendaylight.p4plugin.runtime.impl.ClusterServiceImpl">
     </bean>
 
-    <odl:rpc-implementation ref="deviceServiceProvider" />
-    <odl:rpc-implementation ref="runtimeServiceProvider" />
-    <odl:rpc-implementation ref="packetServiceProvider" />
-    <odl:rpc-implementation ref="clusterServiceProvider" />
+    <odl:rpc-implementation ref="nodeServiceImpl" />
+    <odl:rpc-implementation ref="tableServiceImpl" />
+    <odl:rpc-implementation ref="packetServiceImpl" />
+    <odl:rpc-implementation ref="clusterServiceImpl" />
 </blueprint>

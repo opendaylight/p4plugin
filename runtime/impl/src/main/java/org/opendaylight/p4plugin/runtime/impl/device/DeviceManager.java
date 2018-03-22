@@ -7,93 +7,68 @@
  */
 package org.opendaylight.p4plugin.runtime.impl.device;
 
-import com.google.protobuf.ByteString;
-import org.opendaylight.p4plugin.runtime.impl.utils.Utils;
-import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class DeviceManager {
     private static final Logger LOG = LoggerFactory.getLogger(DeviceManager.class);
     private static DeviceManager singleton = new DeviceManager();
-    private volatile ConcurrentHashMap<String, P4Device> devices = new ConcurrentHashMap<>();
+    private ConcurrentHashMap<String, Device> devices = new ConcurrentHashMap<>();
     private DeviceManager() {}
     public static DeviceManager getInstance() {
         return singleton;
     }
 
-    public boolean isNodeExist(String nodeId) {
+    public boolean isNodeIdExist(String nodeId) {
         return devices.keySet().contains(nodeId);
     }
 
-    public boolean isTargetExist(String ip, Integer port, Long deviceId) {
-        Optional<String> keyContainer = devices.keySet()
+    public boolean isTargetExist(Long deviceId, String ip, Integer port) {
+        Optional<String> keys = devices.keySet()
                 .stream()
-                .filter(k -> devices.get(k).getDeviceId().equals(deviceId)
-                          && devices.get(k).getIp().equals(ip)
-                          && devices.get(k).getPort().equals(port))
+                .filter(k -> devices.get(k).deviceId.equals(deviceId)
+                          && devices.get(k).serverAddress.getIp().equals(ip)
+                          && devices.get(k).serverAddress.getPort().equals(port))
                 .findFirst();
-        return keyContainer.isPresent();
+        return keys.isPresent();
     }
 
-    public boolean isDeviceExist(String nodeId, String ip, Integer port, Long deviceId) {
-        return isNodeExist(nodeId) && isTargetExist(ip, port, deviceId);
+    public boolean isDeviceExist(String nodeId, Long deviceId, String ip, Integer port) {
+        return isNodeIdExist(nodeId) || isTargetExist(deviceId, ip, port);
     }
 
-    public Optional<P4Device> findDevice(String nodeId) {
+    public Optional<Device> findDevice(String nodeId) {
         return Optional.ofNullable(devices.get(nodeId));
     }
 
-    public synchronized void addDevice(String nodeId, Long deviceId, String ip, Integer port,
-                          String runtimeFile, String configFile) throws IOException {
-        if (isDeviceExist(nodeId, ip, port, deviceId)) {
-            throw new IllegalArgumentException("Device is existed.");
+    public void addDevice(String nodeId, Long deviceId, String ip, Integer port,
+                             String configFile, String runtimeFile) throws IOException {
+        if (isDeviceExist(nodeId, deviceId, ip, port)) {
+            LOG.info("Device = {}/{} is already existed.", nodeId, String.format("%d:%s:%s", deviceId, ip, port));
+            throw new IllegalArgumentException("Device is already existed.");
         }
 
-        P4Info p4Info = Utils.parseRuntimeInfo(runtimeFile);
-        ByteString config = Utils.parseDeviceConfigInfo(configFile);
-        P4Device.Builder builder = P4Device.newBuilder()
-                .setNodeId(nodeId)
-                .setDeviceId(deviceId)
-                .setRuntimeInfo(p4Info)
-                .setDeviceConfig(config)
-                .setIp(ip)
-                .setPort(port);
-        devices.put(nodeId, builder.build());
+        Device device = new Device(nodeId, deviceId,
+                                   new ServerAddress(ip, port),
+                                   new PipelineConfig(configFile, runtimeFile));
+        devices.put(nodeId, device);
     }
 
-    public synchronized void removeDevice(String nodeId) {
-        Optional<P4Device> optional = findDevice(nodeId);
-        optional.ifPresent((device)->{
+    public void removeDevice(String nodeId) {
+        Optional<Device> optional = findDevice(nodeId);
+        optional.ifPresent((device) -> {
             device.shutdown();
             devices.remove(nodeId);
-            LOG.info("Device = [{}] removed.", device.getNodeId());
+            LOG.info("Device = {} removed.", device.nodeId);
         });
     }
 
-    public Optional<P4Device> findConfiguredDevice(String nodeId) {
-        Optional<P4Device> optional = findDevice(nodeId);
-
-        if ((optional.isPresent()) && (optional.get().isConfigured())) {
-            return optional;
-        } else {
-            LOG.info("Cannot find a configured device, node id = {}.", nodeId);
-            return Optional.empty();
-        }
-    }
-
-    public List<String> queryNodes() {
-        List<String> result = new ArrayList<>();
-        devices.keySet().forEach(node->{
-            P4Device device = devices.get(node);
-            result.add(device.toString());
-        });
-        return result;
+    public Map<String, Device> queryDevices() {
+        return devices;
     }
 }

@@ -1,0 +1,77 @@
+module p4plugin-profile {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:profile";
+    prefix "p4p-profile";
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import p4plugin-node {
+        prefix "p4p-node";
+        revision-date 2017-08-08;
+    }
+
+    import p4plugin-types {
+        prefix "p4p-types";
+        revision-date 2017-08-08;
+    }
+    
+    import p4plugin-table {
+        prefix "p4p-table";
+        revision-date 2017-08-08;
+    }
+
+    grouping member-key {
+        leaf action-profile-name {
+            type string;
+        }
+
+        leaf member-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-member {
+        uses member-key;
+        uses p4p-table:action;
+    }
+
+    grouping group-key {
+        leaf action-profile-name {
+            type string;
+        }
+
+        leaf group-id {
+            type uint32;
+        }
+    }
+
+    grouping action-profile-group {
+        uses group-key;
+        list group-member {
+            key member-id;
+            leaf member-id {
+                type uint32;
+            }
+
+            leaf weight {
+                type int32;
+            }
+
+            leaf watch {
+                type uint32;
+            }
+        }
+
+        leaf max-size {
+            type int32;
+            description
+              "Max size cannot be modified after a group has been created";
+        }
+    }
+}
+

@@ -1,0 +1,152 @@
+module p4plugin-table {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:table";
+    prefix "p4p-table";
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import p4plugin-node {
+        prefix "p4p-node";
+        revision-date 2017-08-08;
+    }
+
+    import p4plugin-types {
+        prefix "p4p-types";
+        revision-date 2017-08-08;
+    }
+
+    grouping action {
+        leaf action-name {
+            type string;
+        }
+
+        list action-param {
+            key param-name;
+            leaf param-name {
+                type string;
+            }
+
+            leaf param-value {
+                type binary;
+            }
+        }
+    }
+
+    grouping match-field {
+        list field {
+            leaf field-name {
+                type string;
+            }
+
+            choice match-type {
+                case EXACT {
+                    leaf exact-value {
+                        type binary;
+                    }
+                }
+
+                case LPM {
+                    leaf lpm-value {
+                        type binary;
+                    }
+
+                    leaf prefix-len {
+                        type uint32;
+                    }
+                }
+
+                case TERNARY {
+                    leaf ternary-value {
+                        type binary;
+                    }
+
+                    leaf mask {
+                        type binary;
+                    }
+                }
+            }
+        }
+    }
+
+    grouping table-entry-key {
+        leaf table-name {
+            type string;
+        }
+        uses match-field;
+    }
+
+    grouping table-entry {
+        uses table-entry-key;
+        choice action-type {
+            case DIRECT-ACTION {
+                uses action;
+            }
+
+            case ACTION-PROFILE-MEMBER {
+                leaf member-id {
+                    type uint32;
+                }
+            }
+
+            case ACTION-PROFILE-GROUP {
+                leaf group-id {
+                    type uint32;
+                }
+            }
+        }
+
+        leaf default-action {
+            type boolean;
+        }
+
+        leaf priority {
+            type int32;
+        }
+
+        leaf controller-metadata {
+            type uint64;
+        }
+    }
+
+    rpc add-table-entry {
+        input {
+            uses p4p-types:node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc modify-table-entry {
+        input {
+            uses p4p-types:node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc delete-table-entry {
+        input {
+            uses p4p-types:node-id;
+            uses table-entry-key;
+        }
+    }
+
+    rpc read-table-entry {
+        input {
+            uses p4p-types:node-id;
+            leaf table-name {
+                type string;
+            }
+        }
+
+        output {
+            leaf-list entry {
+                type string;
+            }
+        }
+    }
+}
+

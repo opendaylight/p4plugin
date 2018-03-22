@@ -48,7 +48,7 @@ import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.yang.types.
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNode;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.netconf.node.topology.rev150114.NetconfNodeConnectionStatus;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.node.rev170808.*;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfo;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.yang.p4device.grpc.rev170908.GrpcInfoBuilder;
 import org.opendaylight.yang.gen.v1.urn.tbd.params.xml.ns.yang.network.topology.rev131021.NodeId;
@@ -87,7 +87,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
 //    @Mock
 //    private ReadTransaction readTransaction;
 
-    private P4pluginRuntimeDeviceServiceMock p4pluginRuntimeDeviceServiceMock;
+    private P4pluginRuntimeNodeServiceMock p4pluginRuntimeDeviceServiceMock;
 
     private static final NodeId CONTROLLER_CONFIG_ID = new NodeId("controller-config");
     private static final NodeId NODE_ID = new NodeId("device0");
@@ -112,8 +112,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         when(optionalDataBrokerObject.isPresent()).thenReturn(true);
         when(optionalDataBrokerObject.get()).thenReturn(dataBroker);
 
-        p4pluginRuntimeDeviceServiceMock = new P4pluginRuntimeDeviceServiceMock();
-        when(rpcProviderRegistry.getRpcService(P4pluginDeviceService.class))
+        p4pluginRuntimeDeviceServiceMock = new P4pluginRuntimeNodeServiceMock();
+        when(rpcProviderRegistry.getRpcService(P4pluginNodeService.class))
                 .thenReturn(p4pluginRuntimeDeviceServiceMock);
 
         dataProcess = new DataProcess(dataBroker, mountPointService);
@@ -273,7 +273,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTestDataToDataStore(dataBroker, GRPC_INFO_IID, constructGrpcInfo(NODE_ID, "10.42.89.15", 50051, "1"));
         netconfStateChangeListener.onDataTreeChanged(modifications);
         assertTrue(netconfStateChangeListener.getNodeModifiedMap().containsKey(NODE_ID));
-        assertTestModifiedNodeThreeGrpcInfo(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
+        //(p4pluginRuntimeDeviceServiceMock.getAddNodeInputList());
         assertTestModifiedNodeThreeSPCgInput(p4pluginRuntimeDeviceServiceMock.getSetPipelineConfigInputList());
     }
 
@@ -402,13 +402,13 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         writeTransaction.submit();
     }
 
-    private static class P4pluginRuntimeDeviceServiceMock implements P4pluginDeviceService {
+    private static class P4pluginRuntimeNodeServiceMock implements P4pluginNodeService {
 
-        private List<AddDeviceInput> addDeviceInputList = new ArrayList<>();
+        private List<AddNodeInput> addDeviceInputList = new ArrayList<>();
         private List<SetPipelineConfigInput> setPipelineConfigInputList = new ArrayList<>();
 
         @Override
-        public Future<RpcResult<Void>> addDevice(AddDeviceInput input) {
+        public Future<RpcResult<Void>> addNode(AddNodeInput input) {
             addDeviceInputList.add(input);
 //            AddDeviceOutputBuilder builder = new AddDeviceOutputBuilder();
 //            if (input.getIp().getValue().equals("127.0.0.1")) {
@@ -423,19 +423,8 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
             return future;
         }
 
-        private List<AddDeviceInput> getAddNodeInputList() {
+        private List<AddNodeInput> getAddNodeInputList() {
             return addDeviceInputList;
-        }
-
-        @Override
-        public Future<RpcResult<ConnectToDeviceOutput>> connectToDevice(ConnectToDeviceInput var1){
-            ConnectToDeviceOutputBuilder builder = new ConnectToDeviceOutputBuilder();
-            builder.setConnectStatus(true);
-            RpcResultBuilder<ConnectToDeviceOutput> rpcResultBuilder = RpcResultBuilder.success();
-            rpcResultBuilder.withResult(builder.build());
-            SettableFuture<RpcResult<ConnectToDeviceOutput>> future = SettableFuture.create();
-            future.set(rpcResultBuilder.build());
-            return future;
         }
 
         @Override
@@ -460,17 +449,27 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         }
 
         @Override
-        public Future<RpcResult<Void>> removeDevice(RemoveDeviceInput input) {
+        public Future<RpcResult<GetNodeStateOutput>> getNodeState(GetNodeStateInput input) {
             return null;
         }
 
         @Override
-        public Future<RpcResult<QueryDevicesOutput>> queryDevices() {
+        public Future<RpcResult<Void>> openStreamChannel(OpenStreamChannelInput input) {
+            return null;
+        }
+
+        @Override
+        public Future<RpcResult<Void>> removeNode(RemoveNodeInput input) {
+            return null;
+        }
+
+        @Override
+        public Future<RpcResult<QueryNodesOutput>> queryNodes() {
             return null;
         }
     }
 
-    private void assertTestModifiedNodeTwoGrpcInfo(List<AddDeviceInput> list) {
+    private void assertTestModifiedNodeTwoGrpcInfo(List<AddNodeInput> list) {
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getNid(), NODE_ID.getValue());
         Assert.assertEquals(list.get(0).getIp(), new Ipv4Address("127.0.0.1"));
@@ -478,7 +477,7 @@ public class NetconfStateChangeListenerTest extends AbstractDataBrokerTest {
         Assert.assertEquals(list.get(0).getConfigFilePath(), null);
     }
 
-    private void assertTestModifiedNodeThreeGrpcInfo(List<AddDeviceInput> list) {
+    private void assertTestModifiedNodeThreeGrpcInfo(List<AddNodeInput> list) {
         Assert.assertEquals(list.size(), 1);
         Assert.assertEquals(list.get(0).getNid(), NODE_ID.getValue());
         Assert.assertEquals(list.get(0).getIp(), new Ipv4Address("10.42.89.15"));

@@ -13,24 +13,21 @@ import io.grpc.stub.StreamObserver;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
 import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionId;
 import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionIdGenerator;
-import org.opendaylight.p4plugin.runtime.impl.cluster.ElectionIdObserver;
 import org.opendaylight.p4plugin.runtime.impl.utils.NotificationPublisher;
-import org.opendaylight.p4plugin.runtime.impl.utils.SleepUtils;
-import org.opendaylight.p4plugin.runtime.impl.utils.Utils;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.packet.rev170808.P4PacketReceivedBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 
-public class RuntimeStub implements ElectionIdObserver {
+public class RuntimeStub {
     private static final Logger LOG = LoggerFactory.getLogger(RuntimeStub.class);
     private ManagedChannel channel;
     private P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
     private P4RuntimeGrpc.P4RuntimeStub asyncStub;
-    private String nodeId;
-    private Long deviceId;
     private StreamObserver<StreamMessageRequest> requestStreamObserver;
     private ElectionId electionId;
+    private Long deviceId;
+    private String nodeId;
 
     public RuntimeStub(String ip, Integer port, Long deviceId, String nodeId) {
         this(ManagedChannelBuilder.forAddress(ip, port).usePlaintext(true), deviceId, nodeId);
@@ -38,97 +35,23 @@ public class RuntimeStub implements ElectionIdObserver {
 
     private RuntimeStub(ManagedChannelBuilder<?> channelBuilder, Long deviceId, String nodeId) {
         this.channel = channelBuilder.build();
-        this.nodeId = nodeId;
-        this.deviceId = deviceId;
-        initStub();
-        initElectionId();
-    }
-
-    private void initStub() {
         this.blockingStub = P4RuntimeGrpc.newBlockingStub(channel);
         this.asyncStub = P4RuntimeGrpc.newStub(channel);
+        this.electionId = ElectionIdGenerator.getInstance().getElectionId();
+        this.deviceId = deviceId;
+        this.nodeId = nodeId;
     }
 
-    private void initElectionId() {
-        ElectionIdGenerator generator = ElectionIdGenerator.getInstance();
-        generator.addObserver(this);
-        electionId = generator.getElectionId();
+    public void notifyWhenStateChanged(ConnectivityState state, Runnable callback) {
+        channel.notifyWhenStateChanged(state, callback);
     }
 
-    public void notifyWhenStateChanged(ConnectivityState source, Runnable callback) {
-        channel.notifyWhenStateChanged(source, callback);
-    }
-
-    public boolean getConnectState() {
-        return channel.getState(true) == ConnectivityState.READY
-                && requestStreamObserver != null;
+    public ConnectivityState getConnectState() {
+        return channel.getState(false);
     }
 
     public void shutdown() {
-        ElectionIdGenerator.getInstance().deleteObserver(this);
         channel.shutdown();
-    }
-
-    public SetForwardingPipelineConfigResponse setPipelineConfig(SetForwardingPipelineConfigRequest request) {
-        SetForwardingPipelineConfigResponse response;
-        try {
-            response = blockingStub.setForwardingPipelineConfig(request);
-            return response;
-        } catch (StatusRuntimeException e) {
-            LOG.info(String.format("Set pipeline config exception, Status = %s, Reason = %s",
-                    e.getStatus(), e.getMessage()));
-            throw new RuntimeException(e);
-        }
-    }
-
-    public GetForwardingPipelineConfigResponse getPipelineConfig(GetForwardingPipelineConfigRequest request) {
-        GetForwardingPipelineConfigResponse response;
-        try {
-            response = blockingStub.getForwardingPipelineConfig(request);
-            return response;
-        } catch (StatusRuntimeException e) {
-            LOG.info(String.format("Get pipeline config exception, Status = %s, Reason = %s",
-                    e.getStatus(), e.getMessage()));
-            throw new RuntimeException(e);
-        }
-    }
-
-    public void streamChannel() {
-        StreamObserver<StreamMessageResponse> responseStreamObserver = new StreamObserver<StreamMessageResponse>() {
-            @Override
-            public void onNext(StreamMessageResponse value) {
-                onPacketReceived(value);
-            }
-
-            @Override
-            public void onError(Throwable t) {
-                onStreamChannelError(t);
-            }
-
-            @Override
-            public void onCompleted() {
-                onStreamChannelComplete();
-            }
-        };
-
-        requestStreamObserver = asyncStub.streamChannel(responseStreamObserver);
-        sendMasterArbitration(electionId);
-        //awaitConnection(5000);
-        SleepUtils.seconds(5);
-    }
-
-    public void transmitPacket(byte[] payload) {
-        StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
-        PacketOut.Builder packetOutBuilder = PacketOut.newBuilder();
-        packetOutBuilder.setPayload(ByteString.copyFrom(payload));
-        requestBuilder.setPacket(packetOutBuilder);
-        if (requestStreamObserver != null) {
-            requestStreamObserver.onNext(requestBuilder.build());
-            //For debug
-            LOG.info("Transmit packet = {} to device = {}.", Utils.bytesToHexString(payload), nodeId);
-        } else {
-            LOG.info("Stream channel haven't been initialized, device = [{}].", nodeId);
-        }
     }
 
     public WriteResponse write(WriteRequest request) {
@@ -137,9 +60,8 @@ public class RuntimeStub implements ElectionIdObserver {
             response = blockingStub.write(request);
             return response;
         } catch (StatusRuntimeException e) {
-            LOG.info(String.format("Write RPC exception, Status = %s, Reason = %s",
-                    e.getStatus(), e.getMessage()));
-            throw new RuntimeException(e);
+            LOG.error("Write RPC exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
+            throw e;
         }
     }
 
@@ -149,13 +71,78 @@ public class RuntimeStub implements ElectionIdObserver {
             responses = blockingStub.read(request);
             return responses;
         } catch (StatusRuntimeException e) {
-            LOG.info(String.format("Read RPC exception, Status = %s, Reason = %s",
-                    e.getStatus(), e.getMessage()));
-            throw new RuntimeException(e);
+            LOG.error("Read RPC exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
+            throw e;
         }
     }
 
-    public void sendMasterArbitration(ElectionId electionId) {
+    public SetForwardingPipelineConfigResponse setPipelineConfig(SetForwardingPipelineConfigRequest request) {
+        SetForwardingPipelineConfigResponse response;
+        try {
+            response = blockingStub.setForwardingPipelineConfig(request);
+            return response;
+        } catch (StatusRuntimeException e) {
+            LOG.error("Set pipeline exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
+            throw e;
+        }
+    }
+
+    public GetForwardingPipelineConfigResponse getPipelineConfig(GetForwardingPipelineConfigRequest request) {
+        GetForwardingPipelineConfigResponse response;
+        try {
+            response = blockingStub.getForwardingPipelineConfig(request);
+            return response;
+        } catch (StatusRuntimeException e) {
+            LOG.error("Get pipeline config exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
+            throw e;
+        }
+    }
+
+    public void streamChannel() {
+        StreamObserver<StreamMessageResponse> responseStreamObserver = new StreamObserver<StreamMessageResponse>() {
+            @Override
+            public void onNext(StreamMessageResponse response) {
+                onPacketReceived(response);
+            }
+
+            @Override
+            public void onError(Throwable t) {
+                requestStreamObserver = null;
+                LOG.error("Stream channel on error, reason = {}.", t.getMessage());
+            }
+
+            @Override
+            public void onCompleted() {
+                requestStreamObserver = null;
+                LOG.error("Stream channel on complete.");
+            }
+        };
+
+        requestStreamObserver = asyncStub.streamChannel(responseStreamObserver);
+        /* Send master arbitration message  immediately */
+        sendMasterArbitration();
+    }
+
+    public void transmitPacket(byte[] payload) {
+        StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
+        PacketOut.Builder packetOutBuilder = PacketOut.newBuilder();
+        packetOutBuilder.setPayload(ByteString.copyFrom(payload));
+        requestBuilder.setPacket(packetOutBuilder);
+
+        try {
+            requestStreamObserver.onNext(requestBuilder.build());
+        } catch (RuntimeException e) {
+            requestStreamObserver.onError(e);
+            throw e;
+        }
+    }
+
+    public void updateElectionId(ElectionId electionId) {
+        this.electionId = electionId;
+        sendMasterArbitration();
+    }
+
+    private void sendMasterArbitration() {
         StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
         MasterArbitrationUpdate.Builder masterArbitrationBuilder = MasterArbitrationUpdate.newBuilder();
         Uint128.Builder electionIdBuilder = Uint128.newBuilder();
@@ -164,11 +151,12 @@ public class RuntimeStub implements ElectionIdObserver {
         masterArbitrationBuilder.setDeviceId(deviceId);
         masterArbitrationBuilder.setElectionId(electionIdBuilder);
         requestBuilder.setArbitration(masterArbitrationBuilder);
-        if (requestStreamObserver != null) {
+
+        try {
             requestStreamObserver.onNext(requestBuilder.build());
-            LOG.info("Send MasterArbitrationUpdate to device = {}.", nodeId);
-        } else {
-            LOG.info("Stream channel haven't been initialized, device = [{}].", nodeId);
+        } catch (RuntimeException e) {
+            requestStreamObserver.onError(e);
+            throw e;
         }
     }
 
@@ -180,42 +168,16 @@ public class RuntimeStub implements ElectionIdObserver {
                 builder.setNid(nodeId);
                 builder.setPayload(payload);
                 NotificationPublisher.getInstance().notify(builder.build());
-                //For debug
-                LOG.info("Receive packet from node = {}, body = {}.", nodeId, Utils.bytesToHexString(payload));
                 break;
             }
-            case ARBITRATION:break;
-            case UPDATE_NOT_SET:break;
-            default:break;
-        }
-    }
 
-    private void onStreamChannelError(Throwable t) {
-        requestStreamObserver = null;
-        LOG.info("Stream channel on error, reason = {}, node = {}.", t.getMessage(), nodeId);
-    }
-
-    private void onStreamChannelComplete() {
-        requestStreamObserver = null;
-        LOG.info("Stream channel on complete, node = {}.", nodeId);
-    }
-
-    @Override
-    public void update(ElectionId electionId) {
-        this.electionId = electionId;
-        sendMasterArbitration(electionId);
-    }
-
-    public ElectionId getElectionId() {
-        return electionId;
-    }
-
-    private void awaitConnection(long milliseconds) {
-        try {
-            Thread.sleep(milliseconds);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
+            case ARBITRATION:
+                //TODO
+                break;
+            case UPDATE_NOT_SET:
+                break;
+            default:
+                break;
         }
     }
 }

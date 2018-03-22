@@ -12,7 +12,8 @@ import java.util.concurrent.Future;
 
 import org.opendaylight.controller.sal.binding.api.RpcProviderRegistry;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.interfaces.rev140508.InterfacesState;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.node.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.node.rev170808.P4pluginNodeService;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.NodeInterfacesState;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.Node;
 import org.opendaylight.yang.gen.v1.urn.p4plugin.netconf.adapter.rev170908.node.interfaces.state.NodeKey;
@@ -58,29 +59,12 @@ public class DeviceInterfaceDataOperator {
     public void sendP4DeviceInfo(String nodeId, GrpcInfo grpcInfo) {
         try {
             Future<RpcResult<Void>> addDeviceRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginDeviceService.class)
-                    .addDevice(constructRpcAddNodeInput(grpcInfo));
+                    .getRpcService(P4pluginNodeService.class)
+                    .addNode(constructRpcAddNodeInput(grpcInfo));
             if (addDeviceRpcResult.get().isSuccessful()) {
                 LOG.info("Rpc addDevice call success, node: {}", nodeId);
-                connectP4Device(nodeId);
             } else {
                 LOG.info("Rpc addDevice call failed, node: {}", nodeId);
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            LOG.error("Rpc interrupted by {}", e);
-        }
-    }
-
-    private void connectP4Device(String nodeId) {
-        try {
-            Future<RpcResult<ConnectToDeviceOutput>> connectToDeviceRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginDeviceService.class)
-                    .connectToDevice(constructRpcConnectToDeviceInput(nodeId));
-            if (connectToDeviceRpcResult.get().getResult().isConnectStatus()) {
-                LOG.info("Rpc connectToDevice call success, node: {}", nodeId);
-                setPip(nodeId);
-            } else {
-                LOG.info("Rpc connectToDevice call failed, node: {}", nodeId);
             }
         } catch (InterruptedException | ExecutionException e) {
             LOG.error("Rpc interrupted by {}", e);
@@ -90,7 +74,7 @@ public class DeviceInterfaceDataOperator {
     private void setPip(String nodeId) {
         try {
             Future<RpcResult<Void>> setPipelineConfigRpcResult = rpcProviderRegistry
-                    .getRpcService(P4pluginDeviceService.class)
+                    .getRpcService(P4pluginNodeService.class)
                     .setPipelineConfig(constructRpcSetPipelineConfigInput(nodeId));
             if (setPipelineConfigRpcResult.get().isSuccessful()) {
                 LOG.info("Rpc setPipelineConfig call success, node: {}", nodeId);
@@ -102,14 +86,8 @@ public class DeviceInterfaceDataOperator {
         }
     }
 
-    private ConnectToDeviceInput constructRpcConnectToDeviceInput(String nodeId) {
-        ConnectToDeviceInputBuilder builder = new ConnectToDeviceInputBuilder();
-        builder.setNid(nodeId);
-        return builder.build();
-    }
-
-    private AddDeviceInput constructRpcAddNodeInput(GrpcInfo grpcInfo) {
-        AddDeviceInputBuilder builder = new AddDeviceInputBuilder();
+    private AddNodeInput constructRpcAddNodeInput(GrpcInfo grpcInfo) {
+        AddNodeInputBuilder builder = new AddNodeInputBuilder();
         builder.setNid(grpcInfo.getNodeId());
         builder.setIp(grpcInfo.getGrpcIp());
         builder.setPort(grpcInfo.getGrpcPort());

@@ -43,6 +43,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>runtime</module>
         <module>adapter</module>
         <module>features</module>
-        <module>karaf</module>
     </modules>
+
+    <profiles>
+        <profile>
+            <id>karaf</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <modules>
+                <module>karaf</module>
+            </modules>
+        </profile>
+    </profiles>
 </project>

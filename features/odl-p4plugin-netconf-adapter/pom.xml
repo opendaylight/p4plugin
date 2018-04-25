@@ -19,13 +19,13 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>odl-p4plugin-netconf-adapter</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.2-SNAPSHOT</version>
     <packaging>feature</packaging>
     <name>OpenDaylight :: p4plugin :: netconf :: adapter</name>
     
     <properties>
-        <mdsal.version>1.7.1-SNAPSHOT</mdsal.version>
-        <netconf.version>1.4.1-SNAPSHOT</netconf.version>
+        <mdsal.version>1.7.2-SNAPSHOT</mdsal.version>
+        <netconf.version>1.4.2-SNAPSHOT</netconf.version>
     </properties>
     
     <dependencies>

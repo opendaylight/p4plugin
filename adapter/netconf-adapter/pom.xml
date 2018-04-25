@@ -19,7 +19,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>p4plugin-netconf-adapter-aggregator</artifactId>
-    <version>0.1.1-SNAPSHOT</version>
+    <version>0.1.2-SNAPSHOT</version>
     <name>p4plugin:netconf-adapter-aggregator</name>
     <packaging>pom</packaging>
 

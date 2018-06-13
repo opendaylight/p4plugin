@@ -18,7 +18,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <groupId>org.opendaylight.p4plugin</groupId>
     <artifactId>p4plugin-karaf</artifactId>
-    <version>0.1.2-SNAPSHOT</version>
+    <version>0.1.3-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>p4plugin:karaf</name>
 

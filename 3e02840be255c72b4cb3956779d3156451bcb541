@@ -1,0 +1,7 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+2: Anil Belur <abelur@linuxfoundation.org>
+Submitted-by: Anil Belur <abelur@linuxfoundation.org>
+Submitted-at: Fri, 22 Jun 2018 07:21:18 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/73110
+Project: p4plugin
+Branch: refs/heads/stable/oxygen

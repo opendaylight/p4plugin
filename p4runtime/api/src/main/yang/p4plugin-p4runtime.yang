@@ -1,0 +1,182 @@
+module p4plugin-p4runtime {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:p4runtime";
+    prefix "p4plugin-p4runtime";
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+
+    import p4plugin-device {
+        prefix "p4plugin-device";
+        revision-date 2017-08-08;
+    }
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    typedef typed-value {
+        type union {
+            type string;
+            type uint8;
+            type uint16;
+            type uint32;
+            type uint64;
+            type binary;
+        }
+    }
+
+    grouping action {
+        leaf action-name {
+            type string;
+        }
+
+        list action-param {
+            key param-name;
+            leaf param-name {
+                type string;
+            }
+
+            leaf param-value {
+                type typed-value;
+            }
+        }
+    }
+
+    grouping match-field {
+        list field {
+            leaf field-name {
+                type string;
+            }
+
+            choice match-type {
+                case exact {
+                    leaf exact-value {
+                        type typed-value;
+                    }
+                }
+
+                case lpm {
+                   leaf lpm-value {
+                        type typed-value;
+                    }
+
+                    leaf prefix-len {
+                        type uint32;
+                    }
+                }
+
+                case ternary {
+                    leaf ternary-value {
+                        type typed-value;
+                    }
+
+                    leaf mask {
+                        type typed-value;
+                    }
+                }
+            }
+        }
+    }
+
+    grouping table-entry-key {
+        leaf table-name {
+            type string;
+        }
+        uses match-field;
+    }
+
+    grouping table-entry {
+        uses table-entry-key;
+        choice action-type {
+            case direct-action {
+                uses action;
+            }
+        }
+
+        leaf default-action {
+            type boolean;
+        }
+    }
+
+    rpc open-stream-channel {
+        input {
+            uses p4plugin-device:node-id;
+        }
+    }
+
+    rpc set-pipeline-config {
+        input {
+            uses p4plugin-device:node-id;
+        }
+    }
+
+    rpc get-pipeline-config {
+        input {
+            uses p4plugin-device:node-id;
+        }
+
+        output {
+            leaf p4-info {
+                type string;
+            }
+        }
+    }
+
+    rpc transmit-packet {
+        input {
+            uses p4plugin-device:node-id;
+            leaf payload {
+                type binary;
+            }
+        }
+    }
+
+    notification packet-received {
+        uses p4plugin-device:node-id;
+        leaf payload {
+            type binary;
+        }
+    }
+
+    rpc add-table-entry {
+        input {
+            uses p4plugin-device:node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc modify-table-entry {
+        input {
+            uses p4plugin-device:node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc delete-table-entry {
+        input {
+            uses p4plugin-device:node-id;
+            uses table-entry-key;
+        }
+    }
+
+    rpc read-table-entry {
+        input {
+            uses p4plugin-device:node-id;
+            leaf table-name {
+                type string;
+            }
+        }
+
+        output {
+            leaf-list entry {
+                type string;
+            }
+        }
+    }
+}

@@ -1,0 +1,91 @@
+module p4plugin-device {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:device";
+    prefix "p4plugin-device";
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    grouping grpc-server-address {
+        leaf ip {
+            type inet:ipv4-address;
+        }
+
+        leaf port {
+            type inet:port-number;
+        }
+    }
+
+    grouping device-id {
+        leaf did {
+            type uint64;
+        }
+    }
+
+    grouping node-id {
+        leaf nid {
+            type string;
+        }
+    }
+
+    grouping dataplane-config {
+        leaf pipeline-file {
+            type string;
+        }
+
+        leaf runtime-file {
+            type string;
+        }
+    }
+
+    grouping target {
+        uses device-id;
+        uses grpc-server-address;
+        uses dataplane-config;
+    }
+
+    grouping device {
+        uses node-id;
+        uses target;
+    }
+
+    rpc add-device {
+        input {
+            uses device;
+        }
+
+        output {
+            leaf status {
+                type enumeration {
+                    enum device-already-exist;
+                    enum parse-file-exception;
+                    enum invalid-arguments;
+                    enum device-add-success;
+                }
+            }
+        }
+    }
+
+    rpc remove-device {
+        input {
+            uses node-id;
+        }
+    }
+
+    rpc query-devices {
+        output {
+            leaf-list node {
+                type string;
+            }
+        }
+    }
+}

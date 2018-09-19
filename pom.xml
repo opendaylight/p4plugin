@@ -40,8 +40,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     </developers>
 
     <modules>
-        <module>runtime</module>
-        <module>adapter</module>
+        <module>p4runtime</module>
         <module>features</module>
         <module>karaf</module>
     </modules>

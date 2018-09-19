@@ -27,14 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-netconf-adapter</artifactId>
-            <version>${project.version}</version>
-            <type>xml</type>
-            <classifier>features</classifier>
-        </dependency>
-        <dependency>
-            <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-runtime</artifactId>
+            <artifactId>odl-p4plugin-p4runtime</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>

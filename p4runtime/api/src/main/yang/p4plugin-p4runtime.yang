@@ -1,0 +1,221 @@
+module p4plugin-p4runtime {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:p4runtime";
+    prefix "p4plugin-p4runtime";
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+
+    grouping grpc-server-address {
+        leaf ip {
+            type inet:ipv4-address;
+        }
+
+        leaf port {
+            type inet:port-number;
+        }
+    }
+
+    grouping device-id {
+        leaf did {
+            type uint64;
+        }
+    }
+
+    grouping node-id {
+        leaf nid {
+            type string;
+        }
+    }
+
+    grouping dataplane-config {
+        leaf pipeline-file {
+            type string;
+        }
+
+        leaf runtime-file {
+            type string;
+        }
+    }
+
+    grouping target {
+        uses device-id;
+        uses grpc-server-address;
+        uses dataplane-config;
+    }
+
+    grouping device {
+        uses node-id;
+        uses target;
+    }
+
+    grouping action {
+        leaf action-name {
+            type string;
+        }
+
+        list action-param {
+            key param-name;
+            leaf param-name {
+                type string;
+            }
+
+            leaf param-value {
+                type uint64;
+            }
+        }
+    }
+
+    grouping match-field {
+        list field {
+            leaf field-name {
+                type string;
+            }
+
+            choice match-type {
+                case exact {
+                    leaf exact-value {
+                        type uint64;
+                    }
+                }
+
+                case lpm {
+                   leaf lpm-value {
+                        type uint64;
+                    }
+
+                    leaf prefix-len {
+                        type uint32;
+                    }
+                }
+
+                case ternary {
+                    leaf ternary-value {
+                        type uint64;
+                    }
+
+                    leaf mask {
+                        type uint64;
+                    }
+                }
+
+                case valid {
+                    leaf valid-value {
+                        type boolean;
+                    }
+                }
+            }
+        }
+    }
+
+    grouping table-entry-key {
+        leaf table-name {
+            type string;
+        }
+        uses match-field;
+    }
+
+    grouping table-entry {
+        uses table-entry-key;
+        choice action-type {
+            case direct-action {
+                uses action;
+            }
+        }
+
+        leaf default-action {
+            type boolean;
+        }
+    }
+
+    rpc add-device {
+        input {
+            uses device;
+        }
+    }
+
+    rpc remove-device {
+        input {
+            uses node-id;
+        }
+    }
+
+    rpc set-pipeline-config {
+        input {
+            uses node-id;
+        }
+    }
+
+    rpc get-pipeline-config {
+        input {
+            uses node-id;
+        }
+
+        output {
+            leaf p4-info {
+                type string;
+            }
+        }
+    }
+
+    rpc transmit-packet {
+        input {
+            uses node-id;
+            leaf payload {
+                type binary;
+            }
+        }
+    }
+
+    notification packet-received {
+        uses node-id;
+        leaf payload {
+            type binary;
+        }
+    }
+
+    rpc add-table-entry {
+        input {
+            uses node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc modify-table-entry {
+        input {
+            uses node-id;
+            uses table-entry;
+        }
+    }
+
+    rpc delete-table-entry {
+        input {
+            uses node-id;
+            uses table-entry-key;
+        }
+    }
+
+    rpc read-table-entry {
+        input {
+            uses node-id;
+            leaf table-name {
+                type string;
+            }
+        }
+
+        output {
+            leaf-list entry {
+                type string;
+            }
+        }
+    }
+}

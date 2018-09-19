@@ -1,0 +1,114 @@
+module p4plugin-gnmi {
+    yang-version 1;
+    namespace "urn:opendaylight:p4plugin:gnmi";
+    prefix "p4plugin-gnmi";
+
+    import ietf-inet-types {
+        prefix "inet";
+        revision-date 2013-07-15;
+    }
+
+    import p4plugin-device {
+        prefix "p4plugin-device";
+        revision-date 2017-08-08;
+    }
+
+    organization "ZTE corporation";
+    contact "ding.rui@zte.com.cn";
+
+    revision "2017-08-08" {
+        description "Initial revision.";
+    }
+
+    grouping map {
+        leaf key {
+            type string;
+        }
+
+        leaf value {
+            type string;
+        }
+    }
+
+    grouping path-elem {
+        leaf name {
+            type string;
+        }
+
+        list attribute {
+            key "key";
+            uses map;
+        }
+    }
+
+    grouping path {
+        leaf origin {
+            type string;
+        }
+
+        list elem {
+            uses path-elem;
+        }
+
+        leaf target {
+            type string;
+        }
+    }
+
+    grouping prefix {
+        uses path;
+    }
+
+    grouping subscription {
+        uses path;
+        leaf sample-interval {
+            type uint64;
+        }
+
+        leaf suppress-redundant {
+            type boolean;
+        }
+
+        leaf heartbeat-interval {
+            type uint64;
+        }
+    }
+
+    typedef encoding {
+        type enumeration {
+            enum JSON;
+            enum BYTES;
+            enum PROTO;
+            enum ASCII;
+            enum JSON_ITF;
+        }
+    }
+
+    grouping subscription-list {
+        uses prefix;
+        list sub-list {
+            uses subscription;
+        }
+
+        leaf use-aliases {
+            type boolean;
+        }
+
+        leaf mode {
+            type enumeration {
+                enum STREAM;
+                enum ONCE;
+                enum POLL;
+            }
+        }
+
+        leaf allow-aggregation {
+            type boolean;
+        }
+
+        leaf updates-only {
+            type boolean;
+        }
+
+    }
+}

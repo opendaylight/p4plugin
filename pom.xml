@@ -44,5 +44,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>adapter</module>
         <module>features</module>
         <module>karaf</module>
+
     </modules>
 </project>

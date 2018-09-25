@@ -49,7 +49,7 @@ public class Device {
                 .stream()
                 .filter(table -> table.getPreamble().getName().equals(tableName) || table.getPreamble().getAlias().equals(tableName))
                 .findFirst();
-        return optional.orElseThrow(()-> new IllegalArgumentException(String.format("Table name %s.", tableName)))
+        return optional.orElseThrow(() -> new IllegalArgumentException(String.format("Table name %s.", tableName)))
                 .getPreamble()
                 .getId();
     }
@@ -59,7 +59,7 @@ public class Device {
                 .stream()
                 .filter(table -> table.getPreamble().getId() == tableId)
                 .findFirst();
-        return optional.orElseThrow(()-> new IllegalArgumentException(String.format("Table id %d.", tableId)))
+        return optional.orElseThrow(() -> new IllegalArgumentException(String.format("Table id %d.", tableId)))
                 .getPreamble()
                 .getName();
     }
@@ -71,14 +71,14 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer = tableContainer
-                        .orElseThrow(()-> new IllegalArgumentException(String.format("Table name %s.", tableName)))
+                        .orElseThrow(() -> new IllegalArgumentException(String.format("Table name %s.", tableName)))
                         .getMatchFieldsList()
                         .stream()
                         .filter(matchField -> matchField.getName().equals(matchFieldName))
                         .findFirst();
 
         return matchFieldContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Match field name %s.", matchFieldName)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Match field name %s.", matchFieldName)))
                 .getId();
     }
 
@@ -89,14 +89,14 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer = tableContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Table id %d.", tableId)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Table id %d.", tableId)))
                 .getMatchFieldsList()
                 .stream()
                 .filter(matchField -> matchField.getId() == (matchFieldId))
                 .findFirst();
 
         return matchFieldContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Match field id %d.", matchFieldId)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Match field id %d.", matchFieldId)))
                 .getName();
     }
 
@@ -107,15 +107,15 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer = tableContainer
-                        .orElseThrow(()-> new IllegalArgumentException(String.format("Table name %s.", tableName)))
+                        .orElseThrow(() -> new IllegalArgumentException(String.format("Table name %s.", tableName)))
                         .getMatchFieldsList()
                         .stream()
                         .filter(matchField -> matchField.getName().equals(matchFieldName))
                         .findFirst();
 
         return (matchFieldContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Match field name %s.",matchFieldName)))
-                .getBitwidth() + 7 ) / 8;
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Match field name %s.",matchFieldName)))
+                .getBitwidth() + 7) / 8;
     }
 
     private int getActionId(String actionName) {
@@ -123,7 +123,7 @@ public class Device {
                 .stream()
                 .filter(action -> action.getPreamble().getName().equals(actionName) || action.getPreamble().getAlias().equals(actionName))
                 .findFirst();
-        return optional.orElseThrow(()-> new IllegalArgumentException(String.format("Action name %s.", actionName)))
+        return optional.orElseThrow(() -> new IllegalArgumentException(String.format("Action name %s.", actionName)))
                 .getPreamble()
                 .getId();
     }
@@ -133,7 +133,7 @@ public class Device {
                 .stream()
                 .filter(action -> action.getPreamble().getId() == actionId)
                 .findFirst();
-        return optional.orElseThrow(()-> new IllegalArgumentException(String.format("Action id %d.", actionId)))
+        return optional.orElseThrow(() -> new IllegalArgumentException(String.format("Action id %d.", actionId)))
                 .getPreamble()
                 .getName();
     }
@@ -145,13 +145,13 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer = actionContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Action name %s.", actionName)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Action name %s.", actionName)))
                 .getParamsList()
                 .stream()
                 .filter(param -> param.getName().equals(paramName))
                 .findFirst();
 
-        return paramContainer.orElseThrow(()-> new IllegalArgumentException(String.format("Param name %s.", paramName)))
+        return paramContainer.orElseThrow(() -> new IllegalArgumentException(String.format("Param name %s.", paramName)))
                 .getId();
     }
 
@@ -162,13 +162,13 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer = actionContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Action id %d.", actionId)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Action id %d.", actionId)))
                 .getParamsList()
                 .stream()
                 .filter(param -> param.getId() == paramId)
                 .findFirst();
 
-        return paramContainer.orElseThrow(()-> new IllegalArgumentException(String.format("Param id %d.", paramId)))
+        return paramContainer.orElseThrow(() -> new IllegalArgumentException(String.format("Param id %d.", paramId)))
                 .getName();
     }
 
@@ -179,14 +179,14 @@ public class Device {
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer = actionContainer
-                .orElseThrow(()-> new IllegalArgumentException(String.format("Action name %s.", actionName)))
+                .orElseThrow(() -> new IllegalArgumentException(String.format("Action name %s.", actionName)))
                 .getParamsList()
                 .stream()
                 .filter(param -> param.getName().equals(paramName))
                 .findFirst();
 
-        return (paramContainer.orElseThrow(()-> new IllegalArgumentException(String.format("Param name %s.", paramName)))
-                .getBitwidth() + 7 ) / 8;
+        return (paramContainer.orElseThrow(() -> new IllegalArgumentException(String.format("Param name %s.", paramName)))
+                .getBitwidth() + 7) / 8;
     }
 
     public SetForwardingPipelineConfigResponse setPipelineConfig() {
@@ -226,7 +226,7 @@ public class Device {
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TableEntry tableEntry) {
         checkInit();
         WriteResponse response;
-        WriteRequest request = buildWriteRequest(Convert2ProtoEntry(tableEntry), Update.Type.INSERT);
+        WriteRequest request = buildWriteRequest(convert2ProtoEntry(tableEntry), Update.Type.INSERT);
         response = p4RuntimeClient.write(request);
         return response;
     }
@@ -235,7 +235,7 @@ public class Device {
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TableEntry tableEntry) {
         checkInit();
         WriteResponse response;
-        WriteRequest request = buildWriteRequest(Convert2ProtoEntry(tableEntry), Update.Type.MODIFY);
+        WriteRequest request = buildWriteRequest(convert2ProtoEntry(tableEntry), Update.Type.MODIFY);
         response = p4RuntimeClient.write(request);
         return response;
     }
@@ -244,7 +244,7 @@ public class Device {
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TableEntryKey tableEntryKey) {
         checkInit();
         WriteResponse response;
-        WriteRequest request = buildWriteRequest(Convert2ProtoEntry(tableEntryKey), Update.Type.DELETE);
+        WriteRequest request = buildWriteRequest(convert2ProtoEntry(tableEntryKey), Update.Type.DELETE);
         response = p4RuntimeClient.write(request);
         return response;
     }
@@ -267,8 +267,8 @@ public class Device {
             ReadResponse response = responses.next();
             List<Entity> entityList = response.getEntitiesList();
             boolean isCompleted = response.getComplete();
-            entityList.forEach(entity-> {
-                String str = Convert2JsonEntry(entity.getTableEntry());
+            entityList.forEach(entity -> {
+                String str = convert2JsonEntry(entity.getTableEntry());
                 result.add(str);
             });
             if (isCompleted) break;
@@ -301,7 +301,7 @@ public class Device {
         return requestBuilder.build();
     }
 
-    private org.opendaylight.p4plugin.p4runtime.proto.TableEntry Convert2ProtoEntry(
+    private org.opendaylight.p4plugin.p4runtime.proto.TableEntry convert2ProtoEntry(
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TableEntry tableEntry) {
         String tableName = tableEntry.getTableName();
         int tableId = getTableId(tableName);
@@ -322,7 +322,7 @@ public class Device {
         return tableEntryBuilder.build();
     }
 
-    private org.opendaylight.p4plugin.p4runtime.proto.TableEntry Convert2ProtoEntry(
+    private org.opendaylight.p4plugin.p4runtime.proto.TableEntry convert2ProtoEntry(
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TableEntryKey tableEntryKey){
         String tableName = tableEntryKey.getTableName();
         int tableId = getTableId(tableName);
@@ -339,7 +339,7 @@ public class Device {
         return tableEntryBuilder.build();
     }
 
-    public String Convert2JsonEntry(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
+    public String convert2JsonEntry(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
         String result;
         try {
             result = JsonFormat.printer().print(entry);
@@ -396,6 +396,7 @@ public class Device {
 
         return tableActionBuilder.setAction(actionBuilder).build();
     }
+
     private org.opendaylight.p4plugin.p4runtime.proto.FieldMatch buildFieldMatch(
             org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.Field fields,
             String tableName) {

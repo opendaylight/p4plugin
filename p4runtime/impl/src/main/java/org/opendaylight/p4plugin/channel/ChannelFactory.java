@@ -12,9 +12,10 @@ import io.grpc.ManagedChannelBuilder;
 
 import java.util.HashMap;
 
-public class ChannelFactory {
+public final class ChannelFactory {
     private HashMap<String, ManagedChannel> pool = new HashMap<>();
     private static ChannelFactory singleton = new ChannelFactory();
+
     private ChannelFactory() {}
 
     public static ChannelFactory getInstance() {

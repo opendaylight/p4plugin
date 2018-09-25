@@ -148,7 +148,7 @@ public class P4RuntimeServiceProvider implements P4pluginP4runtimeService {
             String nodeId = input.getNid();
             Optional<Device> optional = deviceManager.findDevice(nodeId);
             optional.orElseThrow(IllegalArgumentException::new).openStreamChannel();
-            LOG.info("Get device pipeline config success, nodeId = {}.", nodeId);
+            LOG.info("Open stream channel, nodeId = {}.", nodeId);
             return rpcResultSuccess(null);
         };
     }

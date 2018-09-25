@@ -82,6 +82,8 @@ public class SimpleRouter {
         if (status != Status.SET_PIPELINE_CONFIG) {
             return;
         }
+
+
     }
 
     public Integer getServerPort() {

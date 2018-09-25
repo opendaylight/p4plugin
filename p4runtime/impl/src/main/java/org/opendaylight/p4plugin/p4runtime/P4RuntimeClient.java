@@ -187,7 +187,7 @@ public class P4RuntimeClient {
         return port;
     }
 
-    private String bytes2HexStr(byte[] src){
+    private String bytes2HexStr(byte[] src) {
         StringBuilder stringBuilder = new StringBuilder("");
         if (src == null || src.length <= 0) {
             return null;

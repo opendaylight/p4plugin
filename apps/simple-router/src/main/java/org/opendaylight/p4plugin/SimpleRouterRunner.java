@@ -48,7 +48,7 @@ public class SimpleRouterRunner {
         if (addDevice()) {
             simpleRouter.openStreamChannel();
             simpleRouter.setPipelineConfig();
-            simpleRouter.setTableEntry();
+            simpleRouter.addTableEntry();
         }
     }
 

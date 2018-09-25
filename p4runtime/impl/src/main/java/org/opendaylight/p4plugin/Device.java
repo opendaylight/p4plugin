@@ -67,7 +67,7 @@ public class Device {
     private int getMatchFieldId(String tableName, String matchFieldName) {
         Optional<org.opendaylight.p4plugin.p4info.proto.Table> tableContainer = p4Info.getTablesList()
                 .stream()
-                .filter(table -> table.getPreamble().getName().equals(tableName))
+                .filter(table -> table.getPreamble().getName().equals(tableName) || table.getPreamble().getAlias().equals(tableName))
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer = tableContainer
@@ -103,7 +103,7 @@ public class Device {
     private int getMatchFieldWidth(String tableName, String matchFieldName) {
         Optional<org.opendaylight.p4plugin.p4info.proto.Table> tableContainer = p4Info.getTablesList()
                 .stream()
-                .filter(table -> table.getPreamble().getName().equals(tableName))
+                .filter(table -> table.getPreamble().getName().equals(tableName) || table.getPreamble().getAlias().equals(tableName))
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.MatchField> matchFieldContainer = tableContainer
@@ -141,7 +141,7 @@ public class Device {
     private int getParamId(String actionName, String paramName) {
         Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer = p4Info.getActionsList()
                 .stream()
-                .filter(action -> action.getPreamble().getName().equals(actionName))
+                .filter(action -> action.getPreamble().getName().equals(actionName) || action.getPreamble().getAlias().equals(actionName))
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer = actionContainer
@@ -175,7 +175,7 @@ public class Device {
     private int getParamWidth(String actionName, String paramName) {
         Optional<org.opendaylight.p4plugin.p4info.proto.Action> actionContainer = p4Info.getActionsList()
                 .stream()
-                .filter(action -> action.getPreamble().getName().equals(actionName))
+                .filter(action -> action.getPreamble().getName().equals(actionName) || action.getPreamble().getAlias().equals(actionName))
                 .findFirst();
 
         Optional<org.opendaylight.p4plugin.p4info.proto.Action.Param> paramContainer = actionContainer
@@ -387,7 +387,7 @@ public class Device {
 
                 if (paramValue != null) {
                     paramBuilder.setParamId(paramId);
-                    paramBuilder.setValue(ByteString.copyFrom(paramValue, 0, paramWidth));
+                    paramBuilder.setValue(ByteString.copyFrom(paramValue, paramValue.length - paramWidth , paramWidth));
                 }
 
                 actionBuilder.addParams(paramBuilder);
@@ -656,7 +656,7 @@ public class Device {
                 byteArray[i] = (byte) Integer.parseInt(strArray[i], 16);
             }
         } else {
-            int value = Integer.parseInt(str);
+            Integer value = Integer.parseInt(str);
             byteArray = ByteBuffer.allocate(4).putInt(value).array();
         }
         return byteArray;

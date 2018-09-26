@@ -24,6 +24,8 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <packaging>pom</packaging>
 
     <modules>
+        <module>common</module>
         <module>simple-router</module>
+        <module>loopbacker</module>
     </modules>
 </project>

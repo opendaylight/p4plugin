@@ -5,7 +5,7 @@
  * terms of the Eclipse Public License v1.0 which accompanies this distribution,
  * and is available at http://www.eclipse.org/legal/epl-v10.html
  */
-package org.opendaylight.p4plugin;
+package org.opendaylight.p4plugin.simplerouter;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.*;
@@ -13,10 +13,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev17080
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.action.ActionParamBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.Field;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.FieldBuilder;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.field.MatchType;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.field.match.type.LpmBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.table.entry.action.type.DirectActionBuilder;
-import org.opendaylight.yangtools.yang.binding.DataContainer;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +32,7 @@ public class SimpleRouter {
     private final String configFile;
     private final String runtimeFile;
     private final P4pluginP4runtimeService runtimeService;
-    private Status status;
+    private Status status = Status.INITIALIZE;
 
     public SimpleRouter(String gRPCServerIp,
                         Integer gRPCServerPort,
@@ -161,7 +159,7 @@ public class SimpleRouter {
             result = false;
             LOG.error("Simple router add h1 <-> h2 entry exception, message = {}.", e.getMessage());
         }
-        
+
         status = result ? Status.SET_TABLE_ENTRY : Status.ERROR;
     }
 

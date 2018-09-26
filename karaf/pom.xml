@@ -57,16 +57,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-data-resources</id>
+                        <id>copy-simple-router-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/data/p4/</outputDirectory>
+                            <outputDirectory>target/assembly/data/p4/simple-router/</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>../apps/simple-router/src/main/resources/p4/</directory>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>../apps/simple-router/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>
@@ -75,16 +81,22 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-etc-resources</id>
+                        <id>copy-loopbacker-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/etc</outputDirectory>
+                            <outputDirectory>target/assembly/data/p4/loopbacker/</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../apps/simple-router/src/main/resources/config/</directory>
+                                    <directory>../apps/loopbacker/src/main/resources/p4/</directory>
+                                    <includes>
+                                        <include>**</include>
+                                    </includes>
+                                </resource>
+                                <resource>
+                                    <directory>../apps/loopbacker/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>

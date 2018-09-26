@@ -1,0 +1,19 @@
+tables {
+  preamble {
+    id: 33585362
+    name: "MyIngress.t_redirect"
+    alias: "t_redirect"
+  }
+  action_refs {
+    id: 16786257
+  }
+  size: 1
+  idle_timeout_behavior: NO_TIMEOUT
+}
+actions {
+  preamble {
+    id: 16786257
+    name: "MyIngress.redirect"
+    alias: "redirect"
+  }
+}

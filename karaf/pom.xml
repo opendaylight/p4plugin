@@ -63,7 +63,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/data/p4/simple-router/</outputDirectory>
+                            <outputDirectory>target/assembly/etc/p4/simple-router/</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>../apps/simple-router/src/main/resources/p4/</directory>
@@ -87,7 +87,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/data/p4/loopbacker/</outputDirectory>
+                            <outputDirectory>target/assembly/etc/p4/loopbacker/</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>../apps/loopbacker/src/main/resources/p4/</directory>

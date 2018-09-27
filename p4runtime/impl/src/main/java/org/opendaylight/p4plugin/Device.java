@@ -268,7 +268,7 @@ public class Device {
             List<Entity> entityList = response.getEntitiesList();
             boolean isCompleted = response.getComplete();
             entityList.forEach(entity -> {
-                String str = convert2JsonEntry(entity.getTableEntry());
+                String str = convert2TextEntry(entity.getTableEntry());
                 result.add(str);
             });
             if (isCompleted) break;
@@ -339,12 +339,13 @@ public class Device {
         return tableEntryBuilder.build();
     }
 
-    public String convert2JsonEntry(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
+    public String convert2TextEntry(org.opendaylight.p4plugin.p4runtime.proto.TableEntry entry) {
         String result;
         try {
-            result = JsonFormat.printer().print(entry);
-        } catch (InvalidProtocolBufferException e) {
-            throw new RuntimeException(e);
+//            result = JsonFormat.printer().print(entry);
+              result = TextFormat.printToString(entry);
+//        } catch (InvalidProtocolBufferException e) {
+//            throw new RuntimeException(e);
         } catch (IllegalStateException e) {
             e.printStackTrace();
             throw e;

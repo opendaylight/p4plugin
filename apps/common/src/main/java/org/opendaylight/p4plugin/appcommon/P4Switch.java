@@ -17,14 +17,14 @@ import java.util.concurrent.ExecutionException;
 
 public abstract class P4Switch {
     private static final Logger LOG = LoggerFactory.getLogger(P4Switch.class);
-    private final String gRPCServerIp;
-    private final Integer gRPCServerPort;
-    private final Long deviceId;
-    private final String nodeId;
-    private final String configFile;
-    private final String runtimeFile;
-    private final P4pluginP4runtimeService runtimeService;
-    private Status status = Status.INITIALIZE;
+    protected final String gRPCServerIp;
+    protected final Integer gRPCServerPort;
+    protected final Long deviceId;
+    protected final String nodeId;
+    protected final String configFile;
+    protected final String runtimeFile;
+    protected final P4pluginP4runtimeService runtimeService;
+    protected Status status = Status.INITIALIZE;
 
     protected P4Switch(String gRPCServerIp,
                     Integer gRPCServerPort,

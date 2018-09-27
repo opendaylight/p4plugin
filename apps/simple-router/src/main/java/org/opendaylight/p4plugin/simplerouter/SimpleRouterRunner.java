@@ -7,23 +7,27 @@
  */
 package org.opendaylight.p4plugin.simplerouter;
 
-import com.google.common.util.concurrent.ListenableFuture;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
-import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
+import org.opendaylight.p4plugin.appcommon.P4Switch;
+import org.opendaylight.p4plugin.appcommon.P4SwitchRunner;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.P4pluginDeviceService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.AddTableEntryInput;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.AddTableEntryInputBuilder;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService;
-import org.opendaylight.yangtools.yang.common.RpcResult;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.TypedValue;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.action.ActionParam;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.action.ActionParamBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.Field;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.FieldBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.match.field.field.match.type.LpmBuilder;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.table.entry.action.type.DirectActionBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.math.BigInteger;
-import java.util.concurrent.ExecutionException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class SimpleRouterRunner {
+public class SimpleRouterRunner extends P4SwitchRunner {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleRouterRunner.class);
-    private SimpleRouter simpleRouter;
-    private P4pluginDeviceService deviceService;
-    private P4pluginP4runtimeService runtimeService;
 
     public SimpleRouterRunner(final P4pluginDeviceService deviceService,
                               final P4pluginP4runtimeService runtimeService,
@@ -33,9 +37,12 @@ public class SimpleRouterRunner {
                               final String nodeId,
                               final String configFile,
                               final String runtimeFile) {
-        this.deviceService = deviceService;
-        this.runtimeService = runtimeService;
-        this.simpleRouter = SimpleRouter.newBuilder().setServerIp(gRPCServerIp)
+        super(deviceService, runtimeService, gRPCServerIp, gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+    }
+
+    @Override
+    public P4Switch newSwitch(String gRPCServerIp, Integer gRPCServerPort, Long deviceId, String nodeId, String configFile, String runtimeFile, P4pluginP4runtimeService runtimeService) {
+        return SimpleRouter.newBuilder().setServerIp(gRPCServerIp)
                 .setServerPort(gRPCServerPort)
                 .setDeviceId(deviceId)
                 .setNodeId(nodeId)
@@ -46,50 +53,143 @@ public class SimpleRouterRunner {
 
     public void run() {
         if (addDevice()) {
-            simpleRouter.openStreamChannel();
-            simpleRouter.setPipelineConfig();
-            simpleRouter.addTableEntry();
+            p4Switch.openStreamChannel();
+            p4Switch.setPipelineConfig();
+            p4Switch.addTableEntry(buildH1H2Entry());
+            p4Switch.addTableEntry(buildH2H1Entry());
         }
     }
 
-    public void close() {
-        removeDevice();
+    /**
+    {
+        "input": {
+            "nid": "node0",
+            "table-name": "ipv4_lpm",
+            "action-name": "ipv4_forward",
+            "action-param": [
+                {
+                    "param-name": "port",
+                    "param-value": "2"
+                },
+                {
+                    "param-name": "dstAddr",
+                    "param-value": "00:04:00:00:00:01"
+                }
+            ],
+            
+            "field": [
+                {
+                    "field-name": "hdr.ipv4.dstAddr",
+                    "lpm-value": "10.0.1.0",
+                    "prefix-len": "24"
+                }
+            ]
+        }
+    }
+    
+    {
+        "input": {
+            "nid": "node0",
+            "table-name": "ipv4_lpm",
+            "action-name": "ipv4_forward",
+            "action-param": [
+                {
+                    "param-name": "port",
+                    "param-value": "1"
+                },
+                {
+                    "param-name": "dstAddr",
+                    "param-value": "00:04:00:00:00:00"
+                }
+            ],
+            
+            "field": [
+                {
+                    "field-name": "hdr.ipv4.dstAddr",
+                    "lpm-value": "10.0.0.0",
+                    "prefix-len": "24"
+                }
+            ]
+        }
+    }
+    */
+    /* h1 -> h2 entry */
+    private AddTableEntryInput buildH1H2Entry() {
+        AddTableEntryInputBuilder inputBuilder = new AddTableEntryInputBuilder();
+        inputBuilder.setNid(p4Switch.getNodeId());
+        inputBuilder.setTableName("ipv4_lpm");
+
+        /* build match field */
+        FieldBuilder fieldBuilder = new FieldBuilder();
+        fieldBuilder.setFieldName("hdr.ipv4.dstAddr");
+
+        LpmBuilder lpmBuilder = new LpmBuilder();
+        lpmBuilder.setLpmValue(new TypedValue("10.0.1.0"));
+        lpmBuilder.setPrefixLen((long)24);
+        fieldBuilder.setMatchType(lpmBuilder.build());
+
+        List<Field> fieldList = new ArrayList<>();
+        fieldList.add(fieldBuilder.build());
+
+        /* build action */
+        ActionParamBuilder actionParamBuilder1 = new ActionParamBuilder();
+        actionParamBuilder1.setParamName("port");
+        actionParamBuilder1.setParamValue(new TypedValue("2"));
+
+        ActionParamBuilder actionParamBuilder2 = new ActionParamBuilder();
+        actionParamBuilder2.setParamName("dstAddr");
+        actionParamBuilder2.setParamValue(new TypedValue("00:04:00:00:00:01"));
+
+        List<ActionParam> actionParamList = new ArrayList<>();
+        actionParamList.add(actionParamBuilder1.build());
+        actionParamList.add(actionParamBuilder2.build());
+
+        DirectActionBuilder directActionBuilder = new DirectActionBuilder();
+        directActionBuilder.setActionName("ipv4_forward");
+        directActionBuilder.setActionParam(actionParamList);
+
+        inputBuilder.setField(fieldList);
+        inputBuilder.setActionType(directActionBuilder.build());
+        return inputBuilder.build();
     }
 
-    private boolean removeDevice() {
-        RemoveDeviceInputBuilder inputBuilder = new RemoveDeviceInputBuilder();
-        inputBuilder.setNid(simpleRouter.getNodeId());
-        boolean result;
+    /* h2 -> h1 entry */
+    private AddTableEntryInput buildH2H1Entry() {
+        AddTableEntryInputBuilder inputBuilder = new AddTableEntryInputBuilder();
+        inputBuilder.setNid(p4Switch.getNodeId());
+        inputBuilder.setTableName("ipv4_lpm");
 
-        try {
-            ListenableFuture<RpcResult<RemoveDeviceOutput>> output = deviceService.removeDevice(inputBuilder.build());
-            result = output.get().isSuccessful();
-            LOG.info("Simple router remove {}.", result ? "success" : "failed");
-        } catch (InterruptedException | ExecutionException e) {
-            result = false;
-            LOG.error("Simple router remove exception, message = {}.", e.getMessage());
-        }
-        return result;
-    }
+        /* build match field */
+        FieldBuilder fieldBuilder = new FieldBuilder();
+        fieldBuilder.setFieldName("hdr.ipv4.dstAddr");
 
-    private boolean addDevice() {
-        AddDeviceInputBuilder inputBuilder = new AddDeviceInputBuilder();
-        inputBuilder.setNid(simpleRouter.getNodeId());
-        inputBuilder.setDid(new BigInteger(simpleRouter.getDeviceId().toString()));
-        inputBuilder.setIp(new Ipv4Address(simpleRouter.getServerIp()));
-        inputBuilder.setPort(new PortNumber(simpleRouter.getServerPort()));
-        inputBuilder.setPipelineFile(simpleRouter.getConfigFile());
-        inputBuilder.setRuntimeFile(simpleRouter.getRuntimeFile());
-        boolean result;
+        LpmBuilder lpmBuilder = new LpmBuilder();
+        lpmBuilder.setLpmValue(new TypedValue("10.0.0.0"));
+        lpmBuilder.setPrefixLen((long)24);
+        fieldBuilder.setMatchType(lpmBuilder.build());
 
-        try {
-            ListenableFuture<RpcResult<AddDeviceOutput>> output = deviceService.addDevice(inputBuilder.build());
-            result = output.get().isSuccessful();
-            LOG.info("Simple router add {}.", result ? "success" : "failed");
-        } catch (InterruptedException | ExecutionException e) {
-            result = false;
-            LOG.error("Simple router add exception, message = {}.", e.getMessage());
-        }
-        return result;
+        List<Field> fieldList = new ArrayList<>();
+        fieldList.add(fieldBuilder.build());
+
+        /* build action */
+        ActionParamBuilder actionParamBuilder1 = new ActionParamBuilder();
+        actionParamBuilder1.setParamName("port");
+        actionParamBuilder1.setParamValue(new TypedValue("1"));
+
+        ActionParamBuilder actionParamBuilder2 = new ActionParamBuilder();
+        actionParamBuilder2.setParamName("dstAddr");
+        actionParamBuilder2.setParamValue(new TypedValue("00:04:00:00:00:00"));
+
+        List<ActionParam> actionParamList = new ArrayList<>();
+        actionParamList.add(actionParamBuilder1.build());
+        actionParamList.add(actionParamBuilder2.build());
+
+        DirectActionBuilder directActionBuilder = new DirectActionBuilder();
+        directActionBuilder.setActionName("ipv4_forward");
+        directActionBuilder.setActionParam(actionParamList);
+
+        inputBuilder.setField(fieldList);
+        inputBuilder.setActionType(directActionBuilder.build());
+        return inputBuilder.build();
     }
 }

@@ -21,7 +21,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <odl:rpc-service id = "p4runtimeService"
                      interface="org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService"/>
 
-    <cm:property-placeholder persistent-id="switch" update-strategy="none">
+    <cm:property-placeholder persistent-id="p4.loopbacker" update-strategy="none">
         <cm:default-properties>
             <cm:property name="grpc_server_ip" value="127.0.0.1"/>
             <cm:property name="grpc_server_port" value="50051"/>

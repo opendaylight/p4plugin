@@ -57,7 +57,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-simple-router-resources</id>
+                        <id>copy-simple-router-p4-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -71,6 +71,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                                         <include>**</include>
                                     </includes>
                                 </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>copy-simple-router-config-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/assembly/etc</outputDirectory>
+                            <resources>
+
                                 <resource>
                                     <directory>../apps/simple-router/src/main/resources/config/</directory>
                                     <includes>
@@ -80,8 +94,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             </resources>
                         </configuration>
                     </execution>
+
                     <execution>
-                        <id>copy-loopbacker-resources</id>
+                        <id>copy-loopbacker-p4-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -95,6 +110,18 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                                         <include>**</include>
                                     </includes>
                                 </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-loopbacker-config-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/assembly/etc/</outputDirectory>
+                            <resources>
                                 <resource>
                                     <directory>../apps/loopbacker/src/main/resources/config/</directory>
                                     <includes>

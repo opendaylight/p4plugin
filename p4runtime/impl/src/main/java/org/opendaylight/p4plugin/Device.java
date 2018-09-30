@@ -8,10 +8,9 @@
 package org.opendaylight.p4plugin;
 
 import com.google.protobuf.ByteString;
-import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.TextFormat;
-import com.google.protobuf.util.JsonFormat;
 import org.opendaylight.p4plugin.p4config.proto.P4DeviceConfig;
+import org.opendaylight.p4plugin.p4info.proto.ControllerPacketMetadata;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.p4runtime.P4RuntimeClient;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
@@ -22,10 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 public class Device {
     private static final Logger LOG = LoggerFactory.getLogger(Device.class);
@@ -189,6 +185,36 @@ public class Device {
                 .getBitwidth() + 7) / 8;
     }
 
+    private int getPacketOutMetadataId(String metadataName) {
+        Optional<ControllerPacketMetadata> controllerPacketMetadataOptional = p4Info.getControllerPacketMetadataList()
+                .stream()
+                .filter(controllerPacketMetadata -> controllerPacketMetadata.getPreamble().getName().equals("packet_out") ||
+                        controllerPacketMetadata.getPreamble().getAlias().equals("packet_out"))
+                .findFirst();
+        return controllerPacketMetadataOptional.orElseThrow(() -> new RuntimeException("No controller metadata named \"packet_out\""))
+                .getMetadataList()
+                .stream()
+                .filter(metadata -> metadata.getName().equals(metadataName))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No \"packet_out\" metadata named " + metadataName))
+                .getId();
+    }
+
+    private int getPacketOutMetadataWidth(String metadataName) {
+        Optional<ControllerPacketMetadata> controllerPacketMetadataOptional = p4Info.getControllerPacketMetadataList()
+                .stream()
+                .filter(controllerPacketMetadata -> controllerPacketMetadata.getPreamble().getName().equals("packet_out") ||
+                        controllerPacketMetadata.getPreamble().getAlias().equals("packet_out"))
+                .findFirst();
+        return (controllerPacketMetadataOptional.orElseThrow(() -> new RuntimeException("No controller metadata named \"packet_out\""))
+                .getMetadataList()
+                .stream()
+                .filter(metadata -> metadata.getName().equals(metadataName))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("No \"packet_out\" metadata named " + metadataName))
+                .getBitwidth() + 7) / 8;
+    }
+
     public SetForwardingPipelineConfigResponse setPipelineConfig() {
         ForwardingPipelineConfig.Builder configBuilder = ForwardingPipelineConfig.newBuilder();
         P4DeviceConfig.Builder p4DeviceConfigBuilder = P4DeviceConfig.newBuilder();
@@ -281,6 +307,36 @@ public class Device {
         StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
         PacketOut.Builder packetOutBuilder = PacketOut.newBuilder();
         packetOutBuilder.setPayload(ByteString.copyFrom(payload));
+        requestBuilder.setPacket(packetOutBuilder);
+        p4RuntimeClient.transmitPacket(requestBuilder.build());
+    }
+
+    public void transmitPacket(List<org.opendaylight.yang.gen.v1.urn
+            .opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.Metadata> metadataList, byte[] payload) {
+        checkInit();
+        PacketOut.Builder packetOutBuilder = PacketOut.newBuilder();
+        packetOutBuilder.setPayload(ByteString.copyFrom(payload));
+
+        metadataList.forEach(metadata -> {
+            String name = metadata.getMetadataName();
+            byte[] value = metadata.getMetadataValue();
+            org.opendaylight.p4plugin.p4runtime.proto.PacketMetadata.Builder packetMetadataBuilder =
+                    org.opendaylight.p4plugin.p4runtime.proto.PacketMetadata.newBuilder();
+            packetMetadataBuilder.setMetadataId(getPacketOutMetadataId(name));
+            int valueWidth = getPacketOutMetadataWidth(name);
+
+            if(value.length < valueWidth) {
+                byte[] actual = new byte[valueWidth];
+                Arrays.fill(actual,(byte)0);
+                System.arraycopy(value, 0, actual, valueWidth - value.length, value.length);
+                packetMetadataBuilder.setValue(ByteString.copyFrom(actual, 0, valueWidth));
+            } else {
+                packetMetadataBuilder.setValue(ByteString.copyFrom(value, 0, valueWidth));
+            }
+
+            packetOutBuilder.addMetadata(packetMetadataBuilder);
+        });
+        StreamMessageRequest.Builder requestBuilder = StreamMessageRequest.newBuilder();
         requestBuilder.setPacket(packetOutBuilder);
         p4RuntimeClient.transmitPacket(requestBuilder.build());
     }
@@ -556,7 +612,7 @@ public class Device {
             ByteString deviceConfig;
             p4Info = parseP4Info(p4InfoFile_);
             deviceConfig = parseDeviceConfig(deviceConfigFile_);
-            P4RuntimeClient p4RuntimeClient = new P4RuntimeClient(ip_, port_, deviceId_, nodeId_);
+            P4RuntimeClient p4RuntimeClient = new P4RuntimeClient(ip_, port_, deviceId_, nodeId_, p4Info);
             return new Device(nodeId_, deviceId_, p4RuntimeClient, p4Info, deviceConfig);
         }
     }

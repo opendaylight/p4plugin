@@ -177,8 +177,8 @@
       "name" : "deparser",
       "id" : 0,
       "source_info" : {
-        "filename" : "simple-router.p4",
-        "line" : 158,
+        "filename" : "simple_router.p4",
+        "line" : 164,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -193,8 +193,8 @@
       "name" : "calc",
       "id" : 0,
       "source_info" : {
-        "filename" : "simple-router.p4",
-        "line" : 136,
+        "filename" : "simple_router.p4",
+        "line" : 142,
         "column" : 8,
         "source_fragment" : "update_checksum( ..."
       },
@@ -264,8 +264,8 @@
           "op" : "drop",
           "parameters" : [],
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 90,
+            "filename" : "simple_router.p4",
+            "line" : 96,
             "column" : 8,
             "source_fragment" : "mark_to_drop()"
           }
@@ -299,8 +299,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 94,
+            "filename" : "simple_router.p4",
+            "line" : 100,
             "column" : 8,
             "source_fragment" : "standard_metadata.egress_spec = port"
           }
@@ -318,8 +318,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 95,
+            "filename" : "simple_router.p4",
+            "line" : 101,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.srcAddr = hdr.ethernet.dstAddr"
           }
@@ -337,8 +337,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 96,
+            "filename" : "simple_router.p4",
+            "line" : 102,
             "column" : 8,
             "source_fragment" : "hdr.ethernet.dstAddr = dstAddr"
           }
@@ -379,8 +379,8 @@
             }
           ],
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 97,
+            "filename" : "simple_router.p4",
+            "line" : 103,
             "column" : 8,
             "source_fragment" : "hdr.ipv4.ttl = hdr.ipv4.ttl - 1"
           }
@@ -393,8 +393,8 @@
       "name" : "ingress",
       "id" : 0,
       "source_info" : {
-        "filename" : "simple-router.p4",
-        "line" : 86,
+        "filename" : "simple_router.p4",
+        "line" : 92,
         "column" : 8,
         "source_fragment" : "MyIngress"
       },
@@ -404,8 +404,8 @@
           "name" : "MyIngress.ipv4_lpm",
           "id" : 0,
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 100,
+            "filename" : "simple_router.p4",
+            "line" : 106,
             "column" : 10,
             "source_fragment" : "ipv4_lpm"
           },
@@ -445,8 +445,8 @@
           "name" : "node_2",
           "id" : 0,
           "source_info" : {
-            "filename" : "simple-router.p4",
-            "line" : 114,
+            "filename" : "simple_router.p4",
+            "line" : 120,
             "column" : 12,
             "source_fragment" : "hdr.ipv4.isValid()"
           },
@@ -470,8 +470,8 @@
       "name" : "egress",
       "id" : 1,
       "source_info" : {
-        "filename" : "simple-router.p4",
-        "line" : 124,
+        "filename" : "simple_router.p4",
+        "line" : 130,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -549,7 +549,7 @@
       ["standard_metadata", "recirculate_flag"]
     ]
   ],
-  "program" : "simple-router.p4",
+  "program" : "./simple_router.p4i",
   "__meta__" : {
     "version" : [2, 18],
     "compiler" : "https://github.com/p4lang/p4c"

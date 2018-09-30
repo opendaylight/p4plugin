@@ -93,7 +93,7 @@
       "id" : 0,
       "source_info" : {
         "filename" : "loopback.p4",
-        "line" : 89,
+        "line" : 90,
         "column" : 8,
         "source_fragment" : "MyDeparser"
       },
@@ -150,7 +150,7 @@
           "id" : 0,
           "source_info" : {
             "filename" : "loopback.p4",
-            "line" : 53,
+            "line" : 54,
             "column" : 10,
             "source_fragment" : "t_redirect"
           },
@@ -183,7 +183,7 @@
       "id" : 1,
       "source_info" : {
         "filename" : "loopback.p4",
-        "line" : 71,
+        "line" : 72,
         "column" : 8,
         "source_fragment" : "MyEgress"
       },
@@ -242,7 +242,7 @@
       ["standard_metadata", "recirculate_flag"]
     ]
   ],
-  "program" : "./loopback.p4i",
+  "program" : "loopback.p4",
   "__meta__" : {
     "version" : [2, 18],
     "compiler" : "https://github.com/p4lang/p4c"

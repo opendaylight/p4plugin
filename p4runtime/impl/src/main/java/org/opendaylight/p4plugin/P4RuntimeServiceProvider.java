@@ -104,7 +104,7 @@ public class P4RuntimeServiceProvider implements P4pluginP4runtimeService {
         return () -> {
             String nodeId = input.getNid();
             Optional<Device> optional = deviceManager.findDevice(nodeId);
-            optional.orElseThrow(IllegalArgumentException::new).transmitPacket(input.getPayload());
+            optional.orElseThrow(IllegalArgumentException::new).transmitPacket(input.getMetadata(), input.getPayload());
             LOG.info("Transmit packet to device success, nodeId = {}.", nodeId);
             return rpcResultSuccess(null);
         };

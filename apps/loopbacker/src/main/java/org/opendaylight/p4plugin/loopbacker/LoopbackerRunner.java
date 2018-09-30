@@ -11,8 +11,13 @@ import org.opendaylight.p4plugin.appcommon.P4Switch;
 import org.opendaylight.p4plugin.appcommon.P4SwitchRunner;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.P4pluginDeviceService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.Metadata;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.MetadataBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class LoopbackerRunner extends P4SwitchRunner {
     private static final Logger LOG = LoggerFactory.getLogger(LoopbackerRunner.class);
@@ -52,9 +57,19 @@ public class LoopbackerRunner extends P4SwitchRunner {
         if (addDevice()) {
             p4Switch.openStreamChannel();
             p4Switch.setPipelineConfig();
+            List<Metadata> metadataList = new ArrayList<>();
+            MetadataBuilder metadataBuilder1 = new MetadataBuilder();
+            metadataBuilder1.setMetadataValue(new byte[]{0,0,0,0,0,0,0,0});
+            metadataBuilder1.setMetadataName("cpu_preamble");
+            MetadataBuilder metadataBuilder2 = new MetadataBuilder();
+            metadataBuilder2.setMetadataValue(new byte[]{37});
+            metadataBuilder2.setMetadataName("egress_port");
+            metadataList.add(metadataBuilder1.build());
+            metadataList.add(metadataBuilder2.build());
+
             Runnable runnable = () -> {
                 for (int index = 0; index < 10; index++) {
-                    p4Switch.sendPacketOut("Welcome to ZTE.".getBytes());
+                    p4Switch.sendPacketOut(metadataList, "Welcome to ZTE.".getBytes());
                     SleepUtils.delay(10);
                 }
             };

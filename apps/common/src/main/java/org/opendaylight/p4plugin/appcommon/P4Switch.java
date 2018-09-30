@@ -9,10 +9,12 @@ package org.opendaylight.p4plugin.appcommon;
 
 import com.google.common.util.concurrent.ListenableFuture;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.*;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.Metadata;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 public abstract class P4Switch {
@@ -87,11 +89,12 @@ public abstract class P4Switch {
         }
     }
 
-    public void sendPacketOut(byte[] packet) {
+    public void sendPacketOut(List<Metadata> metadataList, byte[] packet) {
         if (status != Status.SET_PIPELINE) return;
         TransmitPacketInputBuilder inputBuilder = new TransmitPacketInputBuilder();
         inputBuilder.setNid(nodeId);
         inputBuilder.setPayload(packet);
+        inputBuilder.setMetadata(metadataList);
 
         try {
             ListenableFuture<RpcResult<TransmitPacketOutput>> output = runtimeService.transmitPacket(inputBuilder.build());

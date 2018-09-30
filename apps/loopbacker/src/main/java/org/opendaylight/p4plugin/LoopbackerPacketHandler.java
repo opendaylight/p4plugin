@@ -9,20 +9,32 @@ package org.opendaylight.p4plugin;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeListener;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.PacketReceived;
+import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.Metadata;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
+import java.util.List;
 
 public class LoopbackerPacketHandler implements P4pluginP4runtimeListener {
     private static final Logger LOG = LoggerFactory.getLogger(LoopbackerPacketHandler.class);
     @Override
     public void onPacketReceived(PacketReceived notification) {
         byte[] packetByte = notification.getPayload();
-        String packetStr = new String(packetByte);
         String nodeId = notification.getNid();
-        if (packetStr.equals("Welcome to ZTE.")) {
-            LOG.info("Receive packet = {}/{} from {}", Arrays.toString(packetByte), packetStr, nodeId);
-        }
+        List<Metadata> metadataList =  notification.getMetadata();
+        StringBuilder stringBuilder = new StringBuilder();
+
+        metadataList.forEach(
+            metadata -> {
+                String name = metadata.getMetadataName();
+                String value = Arrays.toString(metadata.getMetadataValue());
+                stringBuilder.append("[ metadata name = " + name + "/value = " + value + "]");
+            }
+        );
+
+        LOG.info("Receive packet from {}, {}, payload = {}.", nodeId,
+                new String(stringBuilder),
+                Arrays.toString(packetByte));
     }
 }

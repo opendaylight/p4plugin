@@ -104,6 +104,18 @@ module p4plugin-p4runtime {
         }
     }
 
+    grouping packet-metadata {
+        list metadata {
+            leaf metadata-name {
+                type string;
+            }
+
+            leaf metadata-value {
+                type binary;
+            }
+        }
+    }
+
     rpc open-stream-channel {
         input {
             uses p4plugin-device:node-id;
@@ -135,6 +147,7 @@ module p4plugin-p4runtime {
     rpc transmit-packet {
         input {
             uses p4plugin-device:node-id;
+            uses packet-metadata;
             leaf payload {
                 type binary;
             }
@@ -143,6 +156,7 @@ module p4plugin-p4runtime {
 
     notification packet-received {
         uses p4plugin-device:node-id;
+        uses packet-metadata;
         leaf payload {
             type binary;
         }

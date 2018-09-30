@@ -12,12 +12,12 @@ import com.google.rpc.Code;
 import io.grpc.ManagedChannel;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import org.opendaylight.p4plugin.NotificationPublisher;
 import org.opendaylight.p4plugin.channel.ChannelFactory;
+import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.p4plugin.p4runtime.proto.*;
-import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.PacketReceivedBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.Iterator;
 
 public class P4RuntimeClient {
@@ -29,8 +29,9 @@ public class P4RuntimeClient {
     private P4RuntimeGrpc.P4RuntimeBlockingStub blockingStub;
     private P4RuntimeGrpc.P4RuntimeStub asyncStub;
     private StreamObserver<StreamMessageRequest> requestStreamObserver;
+    private PacketInHandler packetInHandler;
 
-    public P4RuntimeClient(String ip, Integer port, Long deviceId, String nodeId) {
+    public P4RuntimeClient(String ip, Integer port, Long deviceId, String nodeId, P4Info p4Info) {
         ManagedChannel managedChannel = getManagedChannel(ip, port);
         this.deviceId = deviceId;
         this.nodeId = nodeId;
@@ -38,6 +39,7 @@ public class P4RuntimeClient {
         this.port = port;
         this.blockingStub = P4RuntimeGrpc.newBlockingStub(managedChannel);
         this.asyncStub = P4RuntimeGrpc.newStub(managedChannel);
+        this.packetInHandler = new PacketInHandler(nodeId, p4Info);
     }
 
     private ManagedChannel getManagedChannel(String ip , Integer port) {
@@ -95,11 +97,7 @@ public class P4RuntimeClient {
             public void onNext(StreamMessageResponse streamMessageResponse) {
                 switch (streamMessageResponse.getUpdateCase()) {
                     case PACKET:
-                        PacketReceivedBuilder builder = new PacketReceivedBuilder();
-                        byte[] payload = streamMessageResponse.getPacket().getPayload().toByteArray();
-                        builder.setNid(nodeId);
-                        builder.setPayload(payload);
-                        NotificationPublisher.getInstance().notify(builder.build());
+                        packetInHandler.process(streamMessageResponse);
                         break;
 
                     case ARBITRATION:

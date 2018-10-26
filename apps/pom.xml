@@ -26,6 +26,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <modules>
         <module>common</module>
         <module>simple-router</module>
-        <module>loopbacker</module>
+        <module>packet-io</module>
+        <module>packet-replication</module>
     </modules>
 </project>

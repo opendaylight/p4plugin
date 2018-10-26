@@ -96,16 +96,16 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                     </execution>
 
                     <execution>
-                        <id>copy-loopbacker-p4-resources</id>
+                        <id>copy-packetio-p4-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/etc/p4/loopbacker/</outputDirectory>
+                            <outputDirectory>target/assembly/etc/p4/packet-io/</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../apps/loopbacker/src/main/resources/p4/</directory>
+                                    <directory>../apps/packet-io/src/main/resources/p4/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>
@@ -114,7 +114,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                         </configuration>
                     </execution>
                     <execution>
-                        <id>copy-loopbacker-config-resources</id>
+                        <id>copy-packetio-config-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -123,7 +123,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                             <outputDirectory>target/assembly/etc/</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../apps/loopbacker/src/main/resources/config/</directory>
+                                    <directory>../apps/packetio/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>

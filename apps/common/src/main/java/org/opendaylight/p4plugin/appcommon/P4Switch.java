@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-public abstract class P4Switch {
+public class P4Switch {
     private static final Logger LOG = LoggerFactory.getLogger(P4Switch.class);
     protected final String gRPCServerIp;
     protected final Integer gRPCServerPort;
@@ -26,15 +26,12 @@ public abstract class P4Switch {
     protected final String configFile;
     protected final String runtimeFile;
     protected final P4pluginP4runtimeService runtimeService;
-    protected Status status = Status.INITIALIZE;
+    private Status status = Status.INITIALIZE;
 
-    protected P4Switch(String gRPCServerIp,
-                    Integer gRPCServerPort,
-                    Long deviceId,
-                    String nodeId,
-                    String configFile,
-                    String runtimeFile,
-                    P4pluginP4runtimeService runtimeService) {
+    protected P4Switch(String gRPCServerIp, Integer gRPCServerPort,
+                       Long deviceId, String nodeId,
+                       String configFile, String runtimeFile,
+                       P4pluginP4runtimeService runtimeService) {
         this.gRPCServerIp = gRPCServerIp;
         this.gRPCServerPort = gRPCServerPort;
         this.deviceId = deviceId;

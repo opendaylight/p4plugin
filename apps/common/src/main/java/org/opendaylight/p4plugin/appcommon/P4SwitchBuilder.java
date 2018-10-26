@@ -9,7 +9,7 @@ package org.opendaylight.p4plugin.appcommon;
 
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService;
 
-public abstract class P4SwitchBuilder {
+public class P4SwitchBuilder {
     protected String gRPCServerIp;
     protected Integer gRPCServerPort;
     protected Long deviceId;
@@ -19,7 +19,6 @@ public abstract class P4SwitchBuilder {
     protected P4pluginP4runtimeService runtimeService;
 
     public P4SwitchBuilder() {}
-    public abstract P4Switch build();
 
     public P4SwitchBuilder setServerIp(String gRPCServerIp) {
         this.gRPCServerIp = gRPCServerIp;
@@ -54,5 +53,10 @@ public abstract class P4SwitchBuilder {
     public P4SwitchBuilder setRuntimeService(P4pluginP4runtimeService runtimeService) {
         this.runtimeService = runtimeService;
         return this;
+    }
+
+    public P4Switch build() {
+        return new P4Switch(gRPCServerIp, gRPCServerPort, deviceId, nodeId,
+                            configFile, runtimeFile, runtimeService);
     }
 }

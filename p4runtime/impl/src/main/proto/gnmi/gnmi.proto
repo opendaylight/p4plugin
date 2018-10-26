@@ -258,7 +258,7 @@ message SubscriptionList {
   QOSMarking qos = 4;                       // DSCP marking to be used.
   // Mode of the subscription.
   enum Mode {
-    STREAM = 0; // Values streamed by the target (Sec. 3.5.1.5.2).
+    STREAM = 0; // Values streamed by the   (Sec. 3.5.1.5.2).
     ONCE = 1;   // Values sent once-off by the target (Sec. 3.5.1.5.1).
     POLL = 2;   // Values sent in response to a poll request (Sec. 3.5.1.5.3).
   }
@@ -307,7 +307,7 @@ enum SubscriptionMode {
   SAMPLE         = 2;  // The target samples values according to the interval.
 }
 
-// QOSMarking specifies the DSCP value to be set on transmitted telemetry
+// QOSMarking specifies the DSCP value to be set on transmitted telemetryshangci
 // updates from the target.
 // Reference: gNMI Specification Section 3.5.1.2
 message QOSMarking {

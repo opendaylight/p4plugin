@@ -64,7 +64,7 @@ public class P4RuntimeClient {
             response = blockingStub.getForwardingPipelineConfig(request);
             return response;
         } catch (StatusRuntimeException e) {
-            LOG.info("Get pipeline config exception, Status = {}, Reason = {}", e.getStatus(), e.getMessage());
+            LOG.info("Get pipeline config exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
             throw e;
         }
     }
@@ -75,7 +75,7 @@ public class P4RuntimeClient {
             response = blockingStub.write(request);
             return response;
         } catch (StatusRuntimeException e) {
-            LOG.info("Write RPC exception, Status = %s, Reason = %s", e.getStatus(), e.getMessage());
+            LOG.info("Write RPC exception, Status = {}, Reason = {}.", e.getStatus(), e.getMessage());
             throw e;
         }
     }

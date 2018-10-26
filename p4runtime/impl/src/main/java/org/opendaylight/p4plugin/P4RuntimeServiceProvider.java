@@ -14,6 +14,8 @@ import com.google.protobuf.ByteString;
 import com.google.protobuf.TextFormat;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.mdsal.binding.api.NotificationPublishService;
+import org.opendaylight.p4plugin.device.Device;
+import org.opendaylight.p4plugin.device.DeviceManager;
 import org.opendaylight.p4plugin.p4info.proto.P4Info;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
@@ -153,6 +155,26 @@ public class P4RuntimeServiceProvider implements P4pluginP4runtimeService {
         };
     }
 
+    private Callable<RpcResult<AddMulticastGroupEntryOutput>> addMulticastGroup(AddMulticastGroupEntryInput input) {
+        return () -> {
+            String nodeId = input.getNid();
+            Optional<Device> optional = deviceManager.findDevice(nodeId);
+            optional.orElseThrow(IllegalArgumentException::new).addMulticastGroupEntry(input);
+            LOG.info("Add multicast group entry, nodeId = {}.", nodeId);
+            return rpcResultSuccess(null);
+        };
+    }
+
+    private Callable<RpcResult<AddCloneSessionEntryOutput>> addCloneSession(AddCloneSessionEntryInput input) {
+        return () -> {
+            String nodeId = input.getNid();
+            Optional<Device> optional = deviceManager.findDevice(nodeId);
+            optional.orElseThrow(IllegalArgumentException::new).addCloneSessionEntry(input);
+            LOG.info("Add clone session entry, nodeId = {}.", nodeId);
+            return rpcResultSuccess(null);
+        };
+    }
+
     @Override
     public ListenableFuture<RpcResult<AddTableEntryOutput>> addTableEntry(AddTableEntryInput input) {
         return executorService.submit(addEntry(input));
@@ -191,5 +213,15 @@ public class P4RuntimeServiceProvider implements P4pluginP4runtimeService {
     @Override
     public ListenableFuture<RpcResult<GetPipelineConfigOutput>> getPipelineConfig(GetPipelineConfigInput input) {
         return executorService.submit(getConfig(input));
+    }
+
+    @Override
+    public ListenableFuture<RpcResult<AddMulticastGroupEntryOutput>> addMulticastGroupEntry(AddMulticastGroupEntryInput input) {
+        return executorService.submit(addMulticastGroup(input));
+    }
+
+    @Override
+    public ListenableFuture<RpcResult<AddCloneSessionEntryOutput>> addCloneSessionEntry(AddCloneSessionEntryInput input) {
+        return executorService.submit(addCloneSession(input));
     }
 }

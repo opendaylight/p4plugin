@@ -116,6 +116,44 @@ module p4plugin-p4runtime {
         }
     }
 
+    grouping replica {
+        leaf egress-port {
+            type uint32;
+        }
+
+        leaf instance {
+            type uint32;
+        }
+    }
+
+    grouping multicast-group-entry {
+        leaf multicast-group-id {
+            type uint32;
+        }
+
+        list replicas {
+            uses replica;
+        }
+    }
+
+    grouping clone-session-entry {
+        leaf session-id {
+            type uint32;
+        }
+
+        list replicas {
+            uses replica;
+        }
+
+        leaf class-of-service {
+            type uint32;
+        }
+
+        leaf packet-length-bytes {
+            type uint32;
+        }
+    }
+
     rpc open-stream-channel {
         input {
             uses p4plugin-device:node-id;
@@ -195,6 +233,20 @@ module p4plugin-p4runtime {
             leaf-list entry {
                 type string;
             }
+        }
+    }
+
+    rpc add-multicast-group-entry {
+        input {
+            uses p4plugin-device:node-id;
+            uses multicast-group-entry;
+        }
+    }
+
+    rpc add-clone-session-entry {
+        input {
+            uses p4plugin-device:node-id;
+            uses clone-session-entry;
         }
     }
 }

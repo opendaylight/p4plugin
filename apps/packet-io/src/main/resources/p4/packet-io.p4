@@ -2,44 +2,43 @@
 #include <core.p4>
 #include <v1model.p4>
 
-const bit<16> TYPE_IPV4 = 0x800;
+#define CPU_PORT 64
+typedef bit<48> macAddr_t;
 
 /*************************************************************************
 *********************** H E A D E R S  ***********************************
 *************************************************************************/
 
-typedef bit<9>  egressSpec_t;
-typedef bit<48> macAddr_t;
-typedef bit<32> ip4Addr_t;
-
-header ethernet_t {
-    macAddr_t dstAddr;
-    macAddr_t srcAddr;
-    bit<16>   etherType;
+@controller_header("packet_in")
+header packet_in_header_t {
+    bit<9> ingress_port;
+    bit<16> reason;
 }
 
-header ipv4_t {
-    bit<4>    version;
-    bit<4>    ihl;
-    bit<8>    diffserv;
-    bit<16>   totalLen;
-    bit<16>   identification;
-    bit<3>    flags;
-    bit<13>   fragOffset;
-    bit<8>    ttl;
-    bit<8>    protocol;
-    bit<16>   hdrChecksum;
-    ip4Addr_t srcAddr;
-    ip4Addr_t dstAddr;
+@controller_header("packet_out")
+header packet_out_header_t {
+    bit<64> cpu_preamble;
+    bit<9> egress_port;
 }
 
 struct metadata {
     /* empty */
 }
 
+header ethernet_t {dd
+    macAddr_t dstAddr;
+    macAddr_t srcAddr;
+    bit<16>   etherType;
+}
+
 struct headers {
-    ethernet_t   ethernet;
-    ipv4_t       ipv4;
+   packet_out_header_t my_packet_out;
+   packet_in_header_t my_packet_in;
+   ethernet_t ethernet;
+}
+
+enum bit<16> packet_in_reason {
+    arp = 0xFF
 }
 
 /*************************************************************************
@@ -52,32 +51,30 @@ parser MyParser(packet_in packet,
                 inout standard_metadata_t standard_metadata) {
 
     state start {
-        transition parse_ethernet;
+        transition select(packet.lookahead<packet_out_header_t>().cpu_preamble) {
+            64w0x0 : parse_my_packet_out;
+            default : parse_ethernet;
+        }
+    }
+
+    state parse_my_packet_out {
+        packet.extract(hdr.my_packet_out);
+        transition accept;
     }
 
     state parse_ethernet {
         packet.extract(hdr.ethernet);
-        transition select(hdr.ethernet.etherType) {
-            TYPE_IPV4: parse_ipv4;
-            default: accept;
-        }
-    }
-
-    state parse_ipv4 {
-        packet.extract(hdr.ipv4);
         transition accept;
     }
 }
-
 
 /*************************************************************************
 ************   C H E C K S U M    V E R I F I C A T I O N   *************
 *************************************************************************/
 
-control MyVerifyChecksum(inout headers hdr, inout metadata meta) {   
+control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
     apply {  }
 }
-
 
 /*************************************************************************
 **************  I N G R E S S   P R O C E S S I N G   *******************
@@ -86,33 +83,47 @@ control MyVerifyChecksum(inout headers hdr, inout metadata meta) {
 control MyIngress(inout headers hdr,
                   inout metadata meta,
                   inout standard_metadata_t standard_metadata) {
+
+    action send_packet_in() {
+        standard_metadata.egress_spec = CPU_PORT;
+        hdr.my_packet_in.setValid();
+        hdr.my_packet_in.ingress_port = standard_metadata.ingress_port;
+        hdr.my_packet_in.reason = (bit<16>)packet_in_reason.arp;
+    }
+
     action drop() {
         mark_to_drop();
     }
-    
-    action ipv4_forward(macAddr_t dstAddr, egressSpec_t port) {
-        standard_metadata.egress_spec = port;
-        hdr.ethernet.srcAddr = hdr.ethernet.dstAddr;
-        hdr.ethernet.dstAddr = dstAddr;
-        hdr.ipv4.ttl = hdr.ipv4.ttl - 1;
+
+    action send_packet_out() {
+        standard_metadata.egress_spec = hdr.my_packet_out.egress_port;
+        hdr.my_packet_out.setInvalid();
     }
-    
-    table ipv4_lpm {
+
+    table t_upsend {
         key = {
-            hdr.ipv4.dstAddr: lpm;
+            hdr.ethernet.etherType : exact;
         }
+
         actions = {
-            ipv4_forward;
+            send_packet_in;
             drop;
-            NoAction;
         }
-        size = 1024;
-        default_action = NoAction();
+
+        size = 1;
+        default_action = drop();
+        const entries = {
+            16w0x0806 : send_packet_in();
+        }
     }
-    
+
     apply {
-        if (hdr.ipv4.isValid()) {
-            ipv4_lpm.apply();
+        if(hdr.my_packet_out.isValid()) {
+            send_packet_out();
+        } else {
+            if(hdr.ethernet.isValid()) {
+                t_upsend.apply();
+            }
         }
     }
 }
@@ -132,23 +143,7 @@ control MyEgress(inout headers hdr,
 *************************************************************************/
 
 control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
-     apply {
-        update_checksum(
-            hdr.ipv4.isValid(),
-            { hdr.ipv4.version,
-              hdr.ipv4.ihl,
-              hdr.ipv4.diffserv,
-              hdr.ipv4.totalLen,
-              hdr.ipv4.identification,
-              hdr.ipv4.flags,
-              hdr.ipv4.fragOffset,
-              hdr.ipv4.ttl,
-              hdr.ipv4.protocol,
-              hdr.ipv4.srcAddr,
-              hdr.ipv4.dstAddr },
-            hdr.ipv4.hdrChecksum,
-            HashAlgorithm.csum16);
-    }
+     apply {  }
 }
 
 /*************************************************************************
@@ -157,13 +152,13 @@ control MyComputeChecksum(inout headers  hdr, inout metadata meta) {
 
 control MyDeparser(packet_out packet, in headers hdr) {
     apply {
+        packet.emit(hdr.my_packet_in);
         packet.emit(hdr.ethernet);
-        packet.emit(hdr.ipv4);
     }
 }
 
 /*************************************************************************
-***********************  S W I T C H  *******************************
+***********************  S W I T C H  ************************************
 *************************************************************************/
 
 V1Switch(

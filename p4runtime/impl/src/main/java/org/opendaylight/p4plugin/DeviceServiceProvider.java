@@ -11,6 +11,7 @@ import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import org.opendaylight.mdsal.binding.api.DataBroker;
+import org.opendaylight.p4plugin.device.DeviceManager;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
 import org.opendaylight.yangtools.yang.common.RpcResult;
 import org.opendaylight.yangtools.yang.common.RpcResultBuilder;

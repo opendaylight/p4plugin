@@ -18,6 +18,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <reference id="notificationPublishService"
         interface="org.opendaylight.mdsal.binding.api.NotificationPublishService"/>
 
+    <odl:rpc-service id = "insertMetric"
+               interface="org.opendaylight.yang.gen.v1.urn.opendaylight.params.xml.ns.yang.controller.config.tsdr.collector.spi.rev150915.TsdrCollectorSpiService"/>
+
     <bean id="p4RuntimeServiceProvider"
         class="org.opendaylight.p4plugin.P4RuntimeServiceProvider"
         init-method="init" destroy-method="close">
@@ -31,6 +34,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="dataBroker" />
     </bean>
 
+    <bean id="tsdrServiceInjector"
+          class="org.opendaylight.p4plugin.TsdrServiceInjector"
+          init-method="init" destroy-method="close">
+        <argument ref="dataBroker" />
+        <argument ref="insertMetric" />
+    </bean>
+
+    <bean id="gNMIServiceProvider"
+          class="org.opendaylight.p4plugin.gNMIServiceProvider"
+          init-method="init" destroy-method="close">
+        <argument ref="dataBroker" />
+    </bean>
+
     <odl:rpc-implementation ref="p4RuntimeServiceProvider" />
     <odl:rpc-implementation ref="deviceServiceProvider" />
+    <odl:rpc-implementation ref="gNMIServiceProvider" />
 </blueprint>

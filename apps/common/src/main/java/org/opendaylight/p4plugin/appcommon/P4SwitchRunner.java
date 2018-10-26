@@ -38,14 +38,20 @@ public abstract class P4SwitchRunner {
         this.p4Switch = newSwitch(gRPCServerIp, gRPCServerPort, deviceId, nodeId, configFile, runtimeFile, runtimeService);
     }
 
-    public abstract P4Switch newSwitch(String gRPCServerIp,
-                                       Integer gRPCServerPort,
-                                       Long deviceId,
-                                       String nodeId,
-                                       String configFile,
-                                       String runtimeFile,
-                                       P4pluginP4runtimeService runtimeService);
+    public P4Switch newSwitch(String gRPCServerIp, Integer gRPCServerPort,
+                              Long deviceId, String nodeId,
+                              String configFile, String runtimeFile,
+                              P4pluginP4runtimeService runtimeService) {
+        return new P4SwitchBuilder()
+                .setServerIp(gRPCServerIp)
+                .setServerPort(gRPCServerPort)
+                .setConfigFile(configFile)
+                .setRuntimeFile(runtimeFile)
+                .setRuntimeService(runtimeService).build();
+    }
+
     public abstract void run();
+
     public void close() {
         removeDevice();
     }

@@ -10,11 +10,12 @@ package org.opendaylight.p4plugin;
 import org.opendaylight.mdsal.binding.api.DataBroker;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.P4pluginDeviceService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleRouterProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleRouterProvider.class);
+public class PacketReplicationProvider {
+    private static final Logger LOG = LoggerFactory.getLogger(PacketReplicationProvider.class);
     private final DataBroker dataBroker;
     private final P4pluginDeviceService deviceService;
     private final P4pluginP4runtimeService runtimeService;
@@ -24,17 +25,17 @@ public class SimpleRouterProvider {
     private final String nodeId;
     private final String configFile;
     private final String runtimeFile;
-    private SimpleRouterRunner simpleRouterRunner;
+    private PacketReplicationRunner packetReplicationRunner;
 
-    public SimpleRouterProvider(final DataBroker dataBroker,
-                                final P4pluginDeviceService deviceService,
-                                final P4pluginP4runtimeService runtimeService,
-                                final String gRPCServerIp,
-                                final Integer gRPCServerPort,
-                                final Long deviceId,
-                                final String nodeId,
-                                final String configFile,
-                                final String runtimeFile) {
+    public PacketReplicationProvider(final DataBroker dataBroker,
+                                     final P4pluginDeviceService deviceService,
+                                     final P4pluginP4runtimeService runtimeService,
+                                     final String gRPCServerIp,
+                                     final Integer gRPCServerPort,
+                                     final Long deviceId,
+                                     final String nodeId,
+                                     final String configFile,
+                                     final String runtimeFile) {
         this.dataBroker = dataBroker;
         this.deviceService = deviceService;
         this.runtimeService = runtimeService;
@@ -47,14 +48,14 @@ public class SimpleRouterProvider {
     }
 
     public void init() {
-        simpleRouterRunner = new SimpleRouterRunner(deviceService, runtimeService, gRPCServerIp,
-                                                    gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
-        simpleRouterRunner.run();
-        LOG.info("Simple router provider init.");
+        packetReplicationRunner = new PacketReplicationRunner(deviceService, runtimeService, gRPCServerIp,
+                                        gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+        packetReplicationRunner.run();
+        LOG.info("Packet replication provider init.");
     }
 
     public void close() {
-        simpleRouterRunner.close();
-        LOG.info("Simple router provider closed.");
+        packetReplicationRunner.close();
+        LOG.info("Packet replication provider closed.");
     }
 }

@@ -13,8 +13,8 @@ import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev17080
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleRouterProvider {
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleRouterProvider.class);
+public class PacketIOProvider {
+    private static final Logger LOG = LoggerFactory.getLogger(PacketIOProvider.class);
     private final DataBroker dataBroker;
     private final P4pluginDeviceService deviceService;
     private final P4pluginP4runtimeService runtimeService;
@@ -24,17 +24,17 @@ public class SimpleRouterProvider {
     private final String nodeId;
     private final String configFile;
     private final String runtimeFile;
-    private SimpleRouterRunner simpleRouterRunner;
+    private PacketIORunner packetIORunner;
 
-    public SimpleRouterProvider(final DataBroker dataBroker,
-                                final P4pluginDeviceService deviceService,
-                                final P4pluginP4runtimeService runtimeService,
-                                final String gRPCServerIp,
-                                final Integer gRPCServerPort,
-                                final Long deviceId,
-                                final String nodeId,
-                                final String configFile,
-                                final String runtimeFile) {
+    public PacketIOProvider(final DataBroker dataBroker,
+                            final P4pluginDeviceService deviceService,
+                            final P4pluginP4runtimeService runtimeService,
+                            final String gRPCServerIp,
+                            final Integer gRPCServerPort,
+                            final Long deviceId,
+                            final String nodeId,
+                            final String configFile,
+                            final String runtimeFile) {
         this.dataBroker = dataBroker;
         this.deviceService = deviceService;
         this.runtimeService = runtimeService;
@@ -47,14 +47,14 @@ public class SimpleRouterProvider {
     }
 
     public void init() {
-        simpleRouterRunner = new SimpleRouterRunner(deviceService, runtimeService, gRPCServerIp,
-                                                    gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
-        simpleRouterRunner.run();
-        LOG.info("Simple router provider init.");
+        packetIORunner = new PacketIORunner(deviceService, runtimeService, gRPCServerIp,
+                                            gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+        packetIORunner.run();
+        LOG.info("PacketIO provider init.");
     }
 
     public void close() {
-        simpleRouterRunner.close();
-        LOG.info("Simple router provider closed.");
+        packetIORunner.close();
+        LOG.info("PacketIO provider closed.");
     }
 }

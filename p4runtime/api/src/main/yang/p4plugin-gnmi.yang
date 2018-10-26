@@ -65,6 +65,14 @@ module p4plugin-gnmi {
             type uint64;
         }
 
+        leaf mode {
+            type enumeration {
+                enum TARGET_DEFINED;
+                enum ON_CHANGE;
+                enum SAMPLE;
+            }
+        }
+
         leaf suppress-redundant {
             type boolean;
         }
@@ -109,6 +117,23 @@ module p4plugin-gnmi {
         leaf updates-only {
             type boolean;
         }
+    }
 
+    typedef gnmi-typed-value {
+        type union {
+            type string;
+            type uint8;
+            type uint16;
+            type uint32;
+            type uint64;
+            type binary;
+        }
+    }
+
+    rpc subscribe {
+        input {
+            uses p4plugin-device:node-id;
+            uses subscription-list;
+        }
     }
 }

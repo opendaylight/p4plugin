@@ -23,12 +23,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
 
     <cm:property-placeholder persistent-id="p4.simple.router" update-strategy="none">
         <cm:default-properties>
-            <cm:property name="grpc_server_ip" value="127.0.0.1"/>
-            <cm:property name="grpc_server_port" value="50051"/>
-            <cm:property name="device_id" value="0"/>
-            <cm:property name="node_id" value="node-simple-router"/>
-            <cm:property name="config_file" value="etc/p4/simple-router/simple_router.json"/>
-            <cm:property name="runtime_file" value="etc/p4/simple-router/simple_router.proto.txt"/>
+            <cm:property name="topo_file" value="etc/p4plugin/simple-router/topo/topo.json"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -38,11 +33,6 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="dataBroker" />
         <argument ref="deviceService" />
         <argument ref="p4runtimeService" />
-        <argument value="${grpc_server_ip}" />
-        <argument value="${grpc_server_port}" />
-        <argument value="${device_id}" />
-        <argument value="${node_id}" />
-        <argument value="${config_file}" />
-        <argument value="${runtime_file}" />
+        <argument value="${topo_file}" />
     </bean>
 </blueprint>

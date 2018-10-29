@@ -8,6 +8,10 @@
 package org.opendaylight.p4plugin.appcommon;
 
 import com.google.common.util.concurrent.ListenableFuture;
+import org.opendaylight.p4plugin.appcommon.swtich.P4Switch;
+import org.opendaylight.p4plugin.appcommon.swtich.P4SwitchBuilder;
+import org.opendaylight.p4plugin.appcommon.topo.Topo;
+import org.opendaylight.p4plugin.appcommon.topo.TopoParser;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.Ipv4Address;
 import org.opendaylight.yang.gen.v1.urn.ietf.params.xml.ns.yang.ietf.inet.types.rev130715.PortNumber;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.*;
@@ -17,51 +21,81 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
-public abstract class P4SwitchRunner {
-    private static final Logger LOG = LoggerFactory.getLogger(P4SwitchRunner.class);
-    protected P4Switch p4Switch;
+public abstract class ApplicationRunner {
+    private static final Logger LOG = LoggerFactory.getLogger(ApplicationRunner.class);
+    protected Map<String, P4Switch> p4SwitchMap = new LinkedHashMap<>();
     private P4pluginDeviceService deviceService;
     private P4pluginP4runtimeService runtimeService;
 
-    public P4SwitchRunner(final P4pluginDeviceService deviceService,
-                          final P4pluginP4runtimeService runtimeService,
-                          final String gRPCServerIp,
-                          final Integer gRPCServerPort,
-                          final Long deviceId,
-                          final String nodeId,
-                          final String configFile,
-                          final String runtimeFile) {
+
+    public ApplicationRunner(final P4pluginDeviceService deviceService,
+                             final P4pluginP4runtimeService runtimeService,
+                             final String topoFilePath) {
         this.deviceService = deviceService;
         this.runtimeService = runtimeService;
-        this.p4Switch = newSwitch(gRPCServerIp, gRPCServerPort, deviceId, nodeId, configFile, runtimeFile, runtimeService);
+        createLocalTopo(topoFilePath);
     }
 
-    public P4Switch newSwitch(String gRPCServerIp, Integer gRPCServerPort,
-                              Long deviceId, String nodeId,
-                              String configFile, String runtimeFile,
-                              P4pluginP4runtimeService runtimeService) {
-        return new P4SwitchBuilder()
-                .setServerIp(gRPCServerIp)
-                .setServerPort(gRPCServerPort)
-                .setConfigFile(configFile)
-                .setRuntimeFile(runtimeFile)
-                .setRuntimeService(runtimeService).build();
+    private void createLocalTopo(String path) {
+        Topo topo = getTopo(path);
+        if (topo != null) {
+            List<Topo.SwitchConfig> configs = topo.getSwitches();
+            for (Topo.SwitchConfig c : configs) {
+                P4Switch p4Switch = new P4SwitchBuilder()
+                        .setNodeId(c.getNodeId())
+                        .setServerIp(c.getgRPCServerIp())
+                        .setServerPort(c.getgRPCServerPort())
+                        .setDeviceId(c.getDeviceId())
+                        .setConfigFile(c.getConfigFile())
+                        .setRuntimeFile(c.getRuntimeFile())
+                        .setRuntimeService(runtimeService).build();
+                p4SwitchMap.put(c.getNodeId(), p4Switch);
+            }
+        }
+    }
+
+    private Topo getTopo(String path) {
+        TopoParser topoParser = new TopoParser(path);
+        topoParser.parse();
+        return topoParser.getTopo();
     }
 
     public abstract void run();
 
-    public void close() {
-        removeDevice();
+    public boolean loadTopo() {
+        boolean result = true;
+
+        for(Map.Entry<String, P4Switch> entry : p4SwitchMap.entrySet()) {
+            P4Switch p4Switch = entry.getValue();
+            if (addNode(p4Switch)) {
+                p4Switch.openStreamChannel();
+                p4Switch.setPipelineConfig();
+            } else {
+                result = false;
+                break;
+            }
+        }
+        return result;
     }
 
-    public boolean addDevice() {
+    public void removeTopo() {
+        for(Map.Entry<String, P4Switch> entry : p4SwitchMap.entrySet()) {
+            removeNode(entry.getValue());
+        }
+    }
+
+    private boolean addNode(P4Switch p4Switch) {
         AddDeviceInputBuilder inputBuilder = new AddDeviceInputBuilder();
         inputBuilder.setNid(p4Switch.getNodeId());
         inputBuilder.setDid(new BigInteger(p4Switch.getDeviceId().toString()));
-        inputBuilder.setIp(new Ipv4Address(p4Switch.getServerIp()));
-        inputBuilder.setPort(new PortNumber(p4Switch.getServerPort()));
+        inputBuilder.setIp(new Ipv4Address(p4Switch.getgRPCServerIp()));
+        inputBuilder.setPort(new PortNumber(p4Switch.getgRPCServerPort()));
         inputBuilder.setPipelineFile(p4Switch.getConfigFile());
         inputBuilder.setRuntimeFile(p4Switch.getRuntimeFile());
         String nodeId = p4Switch.getNodeId();
@@ -78,7 +112,7 @@ public abstract class P4SwitchRunner {
         return result;
     }
 
-    public boolean removeDevice() {
+    public void removeNode(P4Switch p4Switch) {
         RemoveDeviceInputBuilder inputBuilder = new RemoveDeviceInputBuilder();
         String nodeId = p4Switch.getNodeId();
         inputBuilder.setNid(nodeId);
@@ -92,6 +126,5 @@ public abstract class P4SwitchRunner {
             result = false;
             LOG.error("Remove switch {} exception, message = {}.", nodeId, e.getMessage());
         }
-        return result;
     }
 }

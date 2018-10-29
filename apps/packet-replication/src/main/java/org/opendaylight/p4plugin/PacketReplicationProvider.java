@@ -19,43 +19,27 @@ public class PacketReplicationProvider {
     private final DataBroker dataBroker;
     private final P4pluginDeviceService deviceService;
     private final P4pluginP4runtimeService runtimeService;
-    private final String gRPCServerIp;
-    private final Integer gRPCServerPort;
-    private final Long deviceId;
-    private final String nodeId;
-    private final String configFile;
-    private final String runtimeFile;
+    private final String topoFilePath;
     private PacketReplicationRunner packetReplicationRunner;
 
     public PacketReplicationProvider(final DataBroker dataBroker,
                                      final P4pluginDeviceService deviceService,
                                      final P4pluginP4runtimeService runtimeService,
-                                     final String gRPCServerIp,
-                                     final Integer gRPCServerPort,
-                                     final Long deviceId,
-                                     final String nodeId,
-                                     final String configFile,
-                                     final String runtimeFile) {
+                                     final String topoFilePath) {
         this.dataBroker = dataBroker;
         this.deviceService = deviceService;
         this.runtimeService = runtimeService;
-        this.gRPCServerIp = gRPCServerIp;
-        this.gRPCServerPort = gRPCServerPort;
-        this.deviceId = deviceId;
-        this.nodeId = nodeId;
-        this.configFile = configFile;
-        this.runtimeFile = runtimeFile;
+        this.topoFilePath = topoFilePath;
     }
 
     public void init() {
-        packetReplicationRunner = new PacketReplicationRunner(deviceService, runtimeService, gRPCServerIp,
-                                        gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+        packetReplicationRunner = new PacketReplicationRunner(deviceService, runtimeService, topoFilePath);
         packetReplicationRunner.run();
         LOG.info("Packet replication provider init.");
     }
 
     public void close() {
-        packetReplicationRunner.close();
+        packetReplicationRunner.removeTopo();
         LOG.info("Packet replication provider closed.");
     }
 }

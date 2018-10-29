@@ -7,7 +7,7 @@
  */
 package org.opendaylight.p4plugin;
 
-import org.opendaylight.p4plugin.appcommon.P4SwitchRunner;
+import org.opendaylight.p4plugin.appcommon.ApplicationRunner;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.P4pluginDeviceService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.packet.metadata.Metadata;
@@ -19,25 +19,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class PacketIORunner extends P4SwitchRunner {
+public class PacketIORunner extends ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(PacketIORunner.class);
 
     public PacketIORunner(final P4pluginDeviceService deviceService,
                           final P4pluginP4runtimeService runtimeService,
-                          final String gRPCServerIp,
-                          final Integer gRPCServerPort,
-                          final Long deviceId,
-                          final String nodeId,
-                          final String configFile,
-                          final String runtimeFile) {
-        super(deviceService, runtimeService, gRPCServerIp, gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+                          final String topoFilePath) {
+        super(deviceService, runtimeService, topoFilePath);
     }
 
     @Override
     public void run() {
-        if (addDevice()) {
-            p4Switch.openStreamChannel();
-            p4Switch.setPipelineConfig();
+        if (loadTopo()) {
             List<Metadata> metadataList = new ArrayList<>();
             MetadataBuilder metadataBuilder1 = new MetadataBuilder();
             metadataBuilder1.setMetadataValue(new byte[]{0,0,0,0,0,0,0,0});
@@ -50,7 +43,7 @@ public class PacketIORunner extends P4SwitchRunner {
 
             Runnable runnable = () -> {
                 for (int index = 0; index < 10; index++) {
-                    p4Switch.sendPacketOut(metadataList, "Welcome to ZTE.".getBytes());
+                    p4SwitchMap.get("s1").sendPacketOut(metadataList, "Welcome to ZTE.".getBytes());
                     SleepUtils.delay(10);
                 }
             };

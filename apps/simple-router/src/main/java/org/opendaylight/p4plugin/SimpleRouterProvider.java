@@ -18,43 +18,27 @@ public class SimpleRouterProvider {
     private final DataBroker dataBroker;
     private final P4pluginDeviceService deviceService;
     private final P4pluginP4runtimeService runtimeService;
-    private final String gRPCServerIp;
-    private final Integer gRPCServerPort;
-    private final Long deviceId;
-    private final String nodeId;
-    private final String configFile;
-    private final String runtimeFile;
+    private final String topoFilePath;
     private SimpleRouterRunner simpleRouterRunner;
 
     public SimpleRouterProvider(final DataBroker dataBroker,
                                 final P4pluginDeviceService deviceService,
                                 final P4pluginP4runtimeService runtimeService,
-                                final String gRPCServerIp,
-                                final Integer gRPCServerPort,
-                                final Long deviceId,
-                                final String nodeId,
-                                final String configFile,
-                                final String runtimeFile) {
+                                final String topoFilePath) {
         this.dataBroker = dataBroker;
         this.deviceService = deviceService;
         this.runtimeService = runtimeService;
-        this.gRPCServerIp = gRPCServerIp;
-        this.gRPCServerPort = gRPCServerPort;
-        this.deviceId = deviceId;
-        this.nodeId = nodeId;
-        this.configFile = configFile;
-        this.runtimeFile = runtimeFile;
+        this.topoFilePath = topoFilePath;
     }
 
     public void init() {
-        simpleRouterRunner = new SimpleRouterRunner(deviceService, runtimeService, gRPCServerIp,
-                                                    gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+        simpleRouterRunner = new SimpleRouterRunner(deviceService, runtimeService, topoFilePath);
         simpleRouterRunner.run();
         LOG.info("Simple router provider init.");
     }
 
     public void close() {
-        simpleRouterRunner.close();
+        simpleRouterRunner.removeTopo();
         LOG.info("Simple router provider closed.");
     }
 }

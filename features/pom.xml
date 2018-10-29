@@ -27,7 +27,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <module>odl-p4plugin-p4runtime</module>
         <module>odl-p4plugin-appcommon</module>
         <module>odl-p4plugin-simple-router</module>
-        <module>odl-p4plugin-loopbacker</module>
+        <module>odl-p4plugin-packet-io</module>
         <module>odl-p4plugin-all</module>
         <module>features-p4plugin</module>
     </modules>

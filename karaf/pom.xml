@@ -57,26 +57,64 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                 <artifactId>maven-resources-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>copy-simple-router-p4-resources</id>
+                        <id>copy-simple-router-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>target/assembly/etc/p4/simple-router/</outputDirectory>
+                            <outputDirectory>target/assembly/etc/p4plugin/simple-router/</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>../apps/simple-router/src/main/resources/p4/</directory>
-                                    <includes>
-                                        <include>**</include>
-                                    </includes>
+                                    <directory>../apps/simple-router/src/main/resources/</directory>
+                                    <excludes>
+                                        <exclude>**/*.xml</exclude>
+                                    </excludes>
                                 </resource>
                             </resources>
                         </configuration>
                     </execution>
 
                     <execution>
-                        <id>copy-simple-router-config-resources</id>
+                        <id>copy-packet-replication-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/assembly/etc/p4plugin/packet-replication/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>../apps/packet-replication/src/main/resources/</directory>
+                                    <excludes>
+                                        <exclude>**/*.xml</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>copy-packet-io-resources</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>target/assembly/etc/p4plugin/packet-io/</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>../apps/packet-io/src/main/resources/</directory>
+                                    <excludes>
+                                        <exclude>**/*.xml</exclude>
+                                    </excludes>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>copy-config-resources</id>
                         <phase>package</phase>
                         <goals>
                             <goal>copy-resources</goal>
@@ -84,46 +122,20 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
                         <configuration>
                             <outputDirectory>target/assembly/etc</outputDirectory>
                             <resources>
-
                                 <resource>
                                     <directory>../apps/simple-router/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-
-                    <execution>
-                        <id>copy-packetio-p4-resources</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/assembly/etc/p4/packet-io/</outputDirectory>
-                            <resources>
                                 <resource>
-                                    <directory>../apps/packet-io/src/main/resources/p4/</directory>
+                                    <directory>../apps/packet-replication/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>
                                 </resource>
-                            </resources>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>copy-packetio-config-resources</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>copy-resources</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>target/assembly/etc/</outputDirectory>
-                            <resources>
                                 <resource>
-                                    <directory>../apps/packetio/src/main/resources/config/</directory>
+                                    <directory>../apps/packet-io/src/main/resources/config/</directory>
                                     <includes>
                                         <include>**</include>
                                     </includes>

@@ -21,14 +21,9 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <odl:rpc-service id = "p4runtimeService"
                      interface="org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.P4pluginP4runtimeService"/>
 
-    <cm:property-placeholder persistent-id="p4.packet-io" update-strategy="none">
+    <cm:property-placeholder persistent-id="p4.packet.io" update-strategy="none">
         <cm:default-properties>
-            <cm:property name="grpc_server_ip" value="127.0.0.1"/>
-            <cm:property name="grpc_server_port" value="50051"/>
-            <cm:property name="device_id" value="0"/>
-            <cm:property name="node_id" value="node-packet-io"/>
-            <cm:property name="config_file" value="etc/p4/packet-io/packet_io.json"/>
-            <cm:property name="runtime_file" value="etc/p4/packet-io/packet_io.proto.txt"/>
+            <cm:property name="topo_file" value="etc/p4plugin/packet-io/topo.json"/>
         </cm:default-properties>
     </cm:property-placeholder>
 
@@ -38,12 +33,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         <argument ref="dataBroker" />
         <argument ref="deviceService" />
         <argument ref="p4runtimeService" />
-        <argument value="${grpc_server_ip}" />
-        <argument value="${grpc_server_port}" />
-        <argument value="${device_id}" />
-        <argument value="${node_id}" />
-        <argument value="${config_file}" />
-        <argument value="${runtime_file}" />
+        <argument value="${topo_file}" />
     </bean>
 
     <bean id = "packetHandler"

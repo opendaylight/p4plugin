@@ -1,0 +1,12 @@
+{
+    "switches": [
+        {
+            "node_id" : "s1",
+            "grpc_server_ip" : "127.0.0.1",
+            "grpc_server_port" : 50051,
+            "device_id" : 0,
+            "config_file" : "etc/p4plugin/simple-router/p4/simple-router.json",
+            "runtime_file" : "etc/p4plugin/simple-router/p4/simple-router.proto.txt"
+        }
+    ]
+}

@@ -7,8 +7,8 @@
  */
 package org.opendaylight.p4plugin;
 
-import org.opendaylight.p4plugin.appcommon.P4Switch;
-import org.opendaylight.p4plugin.appcommon.P4SwitchRunner;
+import org.opendaylight.p4plugin.appcommon.ApplicationRunner;
+import org.opendaylight.p4plugin.appcommon.swtich.P4Switch;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.device.rev170808.P4pluginDeviceService;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.AddTableEntryInput;
 import org.opendaylight.yang.gen.v1.urn.opendaylight.p4plugin.p4runtime.rev170808.AddTableEntryInputBuilder;
@@ -26,34 +26,33 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SimpleRouterRunner extends P4SwitchRunner {
+public class SimpleRouterRunner extends ApplicationRunner {
     private static final Logger LOG = LoggerFactory.getLogger(SimpleRouterRunner.class);
 
     public SimpleRouterRunner(final P4pluginDeviceService deviceService,
                               final P4pluginP4runtimeService runtimeService,
-                              final String gRPCServerIp,
-                              final Integer gRPCServerPort,
-                              final Long deviceId,
-                              final String nodeId,
-                              final String configFile,
-                              final String runtimeFile) {
-        super(deviceService, runtimeService, gRPCServerIp, gRPCServerPort, deviceId, nodeId, configFile, runtimeFile);
+                              final String topoPathFile) {
+        super(deviceService, runtimeService, topoPathFile);
     }
 
     @Override
     public void run() {
-        if (addDevice()) {
-            p4Switch.openStreamChannel();
-            p4Switch.setPipelineConfig();
-            p4Switch.addTableEntry(buildH1H2Entry());
-            p4Switch.addTableEntry(buildH2H1Entry());
+        if (loadTopo()) {
+            String nodeId = "s1";
+            P4Switch p4Switch = p4SwitchMap.get(nodeId);
+            if (p4Switch != null) {
+                p4Switch.openStreamChannel();
+                p4Switch.setPipelineConfig();
+                p4Switch.addTableEntry(buildH1H2Entry());
+                p4Switch.addTableEntry(buildH2H1Entry());
+            }
         }
     }
 
     /**
     {
         "input": {
-            "nid": "node0",
+            "nid": "s1",
             "table-name": "ipv4_lpm",
             "action-name": "ipv4_forward",
             "action-param": [
@@ -106,7 +105,7 @@ public class SimpleRouterRunner extends P4SwitchRunner {
     /* h1 -> h2 entry */
     private AddTableEntryInput buildH1H2Entry() {
         AddTableEntryInputBuilder inputBuilder = new AddTableEntryInputBuilder();
-        inputBuilder.setNid(p4Switch.getNodeId());
+        inputBuilder.setNid("s1");
         inputBuilder.setTableName("ipv4_lpm");
 
         /* build match field */
@@ -146,7 +145,7 @@ public class SimpleRouterRunner extends P4SwitchRunner {
     /* h2 -> h1 entry */
     private AddTableEntryInput buildH2H1Entry() {
         AddTableEntryInputBuilder inputBuilder = new AddTableEntryInputBuilder();
-        inputBuilder.setNid(p4Switch.getNodeId());
+        inputBuilder.setNid("s1");
         inputBuilder.setTableName("ipv4_lpm");
 
         /* build match field */

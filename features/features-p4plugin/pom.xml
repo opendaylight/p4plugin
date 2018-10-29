@@ -54,7 +54,7 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
         </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
-            <artifactId>odl-p4plugin-loopbacker</artifactId>
+            <artifactId>odl-p4plugin-packet-io</artifactId>
             <version>${project.version}</version>
             <type>xml</type>
             <classifier>features</classifier>

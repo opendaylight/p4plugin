@@ -1,0 +1,8 @@
+Verified+1: jenkins-releng <jenkins-releng@opendaylight.org>
+Code-Review+1: wang senxiao <10200860@zte.com.cn>
+Code-Review+2: Ding Rui <ding.rui@zte.com.cn>
+Submitted-by: Ding Rui <ding.rui@zte.com.cn>
+Submitted-at: Tue, 30 Oct 2018 08:35:28 +0000
+Reviewed-on: https://git.opendaylight.org/gerrit/77317
+Project: p4plugin
+Branch: refs/heads/master

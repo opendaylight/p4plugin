@@ -24,14 +24,14 @@ and is available at http://www.eclipse.org/legal/epl-v10.html
     <name>OpenDaylight :: p4plugin :: p4runtime</name>
     
     <properties>
-        <mdsal.version>1.8.1-SNAPSHOT</mdsal.version>
+        <mdsal.version>2.5.1-SNAPSHOT</mdsal.version>
         <restconf.version>1.8.1-SNAPSHOT</restconf.version>
     </properties>
     
     <dependencies>
         <dependency>
-            <groupId>org.opendaylight.controller</groupId>
-            <artifactId>odl-mdsal-all</artifactId>
+            <groupId>org.opendaylight.mdsal</groupId>
+            <artifactId>mdsal-artifacts</artifactId>
             <version>${mdsal.version}</version>
             <type>xml</type>
             <classifier>features</classifier>
